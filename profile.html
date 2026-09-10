@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Profil — BA UGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="mark">BA<br/><span>UGC</span></div>
+  <nav>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="characters.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Karakter
+    </a>
+    <a href="products.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+      Produk
+    </a>
+    <a href="video-studio.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
+      Video Studio
+    </a>
+    <div class="nav-section-gap"></div>
+    <a href="history.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      Riwayat
+    </a>
+    <a href="staff.html" class="nav-item" data-admin-only>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Staff
+    </a>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+      <div class="acct-avatar" data-acct-avatar>P</div>
+      <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
+    </button>
+  </div>
+</aside>
+
+<main>
+  <div class="topline">
+    <div>
+      <div class="greet">Akun</div>
+      <h1>Profil</h1>
+    </div>
+  </div>
+
+  <div class="wizard-panel" style="max-width:440px">
+    <div class="block-title" style="margin-bottom:4px">Informasi akun</div>
+    <div class="field-hint" style="margin-bottom:18px" id="profileEmail">Memuat…</div>
+
+    <div class="select-box-label" style="margin-bottom:6px">Nama tampilan</div>
+    <input type="text" id="nameInput" class="field-input" style="width:100%;margin-bottom:18px" placeholder="Nama kamu"/>
+    <button class="btn btn-ghost" id="saveNameBtn" style="margin-bottom:28px">Simpan nama</button>
+
+    <div class="block-title" style="margin-bottom:4px;border-top:1px solid var(--line);padding-top:22px">Ganti password</div>
+    <div class="field-hint" style="margin-bottom:18px">Minimal 8 karakter.</div>
+    <input type="password" id="newPassInput" class="field-input" style="width:100%;margin-bottom:10px" placeholder="Password baru"/>
+    <input type="password" id="confirmPassInput" class="field-input" style="width:100%;margin-bottom:18px" placeholder="Konfirmasi password baru"/>
+    <button class="btn btn-primary" id="savePassBtn">Ganti password</button>
+  </div>
+</main>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  let currentUser = null;
+
+  document.getElementById('saveNameBtn').addEventListener('click', async () => {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) return toast('Nama tidak boleh kosong.');
+    try {
+      if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
+        const { error } = await supabaseClient.from('user_profiles').update({ name }).eq('id', currentUser.id);
+        if (error) throw error;
+      }
+      toast('Nama disimpan. Muat ulang halaman untuk lihat perubahan di sidebar.');
+    } catch (err) {
+      toast('Gagal simpan nama: ' + err.message);
+    }
+  });
+
+  document.getElementById('savePassBtn').addEventListener('click', async () => {
+    const p1 = document.getElementById('newPassInput').value;
+    const p2 = document.getElementById('confirmPassInput').value;
+    if (p1.length < 8) return toast('Password minimal 8 karakter.');
+    if (p1 !== p2) return toast('Konfirmasi password tidak cocok.');
+    const btn = document.getElementById('savePassBtn');
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try {
+      await DB.updateOwnPassword(p1);
+      toast('Password berhasil diganti.');
+      document.getElementById('newPassInput').value = '';
+      document.getElementById('confirmPassInput').value = '';
+    } catch (err) {
+      toast('Gagal ganti password: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Ganti password';
+    }
+  });
+
+  (async () => {
+    currentUser = await AUTH.guard();
+    if (!currentUser) return;
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+    document.getElementById('profileEmail').textContent = currentUser.email;
+    document.getElementById('nameInput').value = currentUser.name || '';
+  })();
+</script>
+</body>
+</html>

@@ -1,31 +1,20 @@
 /* ══════════════════════════════════════
    BA UGC — Data layer (LIVE)
-   Bicara langsung ke skema Supabase ASLI (bukan skema yang saya karang
-   di supabase/schema.sql — itu sudah usang, abaikan).
+   Bicara langsung ke skema Supabase ASLI.
 
-   Status per tabel:
-   - characters      : READ ONLY. Penciptaan karakter (Character Creator)
-                        SENGAJA belum disambung — alur aslinya berbasis
-                        collecting_photos bertahap (lihat characters.html),
-                        bukan generate instan. Menunggu desain ulang.
-   - products        : full CRUD, live.
-   - video_jobs      : full CRUD, live. `title` bukan kolom asli — dihitung
-                        di sini dari nama karakter + product_name.
-   - frames          : full CRUD, live. Rencana scene (script/label/waktu
-                        per frame) disimpan sebagai JSON di
-                        video_jobs.frame_plan (kolom ini masih kosong di
-                        semua baris asli, jadi struktur JSON di bawah ini
-                        adalah usulan, bukan yang sudah given).
-
-   frame_plan JSON shape yang dipakai di sini:
-   {
-     "style": "short" | "story" | "unbox",
-     "frames": [
-       { "frame_number": 1, "label": "Hook", "time_range": "0-3s", "script": "..." },
-       ...
-     ]
-   }
+   UPDATE dari versi sebelumnya:
+   - Tambah N8N_BASE_URL — ganti dengan URL n8n kamu, dipakai buat semua
+     panggilan generate (composite, frame plan, frame clip, produce) dan
+     pembuatan akun staff.
+   - Step 1 (genCompositeBtn), Step 2 (pickStyle), Step 3 (genFrame) di
+     video-studio.html sekarang beneran manggil AI lewat fungsi-fungsi
+     baru di bawah — bukan simulasi timeout lagi.
+   - Tambah fungsi user_profiles (getStaffList, createStaff) untuk
+     halaman staff.html.
    ══════════════════════════════════════ */
+
+// ⚠️ GANTI dengan URL n8n kamu (contoh: https://xxx.sumopod.my.id/webhook)
+const N8N_BASE_URL = 'https://GANTI-DENGAN-URL-N8N-KAMU/webhook';
 
 const DB = (() => {
   function client() {
@@ -35,13 +24,23 @@ const DB = (() => {
     return supabaseClient;
   }
 
+  async function callWebhook(path, body) {
+    const res = await fetch(`${N8N_BASE_URL}/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Backend gagal (${path}): ${res.status}`);
+    return res.json();
+  }
+
   function titleOf(job) {
     const charName = (job.characters && job.characters.name) || 'Karakter';
     const prodName = (job.products && job.products.name) || job.product_name || 'Produk';
     return `${charName} × ${prodName}`;
   }
 
-  // ── Characters (READ ONLY) ──────────────────────
+  // ── Characters (READ ONLY — Character Creator masih menunggu desain ulang) ──
   async function getCharacters() {
     const { data, error } = await client().from('characters').select('*').order('created_at', { ascending: false });
     if (error) throw error;
@@ -72,10 +71,12 @@ const DB = (() => {
 
   // ── Video jobs ───────────────────────
   async function getVideoJobs() {
-    const { data, error } = await client()
-      .from('video_jobs')
-      .select('*, characters(name), products(name)')
-      .order('created_at', { ascending: false });
+    const user = await AUTH.getUser();
+    let query = client().from('video_jobs').select('*, characters(name), products(name)').order('created_at', { ascending: false });
+    // Staff cuma lihat video miliknya sendiri (RLS juga menegakkan ini di server,
+    // filter di sini cuma supaya query lebih ringan / UX lebih cepat)
+    if (user && user.role !== 'admin') query = query.eq('created_by', user.id);
+    const { data, error } = await query;
     if (error) throw error;
     return data.map(j => ({ ...j, title: titleOf(j) }));
   }
@@ -89,9 +90,10 @@ const DB = (() => {
     return data ? { ...data, title: titleOf(data) } : null;
   }
   async function addVideoJob(fields) {
+    const user = await AUTH.getUser();
     const { data, error } = await client()
       .from('video_jobs')
-      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, ...fields })
+      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, created_by: user ? user.id : null, ...fields })
       .select('*, characters(name), products(name)')
       .single();
     if (error) throw error;
@@ -109,8 +111,6 @@ const DB = (() => {
   }
 
   // ── Frames ───────────────────────────
-  // Rencana (Step 2) ditulis ke video_jobs.frame_plan lewat updateVideoJob.
-  // Baris `frames` baru dibuat saat Step 3 mulai generate eksekusi per-scene.
   async function getFrames(videoJobId) {
     const { data, error } = await client().from('frames').select('*').eq('video_job_id', videoJobId).order('frame_number', { ascending: true });
     if (error) throw error;
@@ -133,7 +133,50 @@ const DB = (() => {
     return data;
   }
 
-  // ── Dashboard aggregates (dihitung di client dari getVideoJobs()) ──
+  // ── GENERATE — panggil backend n8n (Magnific) ──────────────
+  // Ganti simulasi lama (setTimeout/toast) dengan panggilan beneran.
+
+  // Step 1: compositing karakter + produk
+  async function generateComposite(jobId) {
+    return callWebhook('generate-composite', { job_id: jobId });
+  }
+
+  // Step 2: AI susun rencana scene (ganti buildFramePlan() yang hardcoded)
+  async function generateFramePlan(jobId, style) {
+    return callWebhook('generate-frame-plan', { job_id: jobId, style });
+  }
+
+  // Step 3: generate 1 klip video untuk 1 frame (TTS + OmniHuman)
+  async function generateFrameClip(frameId) {
+    return callWebhook('generate-frame-clip', { frame_id: frameId });
+  }
+
+  // Step 4: gabung semua klip approved jadi 1 video final
+  async function produceVideo(jobId) {
+    return callWebhook('produce-video', { job_id: jobId });
+  }
+
+  // ── Staff management (admin only — RLS di Supabase juga menegakkan ini) ──
+  async function getStaffList() {
+    const { data, error } = await client().from('user_profiles').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  }
+  async function createStaff({ email, password, name }) {
+    // Lewat backend n8n karena butuh service_role key — TIDAK BOLEH dari browser.
+    return callWebhook('create-staff', { email, password, name });
+  }
+
+  // ── Profil (ganti password) ──────────────
+  async function updateOwnPassword(newPassword) {
+    if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
+      throw new Error('Ganti password perlu Supabase Auth aktif (tidak tersedia di mode demo).');
+    }
+    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }
+
+  // ── Dashboard aggregates ──
   function stats(jobs) {
     return {
       step1: jobs.filter(j => j.current_step === 1 && j.status !== 'completed').length,
@@ -149,6 +192,9 @@ const DB = (() => {
     getProducts, getProduct, addProduct,
     getVideoJobs, getVideoJob, addVideoJob, updateVideoJob,
     getFrames, materializeFrames, updateFrame,
+    generateComposite, generateFramePlan, generateFrameClip, produceVideo,
+    getStaffList, createStaff,
+    updateOwnPassword,
     stats,
   };
 })();
