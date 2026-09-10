@@ -14,7 +14,13 @@
    ══════════════════════════════════════ */
 
 // ⚠️ GANTI dengan URL n8n kamu (contoh: https://xxx.sumopod.my.id/webhook)
-const N8N_BASE_URL = 'https://GANTI-DENGAN-URL-N8N-KAMU/webhook';
+const N8N_BASE_URL = 'https://n8n-crfkzibn5git.jkt3.sumopod.my.id/webhook';
+
+// ⚠️ WAJIB SAMA PERSIS dengan nilai "PASTE_SHARED_SECRET_DI_SINI" yang diisi
+// di tiap node "Cek Secret (...)" di n8n. Ini bukan pengganti autentikasi
+// user (itu tugas Supabase Auth) — ini cuma nyaring supaya orang yang nemu/
+// nebak URL webhook dari luar nggak bisa manggilnya sembarangan.
+const BAUGC_SHARED_SECRET = 'e77b1a350f35b5f18dcd5d5fa85729aaced4b3db76bca1b7b680addf1bafb1ab';
 
 const DB = (() => {
   function client() {
@@ -27,9 +33,13 @@ const DB = (() => {
   async function callWebhook(path, body) {
     const res = await fetch(`${N8N_BASE_URL}/${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-BAUGC-Secret': BAUGC_SHARED_SECRET,
+      },
       body: JSON.stringify(body),
     });
+    if (res.status === 401) throw new Error(`Backend menolak akses (${path}) — cek BAUGC_SHARED_SECRET di data.js sudah sama dengan yang di n8n.`);
     if (!res.ok) throw new Error(`Backend gagal (${path}): ${res.status}`);
     return res.json();
   }
