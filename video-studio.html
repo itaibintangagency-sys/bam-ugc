@@ -136,6 +136,7 @@
   let selectedCharId = params.get('character') || null;
   let selectedProdId = params.get('product') || null;
   let selectedStyle = null;
+  let charsCache = [], prodsCache = [];
   const STEPS = ['Pilih', 'Rencana', 'Generate', 'Produce'];
 
   function renderStepper(current) {
@@ -149,24 +150,24 @@
       el.style.display = n === current ? '' : 'none';
       if (n === current) {
         el.classList.remove('step-enter');
-        void el.offsetWidth; // restart animation on repeat visits (e.g. going back)
+        void el.offsetWidth;
         el.classList.add('step-enter');
       }
     });
   }
 
-  function goStep(n) {
-    if (job) DB.updateVideoJob(job.id, { current_step: n });
+  async function goStep(n) {
+    if (job) { job = await DB.updateVideoJob(job.id, { current_step: n }); }
     renderStepper(n);
-    if (n === 2) renderStep2();
-    if (n === 3) renderStep3();
+    if (n === 2) await renderStep2();
+    if (n === 3) await renderStep3();
     if (n === 4) renderStep4();
   }
 
   // ── STEP 1 ──────────────────────────────
   function renderPickGrid(elId, items, selectedId, onPick) {
     document.getElementById(elId).innerHTML = items.map(it => `
-      <div class="tile ${it.id === selectedId ? 'selected' : ''}" style="${it.id === selectedId ? 'box-shadow:0 0 0 2px var(--coral)' : ''}" onclick="(${onPick})('${it.id}')">
+      <div class="tile" style="${it.id === selectedId ? 'box-shadow:0 0 0 2px var(--coral)' : ''}" onclick="(${onPick})('${it.id}')">
         <div class="tile-media" style="aspect-ratio:1/1;font-size:20px">${it.name.charAt(0)}</div>
         <div class="tile-body" style="padding:8px"><div class="tile-title" style="font-size:11.5px">${escapeHtml(it.name)}</div></div>
       </div>`).join('');
@@ -175,35 +176,48 @@
   function pickChar(id) { selectedCharId = id; refreshStep1(); }
   function pickProd(id) { selectedProdId = id; refreshStep1(); }
 
-  function refreshStep1() {
-    renderPickGrid('pickCharGrid', DB.getCharacters(), selectedCharId, 'pickChar');
-    renderPickGrid('pickProdGrid', DB.getProducts(), selectedProdId, 'pickProd');
-    const c = selectedCharId && DB.getCharacter(selectedCharId);
-    const p = selectedProdId && DB.getProduct(selectedProdId);
+  async function refreshStep1() {
+    try {
+      if (!charsCache.length) charsCache = await DB.getCharacters();
+      if (!prodsCache.length) prodsCache = await DB.getProducts();
+    } catch (err) {
+      toast('Gagal memuat data: ' + err.message);
+      return;
+    }
+    renderPickGrid('pickCharGrid', charsCache, selectedCharId, 'pickChar');
+    renderPickGrid('pickProdGrid', prodsCache, selectedProdId, 'pickProd');
+    const c = selectedCharId && charsCache.find(x => x.id === selectedCharId);
+    const p = selectedProdId && prodsCache.find(x => x.id === selectedProdId);
     document.getElementById('compChar').textContent = c ? c.name : '?';
     document.getElementById('compProd').textContent = p ? p.name : '?';
     document.getElementById('genCompositeBtn').disabled = !(c && p);
+    if (c && c.status !== 'avatar_ready' && c.status !== 'voice_ready' && c.status !== 'complete') {
+      document.getElementById('step1Hint').innerHTML = `⚠️ ${escapeHtml(c.name)} masih berstatus "${escapeHtml(c.status || '—')}" — avatar belum siap. Composite tetap bisa dicoba untuk keperluan prototype.`;
+    }
   }
 
-  document.getElementById('genCompositeBtn').addEventListener('click', () => {
+  document.getElementById('genCompositeBtn').addEventListener('click', async () => {
     if (!selectedCharId || !selectedProdId) return toast('Pilih karakter dan produk dulu.');
-    const c = DB.getCharacter(selectedCharId), p = DB.getProduct(selectedProdId);
+    const c = charsCache.find(x => x.id === selectedCharId);
+    const p = prodsCache.find(x => x.id === selectedProdId);
     const btn = document.getElementById('genCompositeBtn');
     btn.disabled = true; btn.textContent = 'Generating…';
     document.getElementById('compResult').textContent = 'Memproses…';
-    setTimeout(() => {
+    try {
       if (!job) {
-        job = DB.addVideoJob({ character_id: c.id, product_id: p.id, title: `${c.name} × ${p.name}` });
+        job = await DB.addVideoJob({ character_id: c.id, product_id: p.id, product_name: p.name });
       } else {
-        DB.updateVideoJob(job.id, { character_id: c.id, product_id: p.id, title: `${c.name} × ${p.name}` });
-        job = DB.getVideoJob(job.id);
+        job = await DB.updateVideoJob(job.id, { character_id: c.id, product_id: p.id, product_name: p.name });
       }
       document.getElementById('compResult').textContent = 'Composite siap ✓';
       document.getElementById('pageTitle').textContent = job.title;
-      btn.disabled = false; btn.textContent = 'Generate ulang';
       toast('Composite karakter + produk berhasil dibuat.');
       document.getElementById('step1Hint').innerHTML = `Composite siap. <a href="#" onclick="goStep(2);return false;" style="color:var(--coral);font-weight:600">Lanjut ke rencana scene →</a>`;
-    }, 1000);
+    } catch (err) {
+      toast('Gagal generate composite: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generate ulang';
+    }
   });
 
   // ── STEP 2 ──────────────────────────────
@@ -213,7 +227,7 @@
     { id: 'unbox', name: 'Unboxing santai', desc: 'Karakter buka paket, reaksi natural, baru masuk ke poin jual produk.' },
   ];
 
-  function renderStep2() {
+  async function renderStep2() {
     document.getElementById('styleGrid').innerHTML = styleOptions.map(s => `
       <div class="style-card ${selectedStyle === s.id ? 'selected' : ''}" onclick="pickStyle('${s.id}')">
         <div class="style-card-title">${s.name}</div>
@@ -223,48 +237,54 @@
     if (selectedStyle) renderFramePlan();
   }
 
-  function pickStyle(id) {
+  async function pickStyle(id) {
     selectedStyle = id;
     const frames = buildFramePlan(id);
-    DB.setFrames(job.id, frames);
-    DB.updateVideoJob(job.id, { frames_count: frames.length, status: 'review' });
-    job = DB.getVideoJob(job.id);
-    renderStep2();
+    try {
+      job = await DB.updateVideoJob(job.id, {
+        frame_plan: { style: id, frames },
+        frames_count: frames.length,
+        status: 'scripting',
+      });
+    } catch (err) {
+      toast('Gagal simpan rencana: ' + err.message);
+    }
+    await renderStep2();
   }
 
   function buildFramePlan(styleId) {
-    const c = DB.getCharacter(job.character_id), p = DB.getProduct(job.product_id);
+    const c = charsCache.find(x => x.id === job.character_id) || { name: 'Karakter' };
+    const p = prodsCache.find(x => x.id === job.product_id) || { name: job.product_name || 'Produk' };
     const plans = {
       short: [
-        { label: 'Hook', time: '0-3s', script: `${c.name} langsung tunjukkan ${p.name} sambil bilang "kalian juga ngerasain ini nggak sih?"`, background: 'Kamar minimalis, cahaya natural' },
-        { label: 'Value Prop', time: '3-9s', script: `${c.name} jelasin 1 manfaat utama ${p.name} dengan nada ${(c.voice||'').toLowerCase()}.`, background: 'Meja kerja/rias, produk di tangan' },
-        { label: 'CTA', time: '9-15s', script: `${c.name} ajak follow & checkout keranjang kuning.`, background: 'Close-up produk + wajah karakter' },
+        { label: 'Hook', time_range: '0-3s', script: `${c.name} langsung tunjukkan ${p.name} sambil bilang "kalian juga ngerasain ini nggak sih?"` },
+        { label: 'Value Prop', time_range: '3-9s', script: `${c.name} jelasin 1 manfaat utama ${p.name}.` },
+        { label: 'CTA', time_range: '9-15s', script: `${c.name} ajak follow & checkout keranjang kuning.` },
       ],
       story: [
-        { label: 'Hook', time: '0-3s', script: `${c.name} buka dengan pertanyaan relate soal masalah yang dijawab ${p.name}.`, background: 'Kamar minimalis, cahaya natural' },
-        { label: 'Value Prop', time: '3-15s', script: `${c.name} jelasin fitur & manfaat ${p.name} satu-satu.`, background: 'Meja kerja/rias, produk di tangan' },
-        { label: 'Demo/Bukti', time: '15-25s', script: `${c.name} demo pemakaian ${p.name} secara langsung.`, background: 'Area demo sesuai kategori produk' },
-        { label: 'CTA', time: '25-30s', script: `${c.name} rekap manfaat + ajak checkout.`, background: 'Close-up produk + wajah karakter' },
+        { label: 'Hook', time_range: '0-3s', script: `${c.name} buka dengan pertanyaan relate soal masalah yang dijawab ${p.name}.` },
+        { label: 'Value Prop', time_range: '3-15s', script: `${c.name} jelasin fitur & manfaat ${p.name} satu-satu.` },
+        { label: 'Demo/Bukti', time_range: '15-25s', script: `${c.name} demo pemakaian ${p.name} secara langsung.` },
+        { label: 'CTA', time_range: '25-30s', script: `${c.name} rekap manfaat + ajak checkout.` },
       ],
       unbox: [
-        { label: 'Hook', time: '0-3s', script: `${c.name} terima paket, ekspresi penasaran.`, background: 'Meja unboxing, packaging polos' },
-        { label: 'Reaksi', time: '3-10s', script: `${c.name} buka paket ${p.name}, reaksi spontan.`, background: 'Meja unboxing, cahaya hangat' },
-        { label: 'Value Prop', time: '10-20s', script: `${c.name} coba & jelasin kenapa ${p.name} worth it.`, background: 'Area demo sesuai kategori produk' },
-        { label: 'CTA', time: '20-25s', script: `${c.name} ajak checkout sambil pegang produk.`, background: 'Close-up produk + wajah karakter' },
+        { label: 'Hook', time_range: '0-3s', script: `${c.name} terima paket, ekspresi penasaran.` },
+        { label: 'Reaksi', time_range: '3-10s', script: `${c.name} buka paket ${p.name}, reaksi spontan.` },
+        { label: 'Value Prop', time_range: '10-20s', script: `${c.name} coba & jelasin kenapa ${p.name} worth it.` },
+        { label: 'CTA', time_range: '20-25s', script: `${c.name} ajak checkout sambil pegang produk.` },
       ],
     };
-    return plans[styleId];
+    return plans[styleId].map((f, i) => ({ frame_number: i + 1, ...f }));
   }
 
   function renderFramePlan() {
-    const frames = DB.getFrames(job.id);
+    const frames = (job.frame_plan && job.frame_plan.frames) || [];
     document.getElementById('framePlanList').innerHTML = frames.map((f, i) => `
       <div class="frame-card reveal" style="animation-delay:${i * 40}ms">
         <div class="frame-thumb">${f.label}</div>
         <div class="frame-body">
-          <div class="frame-label"><span>${f.label} · ${f.time}</span></div>
+          <div class="frame-label"><span>${f.label} · ${f.time_range}</span></div>
           <div class="frame-script">${escapeHtml(f.script)}</div>
-          <div class="frame-bg">🖼️ ${escapeHtml(f.background)}</div>
         </div>
       </div>`).join('');
   }
@@ -275,48 +295,63 @@
   });
 
   // ── STEP 3 ──────────────────────────────
-  function renderStep3() {
-    const frames = DB.getFrames(job.id);
-    document.getElementById('frameGenList').innerHTML = frames.map(f => `
+  function planFrameFor(frameNumber) {
+    const frames = (job.frame_plan && job.frame_plan.frames) || [];
+    return frames.find(f => f.frame_number === frameNumber) || {};
+  }
+
+  async function renderStep3() {
+    let frames = await DB.getFrames(job.id);
+    if (!frames.length && job.frame_plan && job.frame_plan.frames) {
+      frames = await DB.materializeFrames(job.id, job.frame_plan.frames);
+    }
+    const rows = frames.map(f => {
+      const plan = planFrameFor(f.frame_number);
+      const label = plan.label || `Scene ${f.frame_number}`;
+      const time = plan.time_range || '';
+      const statusText = { pending: 'Belum di-generate', generating: 'Generating', review: 'Menunggu approve', approved: 'Disetujui', regenerating: 'Render ulang…' }[f.status] || f.status;
+      const statusCls = { pending: 'st-draft', generating: 'st-generating', review: 'st-review', approved: 'st-complete', regenerating: 'st-generating' }[f.status] || 'st-draft';
+      let actionBtn = '';
+      if (f.status === 'pending') actionBtn = `<button class="icon-btn" title="Generate" onclick="genFrame('${f.id}')">▶</button>`;
+      else if (f.status === 'review') actionBtn = `<button class="icon-btn" title="Setujui" onclick="approveFrame('${f.id}')">✓</button><button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`;
+      else if (f.status === 'approved') actionBtn = `<button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`;
+      return `
       <div class="frame-card" id="fc-${f.id}">
-        <div class="frame-thumb">${f.status === 'approved' ? '✓ klip' : f.status === 'generating' ? '…' : f.label}</div>
+        <div class="frame-thumb">${f.status === 'approved' ? '✓ klip' : f.status === 'generating' || f.status === 'regenerating' ? '…' : label}</div>
         <div class="frame-body">
-          <div class="frame-label"><span>${f.label} · ${f.time}</span><span class="act-status ${f.status === 'approved' ? 'st-complete' : f.status === 'generating' ? 'st-generating' : 'st-draft'}">${f.status === 'approved' ? 'Disetujui' : f.status === 'generating' ? 'Generating' : 'Belum di-generate'}</span></div>
-          <div class="frame-script">${escapeHtml(f.script)}</div>
+          <div class="frame-label"><span>${escapeHtml(label)}${time ? ' · ' + escapeHtml(time) : ''}</span><span class="act-status ${statusCls}">${statusText}</span></div>
+          <div class="frame-script">${escapeHtml(f.script || plan.script || '')}</div>
         </div>
-        <div class="frame-actions">
-          ${f.status === 'approved'
-            ? `<button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`
-            : `<button class="icon-btn" title="Generate" onclick="genFrame('${f.id}')">▶</button>`}
-        </div>
-      </div>`).join('');
-    updateProduceBtn();
+        <div class="frame-actions">${actionBtn}</div>
+      </div>`;
+    });
+    document.getElementById('frameGenList').innerHTML = rows.join('');
+    updateProduceBtn(frames);
   }
 
-  function genFrame(id) {
-    DB.updateFrame(id, { status: 'generating' });
-    renderStep3();
-    setTimeout(() => {
-      DB.updateFrame(id, { status: 'approved' });
-      renderStep3();
-    }, 900);
+  async function genFrame(id) {
+    await DB.updateFrame(id, { status: 'generating' });
+    await renderStep3();
+    setTimeout(async () => { await DB.updateFrame(id, { status: 'review' }); await renderStep3(); }, 900);
   }
-  function regenFrame(id) {
-    DB.updateFrame(id, { status: 'generating' });
-    renderStep3();
-    setTimeout(() => { DB.updateFrame(id, { status: 'approved' }); renderStep3(); }, 900);
+  async function approveFrame(id) {
+    await DB.updateFrame(id, { status: 'approved' });
+    await renderStep3();
+  }
+  async function regenFrame(id) {
+    await DB.updateFrame(id, { status: 'regenerating' });
+    await renderStep3();
+    setTimeout(async () => { await DB.updateFrame(id, { status: 'review' }); await renderStep3(); }, 900);
   }
 
-  function updateProduceBtn() {
-    const frames = DB.getFrames(job.id);
+  function updateProduceBtn(frames) {
     const allDone = frames.length > 0 && frames.every(f => f.status === 'approved');
     document.getElementById('produceBtn').disabled = !allDone;
     document.getElementById('step3Hint').textContent = allDone ? 'Semua scene disetujui — siap di-produce.' : 'Generate & approve tiap scene untuk lanjut.';
   }
 
-  document.getElementById('produceBtn').addEventListener('click', () => {
-    DB.updateVideoJob(job.id, { status: 'complete', current_step: 4 });
-    job = DB.getVideoJob(job.id);
+  document.getElementById('produceBtn').addEventListener('click', async () => {
+    job = await DB.updateVideoJob(job.id, { status: 'completed', current_step: 4 });
     goStep(4);
   });
 
@@ -331,25 +366,31 @@
     await AUTH.guard();
     document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
 
+    try {
+      charsCache = await DB.getCharacters();
+      prodsCache = await DB.getProducts();
+    } catch (err) {
+      toast('Gagal memuat karakter/produk: ' + err.message);
+    }
+
     const jobId = params.get('job');
     if (jobId) {
-      job = DB.getVideoJob(jobId);
+      try { job = await DB.getVideoJob(jobId); } catch (err) { toast('Gagal memuat video: ' + err.message); }
       if (job) {
         selectedCharId = job.character_id;
         selectedProdId = job.product_id;
+        selectedStyle = job.frame_plan && job.frame_plan.style;
         document.getElementById('pageTitle').textContent = job.title;
-        const frames = DB.getFrames(job.id);
-        if (frames.length) selectedStyle = 'short'; // plan already generated
-        refreshStep1();
+        await refreshStep1();
         document.getElementById('compResult').textContent = 'Composite siap ✓';
         renderStepper(Math.max(1, job.current_step || 1));
-        if (job.current_step === 2) renderStep2();
-        if (job.current_step === 3) renderStep3();
+        if (job.current_step === 2) await renderStep2();
+        if (job.current_step === 3) await renderStep3();
         if (job.current_step === 4) renderStep4();
         return;
       }
     }
-    refreshStep1();
+    await refreshStep1();
     renderStepper(1);
   })();
 </script>

@@ -100,15 +100,26 @@
 <script src="js/app.js"></script>
 <script>
   let charList = [];
+  const STATUS_LABELS = {
+    draft: 'Draft', collecting_photos: 'Mengumpulkan foto', avatar_processing: 'Memproses avatar',
+    avatar_ready: 'Avatar siap', voice_ready: 'Suara siap', complete: 'Lengkap', abandoned: 'Dibatalkan',
+  };
 
-  function renderChars() {
-    charList = DB.getCharacters();
-    document.getElementById('charGrid').innerHTML = charList.map(c => `
+  async function renderChars() {
+    const grid = document.getElementById('charGrid');
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">Memuat karakter…</div>`;
+    try {
+      charList = await DB.getCharacters();
+    } catch (err) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Gagal memuat karakter</strong>${escapeHtml(err.message)}</div>`;
+      return;
+    }
+    grid.innerHTML = charList.map(c => `
       <div class="tile" onclick="openDetail('${c.id}')">
-        <div class="tile-media">${c.name.charAt(0)}<span class="tile-badge">${escapeHtml(c.style)}</span></div>
+        <div class="tile-media">${c.name.charAt(0)}<span class="tile-badge">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</span></div>
         <div class="tile-body">
           <div class="tile-title">${escapeHtml(c.name)}</div>
-          <div class="tile-sub">${c.video_count} video</div>
+          <div class="tile-sub">${c.photos_count || 0} foto</div>
         </div>
       </div>`).join('') + `
       <div class="tile tile-add" onclick="openCreator()" style="aspect-ratio:auto">
@@ -118,33 +129,42 @@
   }
   renderChars();
 
-  function openDetail(id) {
-    const c = DB.getCharacter(id);
+  async function openDetail(id) {
+    let c;
+    try { c = await DB.getCharacter(id); } catch (err) { return toast('Gagal memuat: ' + err.message); }
     if (!c) return;
     document.getElementById('detailName').textContent = c.name;
     document.getElementById('detailBody').innerHTML = `
       <div class="field-row">
-        <div><div class="field-hint">Gaya konten</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.style)}</div></div>
-        <div><div class="field-hint">Suara</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.voice || '—')}</div></div>
+        <div><div class="field-hint">Status</div><div style="font-weight:600;margin-top:2px">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</div></div>
+        <div><div class="field-hint">Gaya konten</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.style || '—')}</div></div>
       </div>
       <div class="field-row" style="margin-top:14px">
-        <div><div class="field-hint">Gender</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.gender || '—')}</div></div>
-        <div><div class="field-hint">Hijab</div><div style="font-weight:600;margin-top:2px">${c.hijab ? 'Ya' : 'Tidak'}</div></div>
+        <div><div class="field-hint">Foto terkumpul</div><div style="font-weight:600;margin-top:2px">${c.photos_count || 0}</div></div>
+        <div><div class="field-hint">Suara</div><div style="font-weight:600;margin-top:2px">${c.voice_id ? 'Sudah ada' : '—'}</div></div>
       </div>
-      <div style="margin-top:14px"><div class="field-hint">Total video</div><div style="font-weight:600;margin-top:2px">${c.video_count}</div></div>`;
+      ${c.notes ? `<div style="margin-top:14px"><div class="field-hint">Catatan</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.notes)}</div></div>` : ''}`;
     document.getElementById('detailUse').href = 'video-studio.html?character=' + c.id;
-    document.getElementById('detailDeactivate').onclick = () => { toast(`${c.name} dinonaktifkan (demo).`); closeModal('detailModal'); };
+    const readyForVideo = ['avatar_ready', 'voice_ready', 'complete'].includes(c.status);
+    document.getElementById('detailUse').style.opacity = readyForVideo ? '1' : '.5';
+    document.getElementById('detailUse').title = readyForVideo ? '' : 'Avatar karakter ini belum siap, tapi tetap bisa dicoba untuk prototype';
+    document.getElementById('detailDeactivate').onclick = () => { toast('Nonaktifkan karakter belum tersambung ke database — perlu ditambahkan terpisah.'); };
     openModal('detailModal');
   }
 
   // ── Character creator wizard ──────────────────────────────
+  // CATATAN: alur asli pembuatan karakter di sistem ini berbasis pengumpulan
+  // foto bertahap (status: draft → collecting_photos → avatar_processing →
+  // avatar_ready → voice_ready → complete), bukan generate instan dari preset.
+  // Wizard di bawah ini masih murni untuk PRATINJAU alur — langkah terakhir
+  // sengaja TIDAK menulis apa pun ke database sampai alur aslinya didesain ulang.
   const creatorSteps = ['Gender', 'Wajah & tubuh', 'Gaya & suara', 'Nama'];
   const options = {
     gender: ['Perempuan', 'Laki-laki'],
     face: ['Oval', 'Bulat', 'Persegi', 'Hati'],
     body: ['Ramping', 'Atletis', 'Berisi'],
     hair: ['Berhijab', 'Rambut panjang', 'Rambut pendek', 'Rambut ikal'],
-    style: ['Review', 'Viral', 'Storytelling', 'Soft-sell'],
+    style: ['Review', 'Viral', 'Storytelling'],
     personality: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Jenaka'],
     voice: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Ceria'],
   };
@@ -186,10 +206,10 @@
     } else if (creatorStep === 3) {
       body.innerHTML = `
         <div class="field"><label for="charNameInput">Nama karakter</label><input type="text" id="charNameInput" placeholder="mis. Dinda" value="${escapeHtml(creatorState.name || '')}"/></div>
-        <div class="field-hint">Generate 1x akan langsung menghasilkan DNA visual (beberapa foto angle) + DNA suara sekaligus.</div>`;
+        <div class="field-hint" style="color:var(--coral)">⚠️ Langkah ini masih pratinjau — belum tersambung ke database. Karakter asli dibuat lewat pengumpulan foto bertahap (lihat status di kartu karakter).</div>`;
     }
     document.getElementById('creatorBack').style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
-    document.getElementById('creatorNext').textContent = creatorStep === creatorSteps.length - 1 ? 'Generate karakter' : 'Lanjut';
+    document.getElementById('creatorNext').textContent = creatorStep === creatorSteps.length - 1 ? 'Selesai (pratinjau)' : 'Lanjut';
   }
 
   document.getElementById('creatorBack').addEventListener('click', () => { if (creatorStep > 0) { creatorStep--; renderCreator(); } });
@@ -202,18 +222,8 @@
 
     const name = document.getElementById('charNameInput').value.trim();
     if (!name) return toast('Isi nama karakter dulu.');
-    const btn = document.getElementById('creatorNext');
-    btn.disabled = true; btn.textContent = 'Generating DNA…';
-    setTimeout(() => {
-      const rec = DB.addCharacter({
-        name, style: creatorState.style, voice: creatorState.voice,
-        gender: creatorState.gender, hijab: creatorState.hair === 'Berhijab',
-      });
-      btn.disabled = false;
-      closeModal('creatorModal');
-      renderChars();
-      toast(`${rec.name} berhasil dibuat.`);
-    }, 900);
+    closeModal('creatorModal');
+    toast('Pratinjau selesai — pembuatan karakter sungguhan menyusul setelah alur collecting_photos didesain ulang.');
   });
 
   // deep-link #new dari halaman lain

@@ -1,7 +1,16 @@
 -- ══════════════════════════════════════
--- BA UGC — Supabase schema
--- Jalankan di Supabase Dashboard → SQL Editor.
--- Mengikuti struktur tabel yang sudah dipakai di project (lihat memori proyek).
+-- ⚠️ SUDAH USANG — JANGAN DIJALANKAN.
+-- Skema asli project ini sudah ada dan berjalan di Supabase (dibuat
+-- sebelum prototype ini, sudah dipakai n8n/Telegram bot untuk
+-- collecting_photos karakter). js/data.js sekarang bicara ke skema ASLI
+-- itu, bukan ke skema di file ini. File ini disimpan sebagai arsip saja —
+-- lihat riwayat chat untuk detail skema asli (characters, character_photos,
+-- video_jobs, products, backgrounds, frames dengan kolom & enum berbeda
+-- dari di bawah ini).
+-- ══════════════════════════════════════
+
+-- ══════════════════════════════════════
+-- BA UGC — Supabase schema (LAMA, arsip)
 -- ══════════════════════════════════════
 
 create extension if not exists "pgcrypto";

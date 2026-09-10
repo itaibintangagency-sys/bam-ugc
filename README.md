@@ -31,7 +31,7 @@ python3 -m http.server 8080
 # buka http://localhost:8080
 ```
 
-Login dengan email/password apa saja — mode prototype menerima semua kombinasi yang tidak kosong. Semua data (karakter, produk, video job) tersimpan di localStorage browser, sudah di-seed dengan 3 karakter + 5 produk contoh biar dashboard langsung keisi.
+⚠️ **Login bisa dicoba tanpa setup apa pun** (mode demo-session, email/password apa saja yang tidak kosong). Tapi begitu masuk ke Dashboard/Produk/Video Studio, halaman-halaman itu sekarang manggil Supabase asli langsung — **tidak akan menampilkan apa-apa (atau muncul pesan error) sampai `js/supabase-client.js` diisi** kredensial yang valid (lihat bagian 4). Ini bukan lagi mode mock-lokal seperti sebelumnya.
 
 ## 2. Push ke GitHub
 
@@ -51,26 +51,32 @@ git push -u origin main
 2. Framework preset: pilih **Other** (situs statis, tidak butuh build step).
 3. Deploy — selesai, dapat URL `*.vercel.app`.
 
-## 4. Sambungkan Supabase (biar bukan prototype lagi)
+## 4. Sambungkan Supabase
 
-1. Buat project baru di [supabase.com](https://supabase.com).
-2. Buka **SQL Editor** → jalankan isi `supabase/schema.sql`.
-3. Buka **Storage** → buat 3 bucket privat: `character-assets`, `product-assets`, `video-outputs`.
-4. Buka **Project Settings → API** → salin **Project URL** dan **anon public key**.
-5. Isi ke `js/supabase-client.js`:
+Project Supabase untuk BA UGC **sudah ada** (dipakai juga oleh bot Telegram untuk mengumpulkan foto karakter) — jangan jalankan `supabase/schema.sql`, itu arsip skema lama yang tidak dipakai lagi.
+
+1. Buka **Project Settings → API** di project Supabase yang sudah ada → salin **Project URL** dan **anon public key**.
+2. Isi ke `js/supabase-client.js`:
    ```js
    const SUPABASE_URL = 'https://xxxx.supabase.co';
    const SUPABASE_ANON_KEY = 'ey...';
    ```
-6. Buka **Authentication → Users** → buat akun admin pertama secara manual (staff tidak bisa daftar sendiri, sesuai desain role).
+3. Pastikan RLS policy & 3 storage bucket (`character-assets`, `product-assets`, `video-outputs`) sudah ada di project itu — dicek manual di dashboard, bukan lewat file ini.
+4. Buka **Authentication → Users** → buat akun admin pertama secara manual kalau belum ada (staff tidak bisa daftar sendiri, sesuai desain role).
 
-Setelah langkah 5, `login.html` otomatis pindah dari demo-session ke Supabase Auth sungguhan — tidak perlu ubah kode lain.
+Setelah langkah 2, `login.html` otomatis pindah dari demo-session ke Supabase Auth sungguhan — tidak perlu ubah kode lain.
 
-### Catatan penting sebelum pakai data asli
-`js/data.js` saat ini baca/tulis ke `localStorage`, bukan ke Supabase. Struktur fungsinya (`DB.getCharacters()`, `DB.addProduct()`, dst.) sudah dibentuk sama persis dengan skema tabel, jadi langkah selanjutnya adalah mengganti isi tiap fungsi di `js/data.js` dengan pemanggilan `supabaseClient.from('...')` — tanpa perlu ubah kode di halaman manapun. Ini pekerjaan lanjutan, bukan bagian dari prototype klik-jadi ini.
+### Status koneksi data per tabel
+`js/data.js` sekarang bicara langsung ke Supabase (bukan `localStorage` lagi), tapi cakupannya beda per tabel:
 
-## 5. Yang masih simulasi (belum tersambung ke API asli)
+| Tabel | Status | Catatan |
+|---|---|---|
+| `products` | Live, full CRUD | Form "Produk baru" langsung insert ke Supabase |
+| `video_jobs`, `frames` | Live, full CRUD | `title` dihitung di app dari nama karakter + `product_name`, bukan kolom asli. Rencana scene (script/label per-frame) disimpan sebagai JSON di `video_jobs.frame_plan` — struktur JSON-nya usulan dari saya, belum ada standar resmi, cek dengan tim n8n sebelum backend lain ikut menulis ke kolom yang sama |
+| `characters` | **Read-only** | Video Studio & halaman Karakter menampilkan data asli untuk dipilih, tapi Character Creator (wizard di characters.html) sengaja **tidak menulis apa pun** — alur pembuatan karakter asli berbasis `collecting_photos` bertahap lewat Telegram bot, beda total dari wizard instan di prototype ini. Perlu didesain ulang terpisah sebelum disambung |
 
-- **Generate composite / generate scene / produce video** — disimulasikan dengan `setTimeout`, belum memanggil Magnific API (OmniHuman, Nano Banana, Video Combiner).
+## 5. Yang masih simulasi
+
+- **Generate composite / generate scene / produce video** — disimulasikan dengan `setTimeout`, belum memanggil Magnific API (OmniHuman, Nano Banana, Video Combiner). Status di `video_jobs`/`frames` sudah ditulis pakai enum asli (`analyzing`/`scripting`/`generating_video`/dst, `pending`/`generating`/`review`/`approved`), jadi begitu n8n mulai update status yang sama dari backend, tampilan di app ini otomatis ikut berubah — tidak perlu ubah kode frontend.
 - **Ambil data dari link produk** — disimulasikan, belum memanggil Apify scraper.
-- Kedua bagian ini adalah pekerjaan n8n/backend selanjutnya (lihat catatan arsitektur proyek) — bukan pekerjaan frontend.
+- **Character Creator** — murni pratinjau UI, tidak menulis ke database (lihat tabel di atas).

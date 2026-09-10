@@ -248,6 +248,7 @@ main{
 .st-generating{background:var(--coral-10);color:var(--coral)}
 .st-review{background:var(--gold-10);color:#a17d00}
 .st-draft{background:var(--bg);color:var(--dim)}
+.st-failed{background:#B4432E1a;color:#B4432E}
 .act-time{font-size:11.5px;color:var(--dim);white-space:nowrap}
 
 .empty{padding:44px 26px;text-align:center;color:var(--dim);font-size:13px}

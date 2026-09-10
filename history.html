@@ -60,10 +60,12 @@
     <input type="search" id="searchInput" placeholder="Cari judul video…"/>
     <select id="statusFilter">
       <option value="">Semua status</option>
-      <option value="draft">Draft</option>
-      <option value="review">Menunggu approve</option>
-      <option value="generating">Generating</option>
-      <option value="complete">Selesai</option>
+      <option value="analyzing">Menganalisis</option>
+      <option value="scripting">Menulis script</option>
+      <option value="generating_audio">Generate audio</option>
+      <option value="generating_video">Generate video</option>
+      <option value="completed">Selesai</option>
+      <option value="failed">Gagal</option>
     </select>
   </div>
 
@@ -78,36 +80,44 @@
 <script src="js/app.js"></script>
 <script>
   const statusMap = {
-    generating: ['Generating', 'st-generating'],
-    review: ['Menunggu approve', 'st-review'],
-    complete: ['Selesai', 'st-complete'],
-    draft: ['Draft', 'st-draft'],
+    analyzing: ['Menganalisis', 'st-draft'],
+    scripting: ['Menulis script', 'st-review'],
+    generating_audio: ['Generate audio', 'st-generating'],
+    generating_video: ['Generate video', 'st-generating'],
+    completed: ['Selesai', 'st-complete'],
+    failed: ['Gagal', 'st-failed'],
   };
 
-  function renderHistory() {
+  async function renderHistory() {
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
     const status = document.getElementById('statusFilter').value;
-    let jobs = DB.getVideoJobs();
+    const el = document.getElementById('historyList');
+    el.innerHTML = `<div class="empty">Memuat riwayat…</div>`;
+    let jobs;
+    try {
+      jobs = await DB.getVideoJobs();
+    } catch (err) {
+      el.innerHTML = `<div class="empty"><strong>Gagal memuat riwayat</strong>${escapeHtml(err.message)}</div>`;
+      return;
+    }
     if (q) jobs = jobs.filter(j => j.title.toLowerCase().includes(q));
     if (status) jobs = jobs.filter(j => j.status === status);
 
-    const el = document.getElementById('historyList');
     if (!jobs.length) {
       el.innerHTML = `<div class="empty"><strong>Belum ada video</strong>Mulai produksi pertama dari Video Studio.</div>`;
       return;
     }
     el.innerHTML = jobs.map(j => {
-      const [label, cls] = statusMap[j.status] || statusMap.draft;
-      const c = DB.getCharacter(j.character_id);
+      const [label, cls] = statusMap[j.status] || statusMap.analyzing;
       return `
       <a href="video-studio.html?job=${j.id}" class="act-row clickable">
         <div class="act-thumb"></div>
         <div class="act-main">
           <div class="act-title">${escapeHtml(j.title)}</div>
-          <div class="act-meta">${c ? c.style + ' · ' : ''}${j.frames_count || 0} scene</div>
+          <div class="act-meta">${j.frames_count || 0} scene · langkah ${j.current_step || 1}/4</div>
         </div>
         <span class="act-status ${cls}">${label}</span>
-        <span class="act-time">${j.time_label || timeAgo(j.created_at)}</span>
+        <span class="act-time">${timeAgo(new Date(j.created_at).getTime())}</span>
       </a>`;
     }).join('');
   }

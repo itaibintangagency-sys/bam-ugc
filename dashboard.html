@@ -128,16 +128,26 @@
 
     document.getElementById('greetDate').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
 
-    const stats = DB.stats();
-    const pct = Math.round((stats.todayCount / stats.targetCount) * 1000) / 10;
-    document.getElementById('capToday').textContent = stats.todayCount;
-    document.getElementById('capTarget').textContent = stats.targetCount;
+    let jobs = [], chars = [];
+    try {
+      [jobs, chars] = await Promise.all([DB.getVideoJobs(), DB.getCharacters()]);
+    } catch (err) {
+      toast('Gagal memuat data: ' + err.message);
+      jobs = []; chars = [];
+    }
+
+    const todayStr = new Date().toDateString();
+    const todayCount = jobs.filter(j => new Date(j.created_at).toDateString() === todayStr).length;
+    const targetCount = 50;
+    const pct = Math.round((todayCount / targetCount) * 1000) / 10;
+    document.getElementById('capToday').textContent = todayCount;
+    document.getElementById('capTarget').textContent = targetCount;
     document.getElementById('capPct').textContent = `${pct}% dari target tercapai`;
-    // set on next frame so the fill transition (defined in CSS) actually plays from 0
     requestAnimationFrame(() => {
       document.getElementById('capBarFill').style.transform = `scaleX(${pct / 100})`;
     });
 
+    const stats = DB.stats(jobs);
     const pipeline = [
       { n: 1, name: 'Compositing karakter + produk', count: stats.step1, cls: '' },
       { n: 2, name: 'Rencana scene menunggu approve', count: stats.step2, cls: '' },
@@ -152,12 +162,11 @@
         <span class="pl-count">${s.count}</span>
       </div>`).join('');
 
-    const chars = DB.getCharacters();
     document.getElementById('charStrip').innerHTML = chars.map(c => `
       <a href="characters.html?id=${c.id}" class="char-card">
         <div class="char-photo">${c.name.charAt(0)}</div>
         <div class="char-name">${escapeHtml(c.name)}</div>
-        <div class="char-tag">${escapeHtml(c.style)} · ${c.video_count} video</div>
+        <div class="char-tag">${escapeHtml(c.status || '—')}</div>
       </a>`).join('') + `
       <a href="characters.html#new" class="char-add">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -165,25 +174,26 @@
       </a>`;
 
     const statusMap = {
-      generating: ['Generating', 'st-generating'],
-      review: ['Menunggu approve', 'st-review'],
-      complete: ['Selesai', 'st-complete'],
-      draft: ['Draft', 'st-draft'],
+      analyzing: ['Menganalisis', 'st-draft'],
+      scripting: ['Menulis script', 'st-review'],
+      generating_audio: ['Generate audio', 'st-generating'],
+      generating_video: ['Generate video', 'st-generating'],
+      completed: ['Selesai', 'st-complete'],
+      failed: ['Gagal', 'st-failed'],
     };
-    const jobs = DB.getVideoJobs().slice(0, 6);
-    document.getElementById('activityList').innerHTML = jobs.map(j => {
-      const [label, cls] = statusMap[j.status] || statusMap.draft;
+    document.getElementById('activityList').innerHTML = jobs.slice(0, 6).map(j => {
+      const [label, cls] = statusMap[j.status] || statusMap.analyzing;
       return `
       <a href="video-studio.html?job=${j.id}" class="act-row clickable">
         <div class="act-thumb"></div>
         <div class="act-main">
           <div class="act-title">${escapeHtml(j.title)}</div>
-          <div class="act-meta">${j.frames_count ? j.frames_count + ' scene' : 'Draft'}</div>
+          <div class="act-meta">${j.frames_count ? j.frames_count + ' scene' : 'Belum ada scene'}</div>
         </div>
         <span class="act-status ${cls}">${label}</span>
-        <span class="act-time">${j.time_label || timeAgo(j.created_at)}</span>
+        <span class="act-time">${timeAgo(new Date(j.created_at).getTime())}</span>
       </a>`;
-    }).join('');
+    }).join('') || `<div class="empty"><strong>Belum ada aktivitas</strong>Mulai video pertama dari tombol "Video baru".</div>`;
 
     document.getElementById('acctBtn').addEventListener('click', () => {
       if (confirm('Keluar dari BA UGC?')) AUTH.signOut();
