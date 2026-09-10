@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Produk — BA UGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="mark">BA<br/><span>UGC</span></div>
+  <nav>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="characters.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Karakter
+    </a>
+    <a href="products.html" class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+      Produk
+    </a>
+    <a href="video-studio.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
+      Video Studio
+    </a>
+    <div class="nav-section-gap"></div>
+    <a href="history.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      Riwayat
+    </a>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+      <div class="acct-avatar" data-acct-avatar>P</div>
+      <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
+    </button>
+  </div>
+</aside>
+
+<main>
+  <div class="topline">
+    <div>
+      <div class="greet">Product library</div>
+      <h1>Produk</h1>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('addProductModal')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Produk baru
+    </button>
+  </div>
+
+  <div class="filter-bar">
+    <input type="search" id="searchInput" placeholder="Cari produk…"/>
+    <select id="platformFilter">
+      <option value="">Semua platform</option>
+      <option value="Shopee">Shopee</option>
+      <option value="TikTok Shop">TikTok Shop</option>
+    </select>
+  </div>
+
+  <div class="card-grid" id="productGrid"></div>
+</main>
+
+<!-- ADD PRODUCT MODAL -->
+<div class="modal-overlay" id="addProductModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Produk baru</div>
+      <button class="modal-close" onclick="closeModal('addProductModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label for="scrapeUrl">Tempel link produk (Shopee / TikTok Shop)</label>
+        <input type="url" id="scrapeUrl" placeholder="https://…"/>
+        <div class="field-hint">Klik "Ambil data" — AI akan isi otomatis nama, harga, dan kategori. Atau isi manual di bawah.</div>
+      </div>
+      <button type="button" class="btn btn-ghost" style="margin-bottom:18px" id="scrapeBtn">Ambil data dari link</button>
+
+      <div class="field">
+        <label for="prodName">Nama produk</label>
+        <input type="text" id="prodName" placeholder="mis. Serum Wajah Glow-C"/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="prodPlatform">Platform</label>
+          <select id="prodPlatform">
+            <option>Shopee</option>
+            <option>TikTok Shop</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="prodPrice">Harga</label>
+          <input type="text" id="prodPrice" placeholder="mis. Rp89.000"/>
+        </div>
+      </div>
+      <div class="field">
+        <label for="prodCategory">Kategori</label>
+        <input type="text" id="prodCategory" placeholder="mis. Skincare"/>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('addProductModal')">Batal</button>
+      <button class="btn btn-primary" id="saveProductBtn">Simpan produk</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="prodDetailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="prodDetailName">—</div>
+      <button class="modal-close" onclick="closeModal('prodDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="prodDetailBody"></div>
+    <div class="modal-foot">
+      <a href="video-studio.html" class="btn btn-primary" id="prodDetailUse">Pakai di video baru</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function renderProducts() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const platform = document.getElementById('platformFilter').value;
+    let list = DB.getProducts();
+    if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
+    if (platform) list = list.filter(p => p.platform === platform);
+
+    const grid = document.getElementById('productGrid');
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Belum ada produk</strong>Tambah produk pertama untuk mulai generate video.</div>`;
+      return;
+    }
+    grid.innerHTML = list.map(p => `
+      <div class="tile" onclick="openProdDetail('${p.id}')">
+        <div class="tile-media">${p.name.charAt(0)}<span class="tile-badge">${escapeHtml(p.platform)}</span></div>
+        <div class="tile-body">
+          <div class="tile-title">${escapeHtml(p.name)}</div>
+          <div class="tile-sub">${escapeHtml(p.price || '')}</div>
+        </div>
+      </div>`).join('');
+  }
+  renderProducts();
+  document.getElementById('searchInput').addEventListener('input', renderProducts);
+  document.getElementById('platformFilter').addEventListener('change', renderProducts);
+
+  function openProdDetail(id) {
+    const p = DB.getProduct(id);
+    if (!p) return;
+    document.getElementById('prodDetailName').textContent = p.name;
+    document.getElementById('prodDetailBody').innerHTML = `
+      <div class="field-row">
+        <div><div class="field-hint">Platform</div><div style="font-weight:600;margin-top:2px">${escapeHtml(p.platform)}</div></div>
+        <div><div class="field-hint">Harga</div><div style="font-weight:600;margin-top:2px">${escapeHtml(p.price || '—')}</div></div>
+      </div>
+      <div style="margin-top:14px"><div class="field-hint">Kategori</div><div style="font-weight:600;margin-top:2px">${escapeHtml(p.category || '—')}</div></div>`;
+    document.getElementById('prodDetailUse').href = 'video-studio.html?product=' + p.id;
+    openModal('prodDetailModal');
+  }
+
+  document.getElementById('scrapeBtn').addEventListener('click', () => {
+    const url = document.getElementById('scrapeUrl').value.trim();
+    if (!url) return toast('Tempel link produk dulu.');
+    const btn = document.getElementById('scrapeBtn');
+    btn.disabled = true; btn.textContent = 'Mengambil data…';
+    setTimeout(() => {
+      document.getElementById('prodName').value = 'Produk dari ' + (url.includes('shopee') ? 'Shopee' : 'TikTok Shop');
+      document.getElementById('prodPlatform').value = url.includes('shopee') ? 'Shopee' : 'TikTok Shop';
+      document.getElementById('prodPrice').value = 'Rp' + (Math.floor(Math.random() * 150 + 20) * 1000).toLocaleString('id-ID');
+      document.getElementById('prodCategory').value = 'Umum';
+      btn.disabled = false; btn.textContent = 'Ambil data dari link';
+      toast('Data produk terisi otomatis — cek & sesuaikan sebelum simpan.');
+    }, 1100);
+  });
+
+  document.getElementById('saveProductBtn').addEventListener('click', () => {
+    const name = document.getElementById('prodName').value.trim();
+    if (!name) return toast('Nama produk wajib diisi.');
+    DB.addProduct({
+      name,
+      platform: document.getElementById('prodPlatform').value,
+      price: document.getElementById('prodPrice').value.trim(),
+      category: document.getElementById('prodCategory').value.trim(),
+    });
+    closeModal('addProductModal');
+    ['prodName','prodPrice','prodCategory','scrapeUrl'].forEach(id => document.getElementById(id).value = '');
+    renderProducts();
+    toast(`${name} ditambahkan ke library.`);
+  });
+
+  (async () => {
+    await AUTH.guard();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+  })();
+</script>
+</body>
+</html>

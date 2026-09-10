@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Karakter — BA UGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="mark">BA<br/><span>UGC</span></div>
+  <nav>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="characters.html" class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Karakter
+    </a>
+    <a href="products.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+      Produk
+    </a>
+    <a href="video-studio.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
+      Video Studio
+    </a>
+    <div class="nav-section-gap"></div>
+    <a href="history.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      Riwayat
+    </a>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+      <div class="acct-avatar" data-acct-avatar>P</div>
+      <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main>
+  <div class="topline">
+    <div>
+      <div class="greet">Character library</div>
+      <h1>Karakter</h1>
+    </div>
+    <button class="btn btn-primary" onclick="openCreator()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Karakter baru
+    </button>
+  </div>
+
+  <div class="card-grid" id="charGrid"></div>
+</main>
+
+<!-- ══════════════ DETAIL MODAL ══════════════ -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="detailName">—</div>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger-ghost" id="detailDeactivate">Nonaktifkan</button>
+      <a href="video-studio.html" class="btn btn-primary" id="detailUse">Pakai di video baru</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CHARACTER CREATOR (game-style, step by step) ══════════════ -->
+<div class="modal-overlay" id="creatorModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head">
+      <div class="modal-title">Karakter baru</div>
+      <button class="modal-close" onclick="closeModal('creatorModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="stepper" id="creatorStepper" style="margin-bottom:22px"></div>
+      <div id="creatorStepBody"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-ghost" id="creatorBack">Kembali</button>
+      <button class="btn btn-primary" id="creatorNext">Lanjut</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  let charList = [];
+
+  function renderChars() {
+    charList = DB.getCharacters();
+    document.getElementById('charGrid').innerHTML = charList.map(c => `
+      <div class="tile" onclick="openDetail('${c.id}')">
+        <div class="tile-media">${c.name.charAt(0)}<span class="tile-badge">${escapeHtml(c.style)}</span></div>
+        <div class="tile-body">
+          <div class="tile-title">${escapeHtml(c.name)}</div>
+          <div class="tile-sub">${c.video_count} video</div>
+        </div>
+      </div>`).join('') + `
+      <div class="tile tile-add" onclick="openCreator()" style="aspect-ratio:auto">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Karakter baru</span>
+      </div>`;
+  }
+  renderChars();
+
+  function openDetail(id) {
+    const c = DB.getCharacter(id);
+    if (!c) return;
+    document.getElementById('detailName').textContent = c.name;
+    document.getElementById('detailBody').innerHTML = `
+      <div class="field-row">
+        <div><div class="field-hint">Gaya konten</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.style)}</div></div>
+        <div><div class="field-hint">Suara</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.voice || '—')}</div></div>
+      </div>
+      <div class="field-row" style="margin-top:14px">
+        <div><div class="field-hint">Gender</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.gender || '—')}</div></div>
+        <div><div class="field-hint">Hijab</div><div style="font-weight:600;margin-top:2px">${c.hijab ? 'Ya' : 'Tidak'}</div></div>
+      </div>
+      <div style="margin-top:14px"><div class="field-hint">Total video</div><div style="font-weight:600;margin-top:2px">${c.video_count}</div></div>`;
+    document.getElementById('detailUse').href = 'video-studio.html?character=' + c.id;
+    document.getElementById('detailDeactivate').onclick = () => { toast(`${c.name} dinonaktifkan (demo).`); closeModal('detailModal'); };
+    openModal('detailModal');
+  }
+
+  // ── Character creator wizard ──────────────────────────────
+  const creatorSteps = ['Gender', 'Wajah & tubuh', 'Gaya & suara', 'Nama'];
+  const options = {
+    gender: ['Perempuan', 'Laki-laki'],
+    face: ['Oval', 'Bulat', 'Persegi', 'Hati'],
+    body: ['Ramping', 'Atletis', 'Berisi'],
+    hair: ['Berhijab', 'Rambut panjang', 'Rambut pendek', 'Rambut ikal'],
+    style: ['Review', 'Viral', 'Storytelling', 'Soft-sell'],
+    personality: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Jenaka'],
+    voice: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Ceria'],
+  };
+  let creatorState = {};
+  let creatorStep = 0;
+
+  function openCreator() {
+    creatorState = { gender: null, face: null, body: null, hair: null, style: null, voice: null, name: '' };
+    creatorStep = 0;
+    renderCreator();
+    openModal('creatorModal');
+  }
+
+  function chip(group, value, current) {
+    return `<button type="button" class="chip ${current === value ? 'active' : ''}" onclick="pickChip('${group}','${value.replace(/'/g,"\\'")}')">${escapeHtml(value)}</button>`;
+  }
+  function pickChip(group, value) { creatorState[group] = value; renderCreator(); }
+
+  function renderCreator() {
+    document.getElementById('creatorStepper').innerHTML = creatorSteps.map((label, i) => `
+      <div class="step-pt ${i < creatorStep ? 'done' : i === creatorStep ? 'active' : ''}">
+        <div class="step-dot">${i < creatorStep ? '✓' : i + 1}</div>
+        <div class="step-label">${label}</div>
+      </div>${i < creatorSteps.length - 1 ? '<div class="step-line"></div>' : ''}`).join('');
+
+    const body = document.getElementById('creatorStepBody');
+    if (creatorStep === 0) {
+      body.innerHTML = `<div class="field"><label>Pilih gender karakter</label><div class="chip-group">${options.gender.map(v => chip('gender', v, creatorState.gender)).join('')}</div></div>`;
+    } else if (creatorStep === 1) {
+      body.innerHTML = `
+        <div class="field"><label>Bentuk wajah</label><div class="chip-group">${options.face.map(v => chip('face', v, creatorState.face)).join('')}</div></div>
+        <div class="field"><label>Bentuk tubuh</label><div class="chip-group">${options.body.map(v => chip('body', v, creatorState.body)).join('')}</div></div>
+        <div class="field"><label>Rambut / hijab</label><div class="chip-group">${options.hair.map(v => chip('hair', v, creatorState.hair)).join('')}</div></div>`;
+    } else if (creatorStep === 2) {
+      body.innerHTML = `
+        <div class="field"><label>Gaya konten</label><div class="chip-group">${options.style.map(v => chip('style', v, creatorState.style)).join('')}</div></div>
+        <div class="field"><label>Suara (preview sebelum pilih)</label><div class="chip-group">${options.voice.map(v => `
+          <button type="button" class="chip ${creatorState.voice === v ? 'active' : ''}" onclick="pickChip('voice','${v}')">🔊 ${escapeHtml(v)}</button>`).join('')}</div></div>`;
+    } else if (creatorStep === 3) {
+      body.innerHTML = `
+        <div class="field"><label for="charNameInput">Nama karakter</label><input type="text" id="charNameInput" placeholder="mis. Dinda" value="${escapeHtml(creatorState.name || '')}"/></div>
+        <div class="field-hint">Generate 1x akan langsung menghasilkan DNA visual (beberapa foto angle) + DNA suara sekaligus.</div>`;
+    }
+    document.getElementById('creatorBack').style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
+    document.getElementById('creatorNext').textContent = creatorStep === creatorSteps.length - 1 ? 'Generate karakter' : 'Lanjut';
+  }
+
+  document.getElementById('creatorBack').addEventListener('click', () => { if (creatorStep > 0) { creatorStep--; renderCreator(); } });
+  document.getElementById('creatorNext').addEventListener('click', () => {
+    if (creatorStep === 0 && !creatorState.gender) return toast('Pilih gender dulu.');
+    if (creatorStep === 1 && (!creatorState.face || !creatorState.body || !creatorState.hair)) return toast('Lengkapi bentuk wajah, tubuh, dan rambut.');
+    if (creatorStep === 2 && (!creatorState.style || !creatorState.voice)) return toast('Pilih gaya konten dan suara.');
+
+    if (creatorStep < creatorSteps.length - 1) { creatorStep++; renderCreator(); return; }
+
+    const name = document.getElementById('charNameInput').value.trim();
+    if (!name) return toast('Isi nama karakter dulu.');
+    const btn = document.getElementById('creatorNext');
+    btn.disabled = true; btn.textContent = 'Generating DNA…';
+    setTimeout(() => {
+      const rec = DB.addCharacter({
+        name, style: creatorState.style, voice: creatorState.voice,
+        gender: creatorState.gender, hijab: creatorState.hair === 'Berhijab',
+      });
+      btn.disabled = false;
+      closeModal('creatorModal');
+      renderChars();
+      toast(`${rec.name} berhasil dibuat.`);
+    }, 900);
+  });
+
+  // deep-link #new dari halaman lain
+  if (window.location.hash === '#new') openCreator();
+
+  (async () => {
+    await AUTH.guard();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+  })();
+</script>
+</body>
+</html>

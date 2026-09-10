@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Riwayat — BA UGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="mark">BA<br/><span>UGC</span></div>
+  <nav>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="characters.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Karakter
+    </a>
+    <a href="products.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+      Produk
+    </a>
+    <a href="video-studio.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
+      Video Studio
+    </a>
+    <div class="nav-section-gap"></div>
+    <a href="history.html" class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      Riwayat
+    </a>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+      <div class="acct-avatar" data-acct-avatar>P</div>
+      <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
+    </button>
+  </div>
+</aside>
+
+<main>
+  <div class="topline">
+    <div>
+      <div class="greet">Semua video</div>
+      <h1>Riwayat</h1>
+    </div>
+    <a href="video-studio.html" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Video baru
+    </a>
+  </div>
+
+  <div class="filter-bar">
+    <input type="search" id="searchInput" placeholder="Cari judul video…"/>
+    <select id="statusFilter">
+      <option value="">Semua status</option>
+      <option value="draft">Draft</option>
+      <option value="review">Menunggu approve</option>
+      <option value="generating">Generating</option>
+      <option value="complete">Selesai</option>
+    </select>
+  </div>
+
+  <div class="activity">
+    <div id="historyList"></div>
+  </div>
+</main>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const statusMap = {
+    generating: ['Generating', 'st-generating'],
+    review: ['Menunggu approve', 'st-review'],
+    complete: ['Selesai', 'st-complete'],
+    draft: ['Draft', 'st-draft'],
+  };
+
+  function renderHistory() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    let jobs = DB.getVideoJobs();
+    if (q) jobs = jobs.filter(j => j.title.toLowerCase().includes(q));
+    if (status) jobs = jobs.filter(j => j.status === status);
+
+    const el = document.getElementById('historyList');
+    if (!jobs.length) {
+      el.innerHTML = `<div class="empty"><strong>Belum ada video</strong>Mulai produksi pertama dari Video Studio.</div>`;
+      return;
+    }
+    el.innerHTML = jobs.map(j => {
+      const [label, cls] = statusMap[j.status] || statusMap.draft;
+      const c = DB.getCharacter(j.character_id);
+      return `
+      <a href="video-studio.html?job=${j.id}" class="act-row clickable">
+        <div class="act-thumb"></div>
+        <div class="act-main">
+          <div class="act-title">${escapeHtml(j.title)}</div>
+          <div class="act-meta">${c ? c.style + ' · ' : ''}${j.frames_count || 0} scene</div>
+        </div>
+        <span class="act-status ${cls}">${label}</span>
+        <span class="act-time">${j.time_label || timeAgo(j.created_at)}</span>
+      </a>`;
+    }).join('');
+  }
+  renderHistory();
+  document.getElementById('searchInput').addEventListener('input', renderHistory);
+  document.getElementById('statusFilter').addEventListener('change', renderHistory);
+
+  (async () => {
+    await AUTH.guard();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+  })();
+</script>
+</body>
+</html>

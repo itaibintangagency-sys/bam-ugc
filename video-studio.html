@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Video Studio — BA UGC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="mark">BA<br/><span>UGC</span></div>
+  <nav>
+    <a href="dashboard.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <a href="characters.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Karakter
+    </a>
+    <a href="products.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+      Produk
+    </a>
+    <a href="video-studio.html" class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
+      Video Studio
+    </a>
+    <div class="nav-section-gap"></div>
+    <a href="history.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      Riwayat
+    </a>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+      <div class="acct-avatar" data-acct-avatar>P</div>
+      <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
+    </button>
+  </div>
+</aside>
+
+<main>
+  <div class="topline">
+    <div>
+      <div class="greet">Video Studio</div>
+      <h1 id="pageTitle">Video baru</h1>
+    </div>
+  </div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <!-- STEP 1 — pilih karakter + produk, generate composite -->
+  <section id="step1">
+    <div class="wizard-panel">
+      <div class="select-pair">
+        <div class="select-box">
+          <div class="select-box-label">Pilih karakter</div>
+          <div class="card-grid" id="pickCharGrid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px"></div>
+        </div>
+        <div class="select-box">
+          <div class="select-box-label">Pilih produk</div>
+          <div class="card-grid" id="pickProdGrid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px"></div>
+        </div>
+      </div>
+
+      <div class="composite-preview">
+        <div class="composite-slot" id="compChar">?</div>
+        <span class="composite-plus">+</span>
+        <div class="composite-slot" id="compProd">?</div>
+        <span class="composite-arrow">→</span>
+        <div class="composite-result" id="compResult">Belum di-generate</div>
+      </div>
+
+      <div class="wizard-foot">
+        <span class="field-hint" id="step1Hint">Pilih karakter dan produk, lalu generate gambar komposit.</span>
+        <button class="btn btn-primary" id="genCompositeBtn">Generate composite</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 — AI style options + frame plan -->
+  <section id="step2" style="display:none">
+    <div class="wizard-panel">
+      <div class="block-title" style="margin-bottom:14px">Pilih gaya video</div>
+      <div class="style-grid" id="styleGrid"></div>
+    </div>
+
+    <div class="wizard-panel" id="framePlanPanel" style="display:none">
+      <div class="block-title" style="margin-bottom:14px">Rencana scene</div>
+      <div class="frame-list" id="framePlanList"></div>
+      <div class="wizard-foot" style="margin-top:18px">
+        <span class="field-hint">Baca script &amp; background tiap scene. Bisa diedit sebelum lanjut generate.</span>
+        <button class="btn btn-primary" id="approvePlanBtn">Setujui rencana</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 — generate per-scene, review satu per satu -->
+  <section id="step3" style="display:none">
+    <div class="wizard-panel">
+      <div class="block-title" style="margin-bottom:14px">Generate &amp; review per-scene</div>
+      <div class="frame-list" id="frameGenList"></div>
+      <div class="wizard-foot" style="margin-top:18px">
+        <span class="field-hint" id="step3Hint">Approve semua scene untuk lanjut ke Produce.</span>
+        <button class="btn btn-primary" id="produceBtn" disabled>Produce</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 — final -->
+  <section id="step4" style="display:none">
+    <div class="wizard-panel" style="text-align:center;padding:46px 30px">
+      <div class="composite-result" style="width:150px;height:220px;margin:0 auto 20px;border-style:solid;border-color:var(--teal);color:var(--teal)" id="finalThumb">Video final</div>
+      <div class="block-title" style="margin-bottom:6px" id="finalTitle">Video selesai</div>
+      <div class="field-hint" style="margin-bottom:22px">Semua scene sudah digabung jadi satu video utuh.</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <a href="history.html" class="btn btn-ghost">Lihat di riwayat</a>
+        <button class="btn btn-primary" id="downloadBtn">Unduh video</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  let job = null;
+  let selectedCharId = params.get('character') || null;
+  let selectedProdId = params.get('product') || null;
+  let selectedStyle = null;
+  const STEPS = ['Pilih', 'Rencana', 'Generate', 'Produce'];
+
+  function renderStepper(current) {
+    document.getElementById('stepper').innerHTML = STEPS.map((label, i) => {
+      const n = i + 1;
+      const cls = n < current ? 'done' : n === current ? 'active' : '';
+      return `<div class="step-pt ${cls}"><div class="step-dot">${n < current ? '✓' : n}</div><div class="step-label">${label}</div></div>${i < STEPS.length - 1 ? '<div class="step-line"></div>' : ''}`;
+    }).join('');
+    [1,2,3,4].forEach(n => {
+      const el = document.getElementById('step'+n);
+      el.style.display = n === current ? '' : 'none';
+      if (n === current) {
+        el.classList.remove('step-enter');
+        void el.offsetWidth; // restart animation on repeat visits (e.g. going back)
+        el.classList.add('step-enter');
+      }
+    });
+  }
+
+  function goStep(n) {
+    if (job) DB.updateVideoJob(job.id, { current_step: n });
+    renderStepper(n);
+    if (n === 2) renderStep2();
+    if (n === 3) renderStep3();
+    if (n === 4) renderStep4();
+  }
+
+  // ── STEP 1 ──────────────────────────────
+  function renderPickGrid(elId, items, selectedId, onPick) {
+    document.getElementById(elId).innerHTML = items.map(it => `
+      <div class="tile ${it.id === selectedId ? 'selected' : ''}" style="${it.id === selectedId ? 'box-shadow:0 0 0 2px var(--coral)' : ''}" onclick="(${onPick})('${it.id}')">
+        <div class="tile-media" style="aspect-ratio:1/1;font-size:20px">${it.name.charAt(0)}</div>
+        <div class="tile-body" style="padding:8px"><div class="tile-title" style="font-size:11.5px">${escapeHtml(it.name)}</div></div>
+      </div>`).join('');
+  }
+
+  function pickChar(id) { selectedCharId = id; refreshStep1(); }
+  function pickProd(id) { selectedProdId = id; refreshStep1(); }
+
+  function refreshStep1() {
+    renderPickGrid('pickCharGrid', DB.getCharacters(), selectedCharId, 'pickChar');
+    renderPickGrid('pickProdGrid', DB.getProducts(), selectedProdId, 'pickProd');
+    const c = selectedCharId && DB.getCharacter(selectedCharId);
+    const p = selectedProdId && DB.getProduct(selectedProdId);
+    document.getElementById('compChar').textContent = c ? c.name : '?';
+    document.getElementById('compProd').textContent = p ? p.name : '?';
+    document.getElementById('genCompositeBtn').disabled = !(c && p);
+  }
+
+  document.getElementById('genCompositeBtn').addEventListener('click', () => {
+    if (!selectedCharId || !selectedProdId) return toast('Pilih karakter dan produk dulu.');
+    const c = DB.getCharacter(selectedCharId), p = DB.getProduct(selectedProdId);
+    const btn = document.getElementById('genCompositeBtn');
+    btn.disabled = true; btn.textContent = 'Generating…';
+    document.getElementById('compResult').textContent = 'Memproses…';
+    setTimeout(() => {
+      if (!job) {
+        job = DB.addVideoJob({ character_id: c.id, product_id: p.id, title: `${c.name} × ${p.name}` });
+      } else {
+        DB.updateVideoJob(job.id, { character_id: c.id, product_id: p.id, title: `${c.name} × ${p.name}` });
+        job = DB.getVideoJob(job.id);
+      }
+      document.getElementById('compResult').textContent = 'Composite siap ✓';
+      document.getElementById('pageTitle').textContent = job.title;
+      btn.disabled = false; btn.textContent = 'Generate ulang';
+      toast('Composite karakter + produk berhasil dibuat.');
+      document.getElementById('step1Hint').innerHTML = `Composite siap. <a href="#" onclick="goStep(2);return false;" style="color:var(--coral);font-weight:600">Lanjut ke rencana scene →</a>`;
+    }, 1000);
+  });
+
+  // ── STEP 2 ──────────────────────────────
+  const styleOptions = [
+    { id: 'short', name: 'Versi pendek (15 detik)', desc: 'Hook 0-3s → Value prop 3-9s → CTA 9-15s. Fokus retensi maksimal.' },
+    { id: 'story', name: 'Versi cerita (30 detik)', desc: 'Hook 0-3s → Value prop 3-15s → Demo/bukti 15-25s → CTA 25-30s. Fokus konversi.' },
+    { id: 'unbox', name: 'Unboxing santai', desc: 'Karakter buka paket, reaksi natural, baru masuk ke poin jual produk.' },
+  ];
+
+  function renderStep2() {
+    document.getElementById('styleGrid').innerHTML = styleOptions.map(s => `
+      <div class="style-card ${selectedStyle === s.id ? 'selected' : ''}" onclick="pickStyle('${s.id}')">
+        <div class="style-card-title">${s.name}</div>
+        <div class="style-card-desc">${s.desc}</div>
+      </div>`).join('');
+    document.getElementById('framePlanPanel').style.display = selectedStyle ? '' : 'none';
+    if (selectedStyle) renderFramePlan();
+  }
+
+  function pickStyle(id) {
+    selectedStyle = id;
+    const frames = buildFramePlan(id);
+    DB.setFrames(job.id, frames);
+    DB.updateVideoJob(job.id, { frames_count: frames.length, status: 'review' });
+    job = DB.getVideoJob(job.id);
+    renderStep2();
+  }
+
+  function buildFramePlan(styleId) {
+    const c = DB.getCharacter(job.character_id), p = DB.getProduct(job.product_id);
+    const plans = {
+      short: [
+        { label: 'Hook', time: '0-3s', script: `${c.name} langsung tunjukkan ${p.name} sambil bilang "kalian juga ngerasain ini nggak sih?"`, background: 'Kamar minimalis, cahaya natural' },
+        { label: 'Value Prop', time: '3-9s', script: `${c.name} jelasin 1 manfaat utama ${p.name} dengan nada ${(c.voice||'').toLowerCase()}.`, background: 'Meja kerja/rias, produk di tangan' },
+        { label: 'CTA', time: '9-15s', script: `${c.name} ajak follow & checkout keranjang kuning.`, background: 'Close-up produk + wajah karakter' },
+      ],
+      story: [
+        { label: 'Hook', time: '0-3s', script: `${c.name} buka dengan pertanyaan relate soal masalah yang dijawab ${p.name}.`, background: 'Kamar minimalis, cahaya natural' },
+        { label: 'Value Prop', time: '3-15s', script: `${c.name} jelasin fitur & manfaat ${p.name} satu-satu.`, background: 'Meja kerja/rias, produk di tangan' },
+        { label: 'Demo/Bukti', time: '15-25s', script: `${c.name} demo pemakaian ${p.name} secara langsung.`, background: 'Area demo sesuai kategori produk' },
+        { label: 'CTA', time: '25-30s', script: `${c.name} rekap manfaat + ajak checkout.`, background: 'Close-up produk + wajah karakter' },
+      ],
+      unbox: [
+        { label: 'Hook', time: '0-3s', script: `${c.name} terima paket, ekspresi penasaran.`, background: 'Meja unboxing, packaging polos' },
+        { label: 'Reaksi', time: '3-10s', script: `${c.name} buka paket ${p.name}, reaksi spontan.`, background: 'Meja unboxing, cahaya hangat' },
+        { label: 'Value Prop', time: '10-20s', script: `${c.name} coba & jelasin kenapa ${p.name} worth it.`, background: 'Area demo sesuai kategori produk' },
+        { label: 'CTA', time: '20-25s', script: `${c.name} ajak checkout sambil pegang produk.`, background: 'Close-up produk + wajah karakter' },
+      ],
+    };
+    return plans[styleId];
+  }
+
+  function renderFramePlan() {
+    const frames = DB.getFrames(job.id);
+    document.getElementById('framePlanList').innerHTML = frames.map((f, i) => `
+      <div class="frame-card reveal" style="animation-delay:${i * 40}ms">
+        <div class="frame-thumb">${f.label}</div>
+        <div class="frame-body">
+          <div class="frame-label"><span>${f.label} · ${f.time}</span></div>
+          <div class="frame-script">${escapeHtml(f.script)}</div>
+          <div class="frame-bg">🖼️ ${escapeHtml(f.background)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  document.getElementById('approvePlanBtn').addEventListener('click', () => {
+    if (!selectedStyle) return toast('Pilih gaya video dulu.');
+    goStep(3);
+  });
+
+  // ── STEP 3 ──────────────────────────────
+  function renderStep3() {
+    const frames = DB.getFrames(job.id);
+    document.getElementById('frameGenList').innerHTML = frames.map(f => `
+      <div class="frame-card" id="fc-${f.id}">
+        <div class="frame-thumb">${f.status === 'approved' ? '✓ klip' : f.status === 'generating' ? '…' : f.label}</div>
+        <div class="frame-body">
+          <div class="frame-label"><span>${f.label} · ${f.time}</span><span class="act-status ${f.status === 'approved' ? 'st-complete' : f.status === 'generating' ? 'st-generating' : 'st-draft'}">${f.status === 'approved' ? 'Disetujui' : f.status === 'generating' ? 'Generating' : 'Belum di-generate'}</span></div>
+          <div class="frame-script">${escapeHtml(f.script)}</div>
+        </div>
+        <div class="frame-actions">
+          ${f.status === 'approved'
+            ? `<button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`
+            : `<button class="icon-btn" title="Generate" onclick="genFrame('${f.id}')">▶</button>`}
+        </div>
+      </div>`).join('');
+    updateProduceBtn();
+  }
+
+  function genFrame(id) {
+    DB.updateFrame(id, { status: 'generating' });
+    renderStep3();
+    setTimeout(() => {
+      DB.updateFrame(id, { status: 'approved' });
+      renderStep3();
+    }, 900);
+  }
+  function regenFrame(id) {
+    DB.updateFrame(id, { status: 'generating' });
+    renderStep3();
+    setTimeout(() => { DB.updateFrame(id, { status: 'approved' }); renderStep3(); }, 900);
+  }
+
+  function updateProduceBtn() {
+    const frames = DB.getFrames(job.id);
+    const allDone = frames.length > 0 && frames.every(f => f.status === 'approved');
+    document.getElementById('produceBtn').disabled = !allDone;
+    document.getElementById('step3Hint').textContent = allDone ? 'Semua scene disetujui — siap di-produce.' : 'Generate & approve tiap scene untuk lanjut.';
+  }
+
+  document.getElementById('produceBtn').addEventListener('click', () => {
+    DB.updateVideoJob(job.id, { status: 'complete', current_step: 4 });
+    job = DB.getVideoJob(job.id);
+    goStep(4);
+  });
+
+  // ── STEP 4 ──────────────────────────────
+  function renderStep4() {
+    document.getElementById('finalTitle').textContent = job.title + ' — selesai';
+  }
+  document.getElementById('downloadBtn').addEventListener('click', () => toast('Ini prototype — hubungkan Video Combiner Magnific untuk file video sungguhan.'));
+
+  // ── INIT ──────────────────────────────
+  (async () => {
+    await AUTH.guard();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+
+    const jobId = params.get('job');
+    if (jobId) {
+      job = DB.getVideoJob(jobId);
+      if (job) {
+        selectedCharId = job.character_id;
+        selectedProdId = job.product_id;
+        document.getElementById('pageTitle').textContent = job.title;
+        const frames = DB.getFrames(job.id);
+        if (frames.length) selectedStyle = 'short'; // plan already generated
+        refreshStep1();
+        document.getElementById('compResult').textContent = 'Composite siap ✓';
+        renderStepper(Math.max(1, job.current_step || 1));
+        if (job.current_step === 2) renderStep2();
+        if (job.current_step === 3) renderStep3();
+        if (job.current_step === 4) renderStep4();
+        return;
+      }
+    }
+    refreshStep1();
+    renderStepper(1);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BA UGC</title>
+</head>
+<body>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  (async () => {
+    const user = await AUTH.getUser();
+    window.location.href = user ? 'dashboard.html' : 'login.html';
+  })();
+</script>
+</body>
+</html>
