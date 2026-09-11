@@ -60,14 +60,22 @@
     <div class="block-title" style="margin-bottom:4px">Informasi akun</div>
     <div class="field-hint" style="margin-bottom:18px" id="profileEmail">Memuat…</div>
 
-    <div class="select-box-label" style="margin-bottom:6px">Nama tampilan</div>
-    <input type="text" id="nameInput" class="field-input" style="width:100%;margin-bottom:18px" placeholder="Nama kamu"/>
+    <div class="field">
+      <label for="nameInput">Nama tampilan</label>
+      <input type="text" id="nameInput" placeholder="Nama kamu"/>
+    </div>
     <button class="btn btn-ghost" id="saveNameBtn" style="margin-bottom:28px">Simpan nama</button>
 
     <div class="block-title" style="margin-bottom:4px;border-top:1px solid var(--line);padding-top:22px">Ganti password</div>
     <div class="field-hint" style="margin-bottom:18px">Minimal 8 karakter.</div>
-    <input type="password" id="newPassInput" class="field-input" style="width:100%;margin-bottom:10px" placeholder="Password baru"/>
-    <input type="password" id="confirmPassInput" class="field-input" style="width:100%;margin-bottom:18px" placeholder="Konfirmasi password baru"/>
+    <div class="field">
+      <label for="newPassInput">Password baru</label>
+      <input type="password" id="newPassInput" placeholder="Password baru"/>
+    </div>
+    <div class="field">
+      <label for="confirmPassInput">Konfirmasi password baru</label>
+      <input type="password" id="confirmPassInput" placeholder="Ulangi password baru"/>
+    </div>
     <button class="btn btn-primary" id="savePassBtn">Ganti password</button>
   </div>
 </main>

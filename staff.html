@@ -60,9 +60,18 @@
   <!-- Form tambah staff (tersembunyi sampai tombol di atas diklik) -->
   <div class="wizard-panel" id="addStaffPanel" style="display:none;max-width:440px">
     <div class="block-title" style="margin-bottom:14px">Akun staff baru</div>
-    <input type="text" id="newName" class="field-input" style="width:100%;margin-bottom:10px" placeholder="Nama"/>
-    <input type="email" id="newEmail" class="field-input" style="width:100%;margin-bottom:10px" placeholder="Email"/>
-    <input type="password" id="newPass" class="field-input" style="width:100%;margin-bottom:18px" placeholder="Password sementara (min. 8 karakter)"/>
+    <div class="field">
+      <label for="newName">Nama</label>
+      <input type="text" id="newName" placeholder="Nama lengkap"/>
+    </div>
+    <div class="field">
+      <label for="newEmail">Email</label>
+      <input type="email" id="newEmail" placeholder="nama@bintangagency.id"/>
+    </div>
+    <div class="field">
+      <label for="newPass">Password sementara</label>
+      <input type="password" id="newPass" placeholder="Minimal 8 karakter"/>
+    </div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-primary" id="submitStaffBtn">Buat akun</button>
       <button class="btn btn-ghost" id="cancelStaffBtn">Batal</button>
