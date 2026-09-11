@@ -14,13 +14,13 @@
    ══════════════════════════════════════ */
 
 // ⚠️ GANTI dengan URL n8n kamu (contoh: https://xxx.sumopod.my.id/webhook)
-const N8N_BASE_URL = 'https://n8n-crfkzibn5git.jkt3.sumopod.my.id/webhook';
+const N8N_BASE_URL = 'https://GANTI-DENGAN-URL-N8N-KAMU/webhook';
 
 // ⚠️ WAJIB SAMA PERSIS dengan nilai "PASTE_SHARED_SECRET_DI_SINI" yang diisi
 // di tiap node "Cek Secret (...)" di n8n. Ini bukan pengganti autentikasi
 // user (itu tugas Supabase Auth) — ini cuma nyaring supaya orang yang nemu/
 // nebak URL webhook dari luar nggak bisa manggilnya sembarangan.
-const BAUGC_SHARED_SECRET = 'e77b1a350f35b5f18dcd5d5fa85729aaced4b3db76bca1b7b680addf1bafb1ab';
+const BAUGC_SHARED_SECRET = 'PASTE_SHARED_SECRET_DI_SINI';
 
 const DB = (() => {
   function client() {
@@ -177,6 +177,30 @@ const DB = (() => {
     return callWebhook('create-staff', { email, password, name });
   }
 
+  // ── Character Creator ──────────────────
+  async function uploadCharacterRefPhoto(file) {
+    const path = `ref-${Date.now()}.jpg`;
+    const { error } = await client().storage.from('character-assets').upload(path, file);
+    if (error) throw error;
+    const { data } = client().storage.from('character-assets').getPublicUrl(path);
+    return data.publicUrl;
+  }
+  async function createCharacter(fields) {
+    // Bikin baris characters (status: generating) lalu backend n8n yang isi avatar_id/voice_id-nya.
+    const user = await AUTH.getUser();
+    const { data, error } = await client()
+      .from('characters')
+      .insert({ status: 'generating', created_by: user ? user.id : null, ...fields })
+      .select().single();
+    if (error) throw error;
+    // Trigger generate di backend (async — hasil masuk lewat update baris characters ini)
+    await callWebhook('generate-character', { character_id: data.id });
+    return data;
+  }
+  async function previewVoice(voiceId) {
+    return callWebhook('preview-voice', { voice_id: voiceId });
+  }
+
   // ── Profil (ganti password) ──────────────
   async function updateOwnPassword(newPassword) {
     if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
@@ -204,6 +228,7 @@ const DB = (() => {
     getFrames, materializeFrames, updateFrame,
     generateComposite, generateFramePlan, generateFrameClip, produceVideo,
     getStaffList, createStaff,
+    uploadCharacterRefPhoto, createCharacter, previewVoice,
     updateOwnPassword,
     stats,
   };
