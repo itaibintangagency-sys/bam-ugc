@@ -108,6 +108,15 @@
           <input type="text" id="prodPrice" placeholder="mis. Rp89.000"/>
         </div>
       </div>
+
+      <div class="field">
+        <label>Foto produk</label>
+        <div class="dropzone" id="prodDropzone" style="border:1.5px dashed var(--line);border-radius:10px;padding:20px;text-align:center;cursor:pointer">
+          <span class="field-hint" id="prodDropzoneLabel">Klik atau seret foto ke sini (bisa lebih dari 1)</span>
+          <input type="file" id="prodFileInput" accept="image/*" multiple hidden/>
+        </div>
+        <div id="prodPreviewGrid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('addProductModal')">Batal</button>
@@ -156,7 +165,7 @@
     }
     grid.innerHTML = list.map(p => `
       <div class="tile" onclick="openProdDetail('${p.id}')">
-        <div class="tile-media">${p.name.charAt(0)}<span class="tile-badge">${escapeHtml(platformLabel(p.platform))}</span></div>
+        <div class="tile-media">${p.images && p.images.length ? `<img src="${p.images[0]}" alt="${escapeHtml(p.name)}">` : p.name.charAt(0)}<span class="tile-badge">${escapeHtml(platformLabel(p.platform))}</span></div>
         <div class="tile-body">
           <div class="tile-title">${escapeHtml(p.name)}</div>
           <div class="tile-sub">${escapeHtml(p.price || '')}</div>
@@ -170,12 +179,35 @@
   document.getElementById('searchInput').addEventListener('input', renderProducts);
   document.getElementById('platformFilter').addEventListener('change', renderProducts);
 
+  // ── Upload foto produk ──────────────────────
+  let prodImageFiles = [];
+  const prodDropzone = document.getElementById('prodDropzone');
+  const prodFileInput = document.getElementById('prodFileInput');
+  prodDropzone.addEventListener('click', () => prodFileInput.click());
+  prodFileInput.addEventListener('change', e => handleProdFiles(e.target.files));
+  prodDropzone.addEventListener('dragover', e => e.preventDefault());
+  prodDropzone.addEventListener('drop', e => { e.preventDefault(); handleProdFiles(e.dataTransfer.files); });
+
+  function handleProdFiles(fileList) {
+    prodImageFiles = Array.from(fileList);
+    document.getElementById('prodDropzoneLabel').textContent = `${prodImageFiles.length} foto dipilih — klik untuk ganti`;
+    document.getElementById('prodPreviewGrid').innerHTML = prodImageFiles.map(f =>
+      `<img src="${URL.createObjectURL(f)}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">`
+    ).join('');
+  }
+  function resetProdForm() {
+    prodImageFiles = [];
+    document.getElementById('prodDropzoneLabel').textContent = 'Klik atau seret foto ke sini (bisa lebih dari 1)';
+    document.getElementById('prodPreviewGrid').innerHTML = '';
+  }
+
   async function openProdDetail(id) {
     let p;
     try { p = await DB.getProduct(id); } catch (err) { return toast('Gagal memuat produk: ' + err.message); }
     if (!p) return;
     document.getElementById('prodDetailName').textContent = p.name;
     document.getElementById('prodDetailBody').innerHTML = `
+      ${p.images && p.images.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${p.images.map(img => `<img src="${img}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`).join('')}</div>` : ''}
       <div class="field-row">
         <div><div class="field-hint">Platform</div><div style="font-weight:600;margin-top:2px">${escapeHtml(platformLabel(p.platform))}</div></div>
         <div><div class="field-hint">Harga</div><div style="font-weight:600;margin-top:2px">${escapeHtml(p.price || '—')}</div></div>
@@ -206,14 +238,22 @@
     const btn = document.getElementById('saveProductBtn');
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try {
+      let imageUrls = [];
+      if (prodImageFiles.length) {
+        btn.textContent = 'Mengupload foto…';
+        imageUrls = await DB.uploadProductImages(prodImageFiles);
+      }
+      btn.textContent = 'Menyimpan…';
       await DB.addProduct({
         name,
         url: document.getElementById('scrapeUrl').value.trim() || null,
         platform: document.getElementById('prodPlatform').value,
         price: document.getElementById('prodPrice').value.trim(),
+        images: imageUrls,
       });
       closeModal('addProductModal');
       ['prodName','prodPrice','scrapeUrl'].forEach(id => document.getElementById(id).value = '');
+      resetProdForm();
       await renderProducts();
       toast(`${name} ditambahkan ke library.`);
     } catch (err) {
