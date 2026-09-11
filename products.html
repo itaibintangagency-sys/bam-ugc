@@ -35,12 +35,16 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
+    <a href="staff.html" class="nav-item" data-admin-only>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Staff
+    </a>
   </nav>
   <div class="sidebar-foot">
-    <button class="acct acct-btn" id="acctBtn" title="Keluar">
+    <a href="profile.html" class="acct" style="text-decoration:none">
       <div class="acct-avatar" data-acct-avatar>P</div>
       <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
-    </button>
+    </a>
   </div>
 </aside>
 
@@ -221,7 +225,6 @@
 
   (async () => {
     await AUTH.guard();
-    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
   })();
 </script>
 </body>
