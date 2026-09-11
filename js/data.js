@@ -78,6 +78,17 @@ const DB = (() => {
     if (error) throw error;
     return data;
   }
+  async function uploadProductImages(files) {
+    const urls = [];
+    for (const file of files) {
+      const path = `product-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await client().storage.from('product-assets').upload(path, file);
+      if (error) throw error;
+      const { data } = client().storage.from('product-assets').getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    return urls;
+  }
 
   // ── Video jobs ───────────────────────
   async function getVideoJobs() {
@@ -223,7 +234,7 @@ const DB = (() => {
 
   return {
     getCharacters, getCharacter,
-    getProducts, getProduct, addProduct,
+    getProducts, getProduct, addProduct, uploadProductImages,
     getVideoJobs, getVideoJob, addVideoJob, updateVideoJob,
     getFrames, materializeFrames, updateFrame,
     generateComposite, generateFramePlan, generateFrameClip, produceVideo,
