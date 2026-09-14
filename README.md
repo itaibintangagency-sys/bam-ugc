@@ -92,6 +92,14 @@ API key Magnific **tidak boleh** dipanggil langsung dari browser — siapa saja 
 
 ## 7. Halaman Profil & Kelola Staff
 
-- **Ganti password** — sudah live, langsung lewat Supabase Auth (`profile.html`).
-- **Kelola staff (lihat daftar)** — butuh tabel `profiles` di database (belum ada di skema yang kamu kasih). Kalau belum ada, halaman Profil bakal nampilin SQL yang perlu dijalankan — saya sengaja tidak auto-run, jalankan sendiri di SQL Editor setelah dicek.
-- **Tambah staff baru** — **tidak bisa** dilakukan langsung dari browser dengan anon key (itu memang dibatasi Supabase demi keamanan — kalau bisa, siapa saja bisa bikin akun). Untuk sekarang, buat staff baru manual lewat Supabase Dashboard → Authentication → Users → Add user (sama seperti bikin akun admin pertama di bagian 4). Kalau nanti mau tombol "Tambah staff" beneran jalan, perlu backend terpisah (Supabase Edge Function atau workflow n8n) yang pegang `service_role` key — jangan taruh `service_role` key di frontend manapun.
+- **Ganti password** — live, langsung lewat Supabase Auth (`profile.html`).
+- **Kelola staff (lihat daftar)** — baca dari tabel `user_profiles` (id, email, name, role) yang sudah ada di project kamu. RLS di sana: admin bisa lihat semua baris, staff cuma bisa lihat baris miliknya sendiri — jadi kalau login sebagai staff dan cuma keliatan 1 baris, itu memang benar begitu adanya, bukan bug.
+- **Role & nama asli** — sekarang ditarik dari `user_profiles.role`/`user_profiles.name` (bukan hardcode "Admin" lagi seperti sebelumnya), ditampilkan di sidebar semua halaman.
+- **Tambah staff baru** — **tidak bisa** dilakukan langsung dari browser dengan anon key. Buat staff baru manual lewat Supabase Dashboard → Authentication → Users → Add user, lalu **cek apakah baris di `user_profiles` ikut otomatis terbuat** (lewat trigger) atau perlu ditambahkan manual — ini belum saya pastikan untuk project kamu. Kalau nanti mau tombol "Tambah staff" beneran jalan, perlu backend terpisah (Supabase Edge Function atau workflow n8n) yang pegang `service_role` key — jangan taruh `service_role` key di frontend manapun.
+
+## 8. Catatan RLS penting (dari skema terbaru)
+
+- **`video_jobs`**: kebijakan `own or admin modify/select` mensyaratkan `created_by = auth.uid()` (kecuali admin). `js/data.js` sudah diperbaiki supaya `addVideoJob` otomatis mengisi `created_by` dengan user yang sedang login — **tanpa ini, staff non-admin tidak akan bisa bikin video job sama sekali** (insert ditolak RLS secara diam-diam, tanpa pesan error yang jelas). Video job lama yang sempat dibuat sebelum perbaikan ini (kalau ada) `created_by`-nya kosong — cuma bisa dilihat/diedit oleh admin sampai diisi manual.
+- **`characters`**: cuma admin yang boleh menulis (`admin write characters`) — cocok dengan keputusan Character Creator tetap dikunci sebagai pratinjau.
+- **`character_photos`**: cuma ada policy SELECT, tidak ada INSERT — upload foto karakter memang didesain lewat proses lain (kemungkinan bot Telegram dengan akses lebih tinggi), bukan dari app ini.
+- **`products`, `backgrounds`, `frames`**: belum ada info RLS-nya sejauh ini — kalau nanti insert dari halaman Produk/Video Studio gagal tanpa alasan jelas, kemungkinan besar karena RLS di tabel ini juga, perlu dicek terpisah.

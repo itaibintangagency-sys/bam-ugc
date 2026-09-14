@@ -213,7 +213,7 @@
       return;
     }
     const charPhotos = {};
-    await Promise.all(charsCache.map(async c => { charPhotos[c.id] = await DB.getCharacterPrimaryPhoto(c.id).catch(() => null); }));
+    await Promise.all(charsCache.map(async c => { charPhotos[c.id] = c.reference_photo_url || await DB.getCharacterPrimaryPhoto(c.id).catch(() => null); }));
     const prodPhotos = {};
     prodsCache.forEach(p => { prodPhotos[p.id] = Array.isArray(p.images) && p.images[0] ? p.images[0] : null; });
 

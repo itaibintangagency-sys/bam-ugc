@@ -88,10 +88,16 @@ const DB = (() => {
     if (error) throw error;
     return data ? { ...data, title: titleOf(data) } : null;
   }
+  async function currentUserId() {
+    const { data } = await client().auth.getUser();
+    return data && data.user ? data.user.id : null;
+  }
+
   async function addVideoJob(fields) {
+    const uid = await currentUserId();
     const { data, error } = await client()
       .from('video_jobs')
-      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, ...fields })
+      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, created_by: uid, ...fields })
       .select('*, characters(name), products(name)')
       .single();
     if (error) throw error;

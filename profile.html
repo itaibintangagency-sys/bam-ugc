@@ -101,7 +101,7 @@
     </div>
     <div class="modal-body">
       <div class="auth-error show" style="background:var(--gold-10);color:#8a6d00;margin-bottom:16px">
-        ⚠️ Membuat akun baru butuh akses admin di server (bukan cuma dari browser) — ini demi keamanan, supaya orang luar nggak bisa bikin akun sendiri lewat halaman ini. Isi form di bawah untuk menyiapkan datanya, tapi <strong>klik "Kirim undangan" belum benar-benar membuat akun</strong> sampai backend-nya ada.
+        ⚠️ Membuat akun baru butuh akses admin di server (bukan cuma dari browser) — ini demi keamanan, supaya orang luar nggak bisa bikin akun sendiri lewat halaman ini. Isi form di bawah untuk menyiapkan datanya, tapi <strong>klik "Kirim undangan" belum benar-benar membuat akun</strong> sampai backend-nya ada. Setelah akun dibuat manual di Supabase Dashboard, cek juga apakah baris di tabel <code>user_profiles</code> otomatis ikut terbuat (lewat trigger) atau perlu ditambahkan manual — saya belum tahu yang mana di project kamu.
       </div>
       <div class="field">
         <label for="staffEmail">Email staff</label>
@@ -135,7 +135,7 @@
     const user = await AUTH.guard();
     if (user) {
       document.getElementById('acctEmail').textContent = user.email || '—';
-      document.getElementById('acctRoleDisplay').textContent = user.role || 'Admin';
+      document.getElementById('acctRoleDisplay').textContent = user.roleLabel || (user.role === 'admin' ? 'Admin' : 'Staff');
     }
     document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
     await loadStaffList();
@@ -172,48 +172,38 @@
   });
 
   // ── Kelola staff ──────────────────────────────
-  // Bergantung pada tabel `profiles` (belum tentu ada di database kamu — lihat
-  // pesan fallback di bawah kalau belum). Ini BUKAN skema yang saya jalankan
-  // otomatis; SQL-nya cuma ditampilkan sebagai usulan kalau tabelnya belum ada.
-  const PROFILES_TABLE_SQL = `create table if not exists profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  full_name text,
-  role text default 'staff' check (role in ('admin','staff')),
-  created_at timestamptz default now()
-);
-alter table profiles enable row level security;
-create policy "authenticated read profiles" on profiles for select using (auth.role() = 'authenticated');
-create policy "self update own profile" on profiles for update using (auth.uid() = id);`;
-
+  // Tabel aslinya: user_profiles (id, email, name, role). RLS di sana:
+  // admin bisa baca SEMUA baris, user biasa cuma bisa baca baris miliknya
+  // sendiri — jadi kalau yang login bukan admin, daftar di bawah ini
+  // WAJAR cuma nampilin 1 baris (akun sendiri), itu bukan bug.
   async function loadStaffList() {
     const el = document.getElementById('staffList');
     if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
       el.innerHTML = `<div class="empty"><strong>Supabase belum dikonfigurasi</strong>Isi js/supabase-client.js dulu.</div>`;
       return;
     }
-    const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient.from('user_profiles').select('*').order('created_at', { ascending: false });
     if (error) {
-      el.innerHTML = `<div class="empty" style="text-align:left;padding:24px 26px">
-        <strong>Tabel "profiles" belum ada</strong>
-        Kelola staff butuh tabel ini di Supabase kamu untuk nyimpen role admin/staff (auth.users bawaan Supabase nggak bisa dibaca langsung dari browser). Jalankan SQL ini di SQL Editor kalau mau diaktifkan:
-        <pre style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:10px;font-size:11px;overflow-x:auto;white-space:pre">${escapeHtml(PROFILES_TABLE_SQL)}</pre>
-      </div>`;
+      el.innerHTML = `<div class="empty" style="text-align:left;padding:24px 26px"><strong>Gagal memuat staff</strong>${escapeHtml(error.message)}</div>`;
       return;
     }
     if (!data.length) {
       el.innerHTML = `<div class="empty"><strong>Belum ada staff terdaftar</strong>Klik "+ Tambah staff" untuk mulai.</div>`;
       return;
     }
+    const me = await AUTH.getUser();
     el.innerHTML = data.map(p => `
       <div class="act-row">
         <div class="act-thumb" style="border-radius:50%"></div>
         <div class="act-main">
-          <div class="act-title">${escapeHtml(p.full_name || '—')}</div>
-          <div class="act-meta">${escapeHtml(p.id)}</div>
+          <div class="act-title">${escapeHtml(p.name || p.email || '—')}</div>
+          <div class="act-meta">${escapeHtml(p.email || '')}</div>
         </div>
         <span class="act-status ${p.role === 'admin' ? 'st-complete' : 'st-draft'}">${p.role === 'admin' ? 'Admin' : 'Staff'}</span>
         <span class="act-time"></span>
-      </div>`).join('');
+      </div>`).join('') + (data.length === 1 && me && me.role !== 'admin'
+        ? `<div class="empty" style="text-align:left">Kamu login sebagai staff — cuma bisa lihat profil sendiri. Login sebagai admin untuk lihat semua staff.</div>`
+        : '');
   }
 
   document.getElementById('inviteStaffBtn').addEventListener('click', () => {

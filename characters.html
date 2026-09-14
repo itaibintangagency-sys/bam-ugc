@@ -118,7 +118,7 @@
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Gagal memuat karakter</strong>${escapeHtml(err.message)}</div>`;
       return;
     }
-    const photos = await Promise.all(charList.map(c => DB.getCharacterPrimaryPhoto(c.id).catch(() => null)));
+    const photos = await Promise.all(charList.map(c => c.reference_photo_url ? Promise.resolve(c.reference_photo_url) : DB.getCharacterPrimaryPhoto(c.id).catch(() => null)));
     grid.innerHTML = charList.map((c, i) => `
       <div class="tile" onclick="openDetail('${c.id}')">
         <div class="tile-media">${photos[i] ? `<img src="${photos[i]}" alt="${escapeHtml(c.name)}"/>` : c.name.charAt(0)}<span class="tile-badge">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</span></div>
@@ -139,7 +139,7 @@
     try { c = await DB.getCharacter(id); } catch (err) { return toast('Gagal memuat: ' + err.message); }
     if (!c) return;
     document.getElementById('detailName').textContent = c.name;
-    const photo = await DB.getCharacterPrimaryPhoto(id).catch(() => null);
+    const photo = c.reference_photo_url || await DB.getCharacterPrimaryPhoto(id).catch(() => null);
     document.getElementById('detailBody').innerHTML = `
       ${photo ? `<img src="${photo}" alt="${escapeHtml(c.name)}" style="width:100%;max-width:220px;border-radius:10px;margin-bottom:14px;display:block"/>` : ''}
       <div class="field-row">

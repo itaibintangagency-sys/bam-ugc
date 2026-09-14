@@ -7,8 +7,8 @@
    (anon key memang public-safe, bukan service_role key).
    ══════════════════════════════════════ */
 
-const SUPABASE_URL = 'https://usrhroplsedwgkxywshw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzcmhyb3Bsc2Vkd2dreHl3c2h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NTAwODIsImV4cCI6MjEwNDQyNjA4Mn0.vLKkBL24pBlN_vvKKmm8QCUPjVww6wqxPz69jK8ty2Y';
+const SUPABASE_URL = 'https://YOUR-PROJECT-ref.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
 
 let supabaseClient = null;
 let SUPABASE_READY = false;

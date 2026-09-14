@@ -168,7 +168,7 @@
 
     document.getElementById('charStrip').innerHTML = chars.map(c => `
       <a href="characters.html?id=${c.id}" class="char-card">
-        <div class="char-photo">${c.name.charAt(0)}</div>
+        <div class="char-photo">${c.reference_photo_url ? `<img src="${escapeHtml(c.reference_photo_url)}" alt="${escapeHtml(c.name)}"/>` : c.name.charAt(0)}</div>
         <div class="char-name">${escapeHtml(c.name)}</div>
         <div class="char-tag">${escapeHtml(c.status || '—')}</div>
       </a>`).join('') + `
