@@ -18,11 +18,12 @@ const AUTH = {
       if (!data || !data.user) return null;
       let name = (data.user.email || '').split('@')[0];
       let role = 'staff';
+      let avatarPath = null;
       try {
-        const { data: profile } = await supabaseClient.from('user_profiles').select('name, role').eq('id', data.user.id).maybeSingle();
-        if (profile) { name = profile.name || name; role = profile.role || role; }
+        const { data: profile } = await supabaseClient.from('user_profiles').select('name, role, avatar_path').eq('id', data.user.id).maybeSingle();
+        if (profile) { name = profile.name || name; role = profile.role || role; avatarPath = profile.avatar_path || null; }
       } catch (e) { /* user_profiles belum bisa dibaca — tetap lanjut pakai fallback di atas */ }
-      return { id: data.user.id, email: data.user.email, name, role };
+      return { id: data.user.id, email: data.user.email, name, role, avatarPath };
     }
     const raw = localStorage.getItem(this.SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -60,7 +61,14 @@ const AUTH = {
     const roleLabel = user.role === 'admin' ? 'Admin' : 'Staff';
     if (nameEl) nameEl.textContent = user.name || user.email;
     if (roleEl) roleEl.textContent = roleLabel;
-    if (avatarEl) avatarEl.textContent = (user.name || user.email || '?').charAt(0).toUpperCase();
+    if (avatarEl) {
+      avatarEl.textContent = (user.name || user.email || '?').charAt(0).toUpperCase();
+      if (user.avatarPath && typeof DB !== 'undefined') {
+        DB.getAvatarUrl(user.avatarPath).then(url => {
+          if (url) avatarEl.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+        }).catch(() => {});
+      }
+    }
     return { ...user, roleLabel };
   },
 };

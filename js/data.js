@@ -189,12 +189,30 @@ const DB = (() => {
     return { ...data, _signedUrl: await signedUrl('product-assets', path) };
   }
 
+  // ── Avatar profil ──────────────────────
+  // Butuh bucket "avatars" (privat) + kolom user_profiles.avatar_path —
+  // keduanya BELUM ADA sampai SQL di bawah dijalankan manual. Sebelum itu,
+  // fungsi ini akan gagal dengan pesan error yang jelas (bukan diam-diam rusak).
+  async function uploadAvatar(userId, file) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${userId}/avatar.${ext}`;
+    await uploadFile('avatars', path, file);
+    const { error } = await client().from('user_profiles').update({ avatar_path: path }).eq('id', userId);
+    if (error) throw error;
+    return signedUrl('avatars', path);
+  }
+  async function getAvatarUrl(avatarPath) {
+    if (!avatarPath) return null;
+    return signedUrl('avatars', avatarPath);
+  }
+
   return {
     getCharacters, getCharacter, getCharacterPrimaryPhoto,
     getProducts, getProduct, addProduct,
     getVideoJobs, getVideoJob, addVideoJob, updateVideoJob,
     getFrames, materializeFrames, updateFrame,
     getBackgrounds, addBackground, signedUrl, uploadFile,
+    uploadAvatar, getAvatarUrl,
     stats,
   };
 })();

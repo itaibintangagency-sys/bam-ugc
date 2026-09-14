@@ -97,7 +97,42 @@ API key Magnific **tidak boleh** dipanggil langsung dari browser — siapa saja 
 - **Role & nama asli** — sekarang ditarik dari `user_profiles.role`/`user_profiles.name` (bukan hardcode "Admin" lagi seperti sebelumnya), ditampilkan di sidebar semua halaman.
 - **Tambah staff baru** — **tidak bisa** dilakukan langsung dari browser dengan anon key. Buat staff baru manual lewat Supabase Dashboard → Authentication → Users → Add user, lalu **cek apakah baris di `user_profiles` ikut otomatis terbuat** (lewat trigger) atau perlu ditambahkan manual — ini belum saya pastikan untuk project kamu. Kalau nanti mau tombol "Tambah staff" beneran jalan, perlu backend terpisah (Supabase Edge Function atau workflow n8n) yang pegang `service_role` key — jangan taruh `service_role` key di frontend manapun.
 
-## 8. Catatan RLS penting (dari skema terbaru)
+## 8. Foto profil (avatar staff)
+
+Fitur ganti foto profil di `profile.html` butuh 1 kolom baru + 1 bucket baru yang **belum ada** di project kamu — saya sengaja tidak menjalankan otomatis. Jalankan ini di SQL Editor Supabase kalau mau diaktifkan:
+
+```sql
+-- 1. Kolom baru buat nyimpen path foto (bukan URL langsung — bucket privat,
+--    URL-nya di-generate ulang tiap ditampilkan lewat signed URL)
+alter table user_profiles add column if not exists avatar_path text;
+
+-- 2. Bucket privat buat file-nya
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', false)
+on conflict (id) do nothing;
+
+-- 3. Siapa boleh apa di bucket ini:
+--    - semua user yang login boleh LIHAT foto siapa saja (buat daftar staff)
+--    - user cuma boleh UPLOAD/GANTI foto miliknya sendiri
+--      (path harus diawali user_id-nya, dijamin lewat foldername check)
+create policy "authenticated read avatars"
+  on storage.objects for select
+  using (bucket_id = 'avatars' and auth.role() = 'authenticated');
+
+create policy "users upload own avatar"
+  on storage.objects for insert
+  with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+
+create policy "users update own avatar"
+  on storage.objects for update
+  using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+```
+
+Kebijakan UPDATE yang sudah ada di `user_profiles` (`update own name`) cek `auth.uid() = id` di level baris, bukan per-kolom — jadi otomatis juga mengizinkan update `avatar_path` tanpa perlu policy tambahan.
+
+**Kapasitas di Free tier:** foto profil ukuran wajar (ratusan KB) jauh di bawah limit 1GB file storage & 50MB per-file Supabase Free — aman dipakai tanpa upgrade plan. Yang perlu diawasi ke depan bukan foto profil, tapi kalau video/gambar hasil generate Magnific nantinya ikut disimpan di Storage yang sama — itu jauh lebih besar dan lebih cepat mendekati limit.
+
+## 9. Catatan RLS penting (dari skema terbaru)
 
 - **`video_jobs`**: kebijakan `own or admin modify/select` mensyaratkan `created_by = auth.uid()` (kecuali admin). `js/data.js` sudah diperbaiki supaya `addVideoJob` otomatis mengisi `created_by` dengan user yang sedang login — **tanpa ini, staff non-admin tidak akan bisa bikin video job sama sekali** (insert ditolak RLS secara diam-diam, tanpa pesan error yang jelas). Video job lama yang sempat dibuat sebelum perbaikan ini (kalau ada) `created_by`-nya kosong — cuma bisa dilihat/diedit oleh admin sampai diisi manual.
 - **`characters`**: cuma admin yang boleh menulis (`admin write characters`) — cocok dengan keputusan Character Creator tetap dikunci sebagai pratinjau.
