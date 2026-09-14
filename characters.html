@@ -11,6 +11,7 @@
 </head>
 <body>
 
+<!-- ══════════════ SIDEBAR ══════════════ -->
 <aside class="sidebar">
   <div class="mark">BA<br/><span>UGC</span></div>
   <nav>
@@ -35,368 +36,209 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
-    <a href="staff.html" class="nav-item" data-admin-only>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Staff
+    <a href="profile.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Profil
     </a>
   </nav>
   <div class="sidebar-foot">
-    <a href="profile.html" class="acct" style="text-decoration:none">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
       <div class="acct-avatar" data-acct-avatar>P</div>
       <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
-    </a>
+    </button>
   </div>
 </aside>
 
+<!-- ══════════════ MAIN ══════════════ -->
 <main>
-  <!-- ══════════ VIEW: DAFTAR KARAKTER ══════════ -->
-  <div id="listView">
-    <div class="topline">
-      <div>
-        <div class="greet">Talent roster</div>
-        <h1>Karakter</h1>
-      </div>
-      <button class="btn btn-primary" id="newCharBtn" data-admin-only>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Karakter baru
-      </button>
+  <div class="topline">
+    <div>
+      <div class="greet">Character library</div>
+      <h1>Karakter</h1>
     </div>
-    <div class="card-grid" id="charGrid"></div>
+    <button class="btn btn-primary" onclick="openCreator()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Karakter baru
+    </button>
   </div>
 
-  <!-- ══════════ VIEW: CHARACTER CREATOR (1 halaman panjang) ══════════ -->
-  <div id="creatorView" style="display:none;max-width:720px">
-    <div class="topline">
-      <div>
-        <div class="greet">Bikin talent AI baru</div>
-        <h1>Character Creator</h1>
-      </div>
-      <button class="btn btn-ghost" id="backToListBtn">← Kembali</button>
-    </div>
-
-    <!-- 0. Foto referensi (opsional) -->
-    <div class="wizard-panel">
-      <div class="block-title" style="margin-bottom:6px">Foto referensi (opsional)</div>
-      <div class="field-hint" style="margin-bottom:14px">Punya foto acuan wajah/gaya? Upload di sini — atau lewati untuk generate murni dari pilihan di bawah.</div>
-
-      <div class="dropzone" id="refDropzone" style="border:1.5px dashed var(--line);border-radius:10px;padding:24px;text-align:center;cursor:pointer">
-        <div id="refPreviewWrap" style="display:none;margin-bottom:12px">
-          <img id="refPreviewImg" style="max-width:160px;max-height:160px;border-radius:8px;object-fit:cover"/>
-        </div>
-        <span class="field-hint" id="refDropzoneLabel">Klik atau seret foto ke sini</span>
-        <input type="file" id="refFileInput" accept="image/*" hidden/>
-      </div>
-
-      <div id="identityLockRow" style="display:none;margin-top:16px">
-        <div class="select-box-label" style="margin-bottom:8px">Sejauh mana foto ini diikuti?</div>
-        <div class="chip-group">
-          <button type="button" class="chip" data-lock="locked" onclick="setIdentityLock('locked')">100% sama — kunci wajah dari foto</button>
-          <button type="button" class="chip active" data-lock="reference" onclick="setIdentityLock('reference')">Hanya referensi/gaya</button>
-        </div>
-        <div class="field-hint" style="margin-top:8px" id="lockHint">Foto jadi inspirasi gaya, AI boleh menyesuaikan — kategori di bawah tetap bisa dipilih.</div>
-      </div>
-    </div>
-
-    <!-- 1. Gender -->
-    <div class="wizard-panel">
-      <div class="block-title" style="margin-bottom:12px">Gender</div>
-      <div class="chip-group" id="genderChips"></div>
-    </div>
-
-    <!-- Kategori yang bisa hilang kalau identity_lock = locked -->
-    <div id="lockableCategories">
-      <div class="wizard-panel">
-        <div class="block-title" style="margin-bottom:12px">Bentuk wajah &amp; kulit</div>
-        <div class="field" style="margin-bottom:14px">
-          <div class="field-hint" style="margin-bottom:8px">Bentuk wajah</div>
-          <div class="chip-group" id="faceShapeChips"></div>
-        </div>
-        <div class="field">
-          <div class="field-hint" style="margin-bottom:8px">Warna kulit</div>
-          <div class="chip-group" id="skinToneChips"></div>
-        </div>
-      </div>
-
-      <div class="wizard-panel">
-        <div class="block-title" style="margin-bottom:12px">Bentuk tubuh</div>
-        <div class="chip-group" id="bodyTypeChips"></div>
-      </div>
-
-      <div class="wizard-panel">
-        <div class="block-title" style="margin-bottom:12px" id="hairHijabTitle">Rambut / Hijab</div>
-        <div class="chip-group" id="hairHijabChips"></div>
-      </div>
-
-      <div class="wizard-panel">
-        <div class="block-title" style="margin-bottom:12px">Gaya busana</div>
-        <div class="chip-group" id="outfitChips"></div>
-      </div>
-    </div>
-
-    <!-- Vibe & Suara — SELALU aktif -->
-    <div class="wizard-panel">
-      <div class="block-title" style="margin-bottom:12px">Vibe kepribadian</div>
-      <div class="chip-group" id="vibeChips"></div>
-    </div>
-
-    <div class="wizard-panel">
-      <div class="block-title" style="margin-bottom:12px">Suara</div>
-      <div class="field-hint" style="margin-bottom:12px">Pilih dulu Gender &amp; Vibe di atas untuk lihat opsi suara yang cocok.</div>
-      <div id="voiceOptionsList"></div>
-    </div>
-
-    <!-- Nama + submit -->
-    <div class="wizard-panel">
-      <div class="field">
-        <label for="charNameInput">Nama karakter</label>
-        <input type="text" id="charNameInput" placeholder="mis. Rangga, Dinda"/>
-      </div>
-      <div class="wizard-foot">
-        <span class="field-hint" id="creatorHint">Lengkapi semua pilihan di atas.</span>
-        <button class="btn btn-primary" id="submitCharBtn">Buat Karakter</button>
-      </div>
-    </div>
-  </div>
+  <div class="card-grid" id="charGrid"></div>
 </main>
+
+<!-- ══════════════ DETAIL MODAL ══════════════ -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="detailName">—</div>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger-ghost" id="detailDeactivate">Nonaktifkan</button>
+      <a href="video-studio.html" class="btn btn-primary" id="detailUse">Pakai di video baru</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ CHARACTER CREATOR (game-style, step by step) ══════════════ -->
+<div class="modal-overlay" id="creatorModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-head">
+      <div class="modal-title">Karakter baru</div>
+      <button class="modal-close" onclick="closeModal('creatorModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="stepper" id="creatorStepper" style="margin-bottom:22px"></div>
+      <div id="creatorStepBody"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-ghost" id="creatorBack">Kembali</button>
+      <button class="btn btn-primary" id="creatorNext">Lanjut</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
-  // ══════════════ DATA PRESET ══════════════
-  const OPTIONS = {
-    gender: ['Perempuan', 'Pria'],
-    faceShape: ['Oval', 'Bulat', 'Lonjong'],
-    skinTone: ['Terang', 'Sawo matang', 'Gelap'],
-    bodyType: ['Kurus', 'Sedang', 'Berisi', 'Atletis'],
-    hairHijabPerempuan: ['Rambut pendek', 'Rambut panjang', 'Rambut ikal', 'Pasmina', 'Segi empat', 'Syar\'i', 'Turban'],
-    hairHijabPria: ['Rambut pendek', 'Rambut panjang', 'Gundul', 'Berjanggut tipis', 'Berjanggut lebat', 'Tanpa janggut'],
-    outfit: ['Casual', 'Formal', 'Olahraga', 'Syar\'i modern'],
-    vibe: ['Ceria', 'Kalem', 'Profesional', 'Playful'],
-  };
-
-  // ⚠️ voice_id di bawah ini PLACEHOLDER — ganti dengan voice_id Indonesia asli
-  // dari katalog ElevenLabs (lewat proxy Magnific) sebelum dipakai produksi.
-  const VOICES = {
-    Perempuan: {
-      Ceria: [{ id: 'VOICE_ID_CERIA_PEREMPUAN_1', name: 'Cahaya', desc: 'Trendy, muda, fresh — cocok buat konten sosial media' }],
-      Kalem: [{ id: 'VOICE_ID_KALEM_PEREMPUAN_1', name: 'Anita', desc: 'Calm and sweet' }],
-      Profesional: [{ id: 'VOICE_ID_PROF_PEREMPUAN_1', name: 'Deandra', desc: 'Berkarakter, cocok konten informatif' }],
-      Playful: [{ id: 'VOICE_ID_PLAYFUL_PEREMPUAN_1', name: 'Bibi', desc: 'Childishly cheeky, witty' }],
-    },
-    Pria: {
-      Ceria: [{ id: 'VOICE_ID_CERIA_PRIA_1', name: 'Bayu', desc: 'Energik, ramah' }],
-      Kalem: [{ id: 'VOICE_ID_KALEM_PRIA_1', name: 'Abi', desc: 'Calm, measured' }],
-      Profesional: [{ id: 'VOICE_ID_PROF_PRIA_1', name: 'Pramoedya', desc: 'Heavy baritone, mature' }],
-      Playful: [{ id: 'VOICE_ID_PLAYFUL_PRIA_1', name: 'Reza', desc: 'Jenaka, santai' }],
-    },
-  };
-
-  // ══════════════ STATE ══════════════
-  let state = {};
-  function resetState() {
-    state = {
-      gender: null, faceShape: null, skinTone: null, bodyType: null,
-      hairHijab: null, outfit: null, vibe: null, voiceId: null,
-      identityLock: 'none', // 'none' | 'reference' | 'locked'
-      refPhotoFile: null,
-    };
-  }
-  resetState();
-
-  function chip(groupId, value, current, field) {
-    return `<button type="button" class="chip ${current === value ? 'active' : ''}" onclick="pick('${field}','${value.replace(/'/g, "\\'")}')">${escapeHtml(value)}</button>`;
-  }
-
-  function pick(field, value) {
-    state[field] = value;
-    if (field === 'gender') { state.hairHijab = null; renderHairHijab(); renderVoiceOptions(); }
-    if (field === 'vibe') renderVoiceOptions();
-    renderAllChips();
-    updateSubmitState();
-  }
-
-  function renderAllChips() {
-    document.getElementById('genderChips').innerHTML = OPTIONS.gender.map(v => chip('gender', v, state.gender, 'gender')).join('');
-    document.getElementById('faceShapeChips').innerHTML = OPTIONS.faceShape.map(v => chip('faceShape', v, state.faceShape, 'faceShape')).join('');
-    document.getElementById('skinToneChips').innerHTML = OPTIONS.skinTone.map(v => chip('skinTone', v, state.skinTone, 'skinTone')).join('');
-    document.getElementById('bodyTypeChips').innerHTML = OPTIONS.bodyType.map(v => chip('bodyType', v, state.bodyType, 'bodyType')).join('');
-    document.getElementById('outfitChips').innerHTML = OPTIONS.outfit.map(v => chip('outfit', v, state.outfit, 'outfit')).join('');
-    document.getElementById('vibeChips').innerHTML = OPTIONS.vibe.map(v => chip('vibe', v, state.vibe, 'vibe')).join('');
-    renderHairHijab();
-  }
-
-  function renderHairHijab() {
-    const title = document.getElementById('hairHijabTitle');
-    const list = state.gender === 'Pria' ? OPTIONS.hairHijabPria : OPTIONS.hairHijabPerempuan;
-    title.textContent = state.gender === 'Pria' ? 'Rambut & Janggut' : 'Rambut / Hijab';
-    document.getElementById('hairHijabChips').innerHTML = list.map(v => chip('hairHijab', v, state.hairHijab, 'hairHijab')).join('');
-  }
-
-  function renderVoiceOptions() {
-    const el = document.getElementById('voiceOptionsList');
-    if (!state.gender || !state.vibe) {
-      el.innerHTML = '<div class="field-hint">Pilih Gender &amp; Vibe dulu untuk lihat opsi suara.</div>';
-      return;
-    }
-    const opts = (VOICES[state.gender] && VOICES[state.gender][state.vibe]) || [];
-    el.innerHTML = opts.map(v => `
-      <div class="frame-card" style="${state.voiceId === v.id ? 'box-shadow:0 0 0 2px var(--coral)' : ''}">
-        <div class="frame-thumb">🔊</div>
-        <div class="frame-body">
-          <div class="frame-label"><span>${escapeHtml(v.name)}</span></div>
-          <div class="frame-script">${escapeHtml(v.desc)}</div>
-        </div>
-        <div class="frame-actions">
-          <button class="icon-btn" title="Preview" onclick="previewVoice('${v.id}')">▶</button>
-          <button class="icon-btn" title="Pilih" onclick="selectVoice('${v.id}')">${state.voiceId === v.id ? '✓' : '○'}</button>
-        </div>
-      </div>`).join('');
-  }
-  function selectVoice(id) { state.voiceId = id; renderVoiceOptions(); updateSubmitState(); }
-  async function previewVoice(id) {
-    try {
-      const result = await DB.previewVoice(id);
-      const audio = new Audio(result.audio_url);
-      audio.play();
-    } catch (err) {
-      toast('Gagal preview suara: ' + err.message);
-    }
-  }
-
-  // ══════════════ IDENTITY LOCK ══════════════
-  function setIdentityLock(mode) {
-    state.identityLock = mode;
-    document.querySelectorAll('#identityLockRow .chip').forEach(el => {
-      el.classList.toggle('active', el.dataset.lock === mode);
-    });
-    const lockableEl = document.getElementById('lockableCategories');
-    const hint = document.getElementById('lockHint');
-    if (mode === 'locked') {
-      lockableEl.style.display = 'none';
-      hint.textContent = 'Wajah, tubuh, rambut/hijab, dan busana dikunci dari foto. Cuma Vibe & Suara yang bisa dipilih.';
-      state.faceShape = state.skinTone = state.bodyType = state.hairHijab = state.outfit = null;
-    } else {
-      lockableEl.style.display = '';
-      hint.textContent = 'Foto jadi inspirasi gaya, AI boleh menyesuaikan — kategori di bawah tetap bisa dipilih.';
-    }
-    updateSubmitState();
-  }
-
-  // ══════════════ UPLOAD FOTO ══════════════
-  const refDropzone = document.getElementById('refDropzone');
-  const refFileInput = document.getElementById('refFileInput');
-  refDropzone.addEventListener('click', () => refFileInput.click());
-  refFileInput.addEventListener('change', e => handleRefFile(e.target.files[0]));
-  refDropzone.addEventListener('dragover', e => e.preventDefault());
-  refDropzone.addEventListener('drop', e => { e.preventDefault(); handleRefFile(e.dataTransfer.files[0]); });
-
-  function handleRefFile(file) {
-    if (!file) return;
-    state.refPhotoFile = file;
-    document.getElementById('refPreviewWrap').style.display = '';
-    document.getElementById('refPreviewImg').src = URL.createObjectURL(file);
-    document.getElementById('refDropzoneLabel').textContent = 'Klik untuk ganti foto';
-    document.getElementById('identityLockRow').style.display = '';
-    setIdentityLock('reference');
-  }
-
-  // ══════════════ SUBMIT VALIDATION ══════════════
-  function updateSubmitState() {
-    const locked = state.identityLock === 'locked';
-    const required = locked
-      ? ['gender', 'vibe', 'voiceId']
-      : ['gender', 'faceShape', 'skinTone', 'bodyType', 'hairHijab', 'outfit', 'vibe', 'voiceId'];
-    const ok = required.every(f => state[f]);
-    document.getElementById('submitCharBtn').disabled = !ok;
-    document.getElementById('creatorHint').textContent = ok ? 'Siap dibuat!' : 'Lengkapi semua pilihan di atas.';
-  }
-
-  document.getElementById('submitCharBtn').addEventListener('click', async () => {
-    const name = document.getElementById('charNameInput').value.trim();
-    if (!name) return toast('Nama karakter wajib diisi.');
-    const btn = document.getElementById('submitCharBtn');
-    btn.disabled = true; btn.textContent = 'Membuat karakter…';
-    try {
-      let refPhotoUrl = null;
-      if (state.refPhotoFile) {
-        refPhotoUrl = await DB.uploadCharacterRefPhoto(state.refPhotoFile);
-      }
-      await DB.createCharacter({
-        name,
-        gender: state.gender,
-        vibe: state.vibe,
-        voice_id: state.voiceId,
-        identity_lock: state.identityLock,
-        reference_photo_url: refPhotoUrl,
-        attributes: {
-          face_shape: state.faceShape, skin_tone: state.skinTone, body_type: state.bodyType,
-          hair_hijab: state.hairHijab, outfit: state.outfit,
-        },
-      });
-      toast(`Karakter ${name} sedang dibuat — cek status di daftar karakter.`);
-      showListView();
-      await loadCharList();
-    } catch (err) {
-      toast('Gagal buat karakter: ' + err.message);
-    } finally {
-      btn.disabled = false; btn.textContent = 'Buat Karakter';
-    }
-  });
-
-  // ══════════════ VIEW SWITCHING ══════════════
-  function showCreatorView() {
-    resetState();
-    document.getElementById('listView').style.display = 'none';
-    document.getElementById('creatorView').style.display = '';
-    document.getElementById('refPreviewWrap').style.display = 'none';
-    document.getElementById('refDropzoneLabel').textContent = 'Klik atau seret foto ke sini';
-    document.getElementById('identityLockRow').style.display = 'none';
-    document.getElementById('lockableCategories').style.display = '';
-    document.getElementById('charNameInput').value = '';
-    renderAllChips();
-    renderVoiceOptions();
-    updateSubmitState();
-  }
-  function showListView() {
-    document.getElementById('creatorView').style.display = 'none';
-    document.getElementById('listView').style.display = '';
-  }
-  document.getElementById('newCharBtn').addEventListener('click', showCreatorView);
-  document.getElementById('backToListBtn').addEventListener('click', showListView);
-  if (window.location.hash === '#new') showCreatorView();
-
-  // ══════════════ DAFTAR KARAKTER ══════════════
+  let charList = [];
   const STATUS_LABELS = {
-    draft: 'Draft', generating: 'Sedang dibuat', avatar_ready: 'Siap',
-    voice_ready: 'Suara siap', complete: 'Lengkap', failed: 'Gagal', abandoned: 'Dibatalkan',
+    draft: 'Draft', collecting_photos: 'Mengumpulkan foto', avatar_processing: 'Memproses avatar',
+    avatar_ready: 'Avatar siap', voice_ready: 'Suara siap', complete: 'Lengkap', abandoned: 'Dibatalkan',
   };
-  async function loadCharList() {
+
+  async function renderChars() {
     const grid = document.getElementById('charGrid');
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1">Memuat karakter…</div>`;
     try {
-      const list = await DB.getCharacters();
-      if (!list.length) {
-        grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Belum ada karakter</strong>Klik "Karakter baru" untuk mulai.</div>`;
-        return;
-      }
-      grid.innerHTML = list.map(c => `
-        <div class="tile">
-          <div class="tile-media">${c.avatar_id ? `<img src="${c.avatar_id}" alt="${escapeHtml(c.name)}">` : c.name.charAt(0)}<span class="tile-badge">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</span></div>
-          <div class="tile-body">
-            <div class="tile-title">${escapeHtml(c.name)}</div>
-            <div class="tile-sub">${escapeHtml(c.personality || c.style || '—')}</div>
-          </div>
-        </div>`).join('');
+      charList = await DB.getCharacters();
     } catch (err) {
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Gagal memuat karakter</strong>${escapeHtml(err.message)}</div>`;
+      return;
     }
+    const photos = await Promise.all(charList.map(c => DB.getCharacterPrimaryPhoto(c.id).catch(() => null)));
+    grid.innerHTML = charList.map((c, i) => `
+      <div class="tile" onclick="openDetail('${c.id}')">
+        <div class="tile-media">${photos[i] ? `<img src="${photos[i]}" alt="${escapeHtml(c.name)}"/>` : c.name.charAt(0)}<span class="tile-badge">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</span></div>
+        <div class="tile-body">
+          <div class="tile-title">${escapeHtml(c.name)}</div>
+          <div class="tile-sub">${c.photos_count || 0} foto</div>
+        </div>
+      </div>`).join('') + `
+      <div class="tile tile-add" onclick="openCreator()" style="aspect-ratio:auto">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Karakter baru</span>
+      </div>`;
   }
+  renderChars();
+
+  async function openDetail(id) {
+    let c;
+    try { c = await DB.getCharacter(id); } catch (err) { return toast('Gagal memuat: ' + err.message); }
+    if (!c) return;
+    document.getElementById('detailName').textContent = c.name;
+    const photo = await DB.getCharacterPrimaryPhoto(id).catch(() => null);
+    document.getElementById('detailBody').innerHTML = `
+      ${photo ? `<img src="${photo}" alt="${escapeHtml(c.name)}" style="width:100%;max-width:220px;border-radius:10px;margin-bottom:14px;display:block"/>` : ''}
+      <div class="field-row">
+        <div><div class="field-hint">Status</div><div style="font-weight:600;margin-top:2px">${escapeHtml(STATUS_LABELS[c.status] || c.status || '—')}</div></div>
+        <div><div class="field-hint">Gaya konten</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.style || '—')}</div></div>
+      </div>
+      <div class="field-row" style="margin-top:14px">
+        <div><div class="field-hint">Foto terkumpul</div><div style="font-weight:600;margin-top:2px">${c.photos_count || 0}</div></div>
+        <div><div class="field-hint">Suara</div><div style="font-weight:600;margin-top:2px">${c.voice_id ? 'Sudah ada' : '—'}</div></div>
+      </div>
+      ${c.notes ? `<div style="margin-top:14px"><div class="field-hint">Catatan</div><div style="font-weight:600;margin-top:2px">${escapeHtml(c.notes)}</div></div>` : ''}`;
+    document.getElementById('detailUse').href = 'video-studio.html?character=' + c.id;
+    const readyForVideo = ['avatar_ready', 'voice_ready', 'complete'].includes(c.status);
+    document.getElementById('detailUse').style.opacity = readyForVideo ? '1' : '.5';
+    document.getElementById('detailUse').title = readyForVideo ? '' : 'Avatar karakter ini belum siap, tapi tetap bisa dicoba untuk prototype';
+    document.getElementById('detailDeactivate').onclick = () => { toast('Nonaktifkan karakter belum tersambung ke database — perlu ditambahkan terpisah.'); };
+    openModal('detailModal');
+  }
+
+  // ── Character creator wizard ──────────────────────────────
+  // CATATAN: alur asli pembuatan karakter di sistem ini berbasis pengumpulan
+  // foto bertahap (status: draft → collecting_photos → avatar_processing →
+  // avatar_ready → voice_ready → complete), bukan generate instan dari preset.
+  // Wizard di bawah ini masih murni untuk PRATINJAU alur — langkah terakhir
+  // sengaja TIDAK menulis apa pun ke database sampai alur aslinya didesain ulang.
+  const creatorSteps = ['Gender', 'Wajah & tubuh', 'Gaya & suara', 'Nama'];
+  const options = {
+    gender: ['Perempuan', 'Laki-laki'],
+    face: ['Oval', 'Bulat', 'Persegi', 'Hati'],
+    body: ['Ramping', 'Atletis', 'Berisi'],
+    hair: ['Berhijab', 'Rambut panjang', 'Rambut pendek', 'Rambut ikal'],
+    style: ['Review', 'Viral', 'Storytelling'],
+    personality: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Jenaka'],
+    voice: ['Hangat & ramah', 'Energik & cepat', 'Tenang & jelas', 'Ceria'],
+  };
+  let creatorState = {};
+  let creatorStep = 0;
+
+  function openCreator() {
+    creatorState = { gender: null, face: null, body: null, hair: null, style: null, voice: null, name: '' };
+    creatorStep = 0;
+    renderCreator();
+    openModal('creatorModal');
+  }
+
+  function chip(group, value, current) {
+    return `<button type="button" class="chip ${current === value ? 'active' : ''}" onclick="pickChip('${group}','${value.replace(/'/g,"\\'")}')">${escapeHtml(value)}</button>`;
+  }
+  function pickChip(group, value) { creatorState[group] = value; renderCreator(); }
+
+  function renderCreator() {
+    document.getElementById('creatorStepper').innerHTML = creatorSteps.map((label, i) => `
+      <div class="step-pt ${i < creatorStep ? 'done' : i === creatorStep ? 'active' : ''}">
+        <div class="step-dot">${i < creatorStep ? '✓' : i + 1}</div>
+        <div class="step-label">${label}</div>
+      </div>${i < creatorSteps.length - 1 ? '<div class="step-line"></div>' : ''}`).join('');
+
+    const body = document.getElementById('creatorStepBody');
+    if (creatorStep === 0) {
+      body.innerHTML = `<div class="field"><label>Pilih gender karakter</label><div class="chip-group">${options.gender.map(v => chip('gender', v, creatorState.gender)).join('')}</div></div>`;
+    } else if (creatorStep === 1) {
+      body.innerHTML = `
+        <div class="field"><label>Bentuk wajah</label><div class="chip-group">${options.face.map(v => chip('face', v, creatorState.face)).join('')}</div></div>
+        <div class="field"><label>Bentuk tubuh</label><div class="chip-group">${options.body.map(v => chip('body', v, creatorState.body)).join('')}</div></div>
+        <div class="field"><label>Rambut / hijab</label><div class="chip-group">${options.hair.map(v => chip('hair', v, creatorState.hair)).join('')}</div></div>`;
+    } else if (creatorStep === 2) {
+      body.innerHTML = `
+        <div class="field"><label>Gaya konten</label><div class="chip-group">${options.style.map(v => chip('style', v, creatorState.style)).join('')}</div></div>
+        <div class="field"><label>Suara (preview sebelum pilih)</label><div class="chip-group">${options.voice.map(v => `
+          <button type="button" class="chip ${creatorState.voice === v ? 'active' : ''}" onclick="pickChip('voice','${v}')">🔊 ${escapeHtml(v)}</button>`).join('')}</div></div>`;
+    } else if (creatorStep === 3) {
+      body.innerHTML = `
+        <div class="field"><label for="charNameInput">Nama karakter</label><input type="text" id="charNameInput" placeholder="mis. Dinda" value="${escapeHtml(creatorState.name || '')}"/></div>
+        <div class="field-hint" style="color:var(--coral)">⚠️ Langkah ini masih pratinjau — belum tersambung ke database. Karakter asli dibuat lewat pengumpulan foto bertahap (lihat status di kartu karakter).</div>`;
+    }
+    document.getElementById('creatorBack').style.visibility = creatorStep === 0 ? 'hidden' : 'visible';
+    document.getElementById('creatorNext').textContent = creatorStep === creatorSteps.length - 1 ? 'Selesai (pratinjau)' : 'Lanjut';
+  }
+
+  document.getElementById('creatorBack').addEventListener('click', () => { if (creatorStep > 0) { creatorStep--; renderCreator(); } });
+  document.getElementById('creatorNext').addEventListener('click', () => {
+    if (creatorStep === 0 && !creatorState.gender) return toast('Pilih gender dulu.');
+    if (creatorStep === 1 && (!creatorState.face || !creatorState.body || !creatorState.hair)) return toast('Lengkapi bentuk wajah, tubuh, dan rambut.');
+    if (creatorStep === 2 && (!creatorState.style || !creatorState.voice)) return toast('Pilih gaya konten dan suara.');
+
+    if (creatorStep < creatorSteps.length - 1) { creatorStep++; renderCreator(); return; }
+
+    const name = document.getElementById('charNameInput').value.trim();
+    if (!name) return toast('Isi nama karakter dulu.');
+    closeModal('creatorModal');
+    toast('Pratinjau selesai — pembuatan karakter sungguhan menyusul setelah alur collecting_photos didesain ulang.');
+  });
+
+  // deep-link #new dari halaman lain
+  if (window.location.hash === '#new') openCreator();
 
   (async () => {
     await AUTH.guard();
-    await loadCharList();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
   })();
 </script>
 </body>

@@ -35,16 +35,16 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
-    <a href="staff.html" class="nav-item" data-admin-only>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Staff
+    <a href="profile.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Profil
     </a>
   </nav>
   <div class="sidebar-foot">
-    <a href="profile.html" class="acct" style="text-decoration:none">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
       <div class="acct-avatar" data-acct-avatar>P</div>
       <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
-    </a>
+    </button>
   </div>
 </aside>
 
@@ -95,14 +95,14 @@
     </div>
 
     <div class="wizard-panel" id="framePlanPanel" style="display:none">
-      <div class="block-title" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <span>Rencana scene</span>
-        <button class="btn btn-ghost" id="regenPlanBtn" style="font-size:12px;padding:6px 12px">↻ Buat rencana lain</button>
-      </div>
+      <div class="block-title" style="margin-bottom:14px">Rencana scene</div>
       <div class="frame-list" id="framePlanList"></div>
       <div class="wizard-foot" style="margin-top:18px">
-        <span class="field-hint">Klik teks script untuk edit langsung. Bisa diedit sebelum lanjut generate.</span>
-        <button class="btn btn-primary" id="approvePlanBtn">Setujui rencana</button>
+        <span class="field-hint">Baca script &amp; background tiap scene. Bisa diedit sebelum lanjut generate.</span>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" id="regenPlanBtn">🔄 Generate rencana lain</button>
+          <button class="btn btn-primary" id="approvePlanBtn">Setujui rencana</button>
+        </div>
       </div>
     </div>
   </section>
@@ -122,18 +122,36 @@
   <!-- STEP 4 — final -->
   <section id="step4" style="display:none">
     <div class="wizard-panel" style="text-align:center;padding:46px 30px">
-      <div class="composite-result" style="width:150px;height:220px;margin:0 auto 20px;border-style:solid;border-color:var(--teal);color:var(--teal);overflow:hidden;padding:0" id="finalThumb">Video final</div>
+      <div class="composite-result" style="width:150px;height:220px;margin:0 auto 20px;border-style:solid;border-color:var(--teal);color:var(--teal)" id="finalThumb">Video final</div>
       <div class="block-title" style="margin-bottom:6px" id="finalTitle">Video selesai</div>
       <div class="field-hint" style="margin-bottom:22px">Semua scene sudah digabung jadi satu video utuh.</div>
       <div style="display:flex;gap:10px;justify-content:center">
         <a href="history.html" class="btn btn-ghost">Lihat di riwayat</a>
-        <a class="btn btn-primary" id="downloadBtn" href="#" target="_blank">Unduh video</a>
+        <button class="btn btn-primary" id="downloadBtn">Unduh video</button>
       </div>
     </div>
   </section>
 </main>
 
+<!-- ══════════════════════════════════════ BACKGROUND PICKER MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="bgPickerModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Pilih background</div>
+      <button class="modal-close" onclick="closeModal('bgPickerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="btn btn-ghost" style="display:inline-flex;margin-bottom:14px;cursor:pointer">
+        Upload background baru
+        <input type="file" id="bgUploadInput" accept="image/*" style="display:none"/>
+      </label>
+      <div class="card-grid" id="bgPickerGrid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px"></div>
+    </div>
+  </div>
+</div>
+
 <script src="js/supabase-client.js"></script>
+<script src="js/n8n-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
@@ -171,20 +189,16 @@
     if (n === 4) renderStep4();
   }
 
-  // Ikon placeholder per tipe scene — dipakai selama belum ada gambar/klip asli
-  const SCENE_ICONS = {
-    'Hook': '🎬', 'Value Prop': '💡', 'CTA': '🛒',
-    'Demo/Bukti': '📦', 'Reaksi': '😲', 'default': '🎞️',
-  };
-  function sceneIcon(label) { return SCENE_ICONS[label] || SCENE_ICONS.default; }
-
   // ── STEP 1 ──────────────────────────────
-  function renderPickGrid(elId, items, selectedId, onPick) {
-    document.getElementById(elId).innerHTML = items.map(it => `
+  function renderPickGrid(elId, items, selectedId, onPick, thumbMap) {
+    document.getElementById(elId).innerHTML = items.map(it => {
+      const img = thumbMap && thumbMap[it.id];
+      return `
       <div class="tile" style="${it.id === selectedId ? 'box-shadow:0 0 0 2px var(--coral)' : ''}" onclick="(${onPick})('${it.id}')">
-        <div class="tile-media" style="aspect-ratio:1/1;font-size:20px">${it.name.charAt(0)}</div>
+        <div class="tile-media" style="aspect-ratio:1/1;font-size:20px">${img ? `<img src="${img}" alt="${escapeHtml(it.name)}"/>` : it.name.charAt(0)}</div>
         <div class="tile-body" style="padding:8px"><div class="tile-title" style="font-size:11.5px">${escapeHtml(it.name)}</div></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   function pickChar(id) { selectedCharId = id; refreshStep1(); }
@@ -198,12 +212,17 @@
       toast('Gagal memuat data: ' + err.message);
       return;
     }
-    renderPickGrid('pickCharGrid', charsCache, selectedCharId, 'pickChar');
-    renderPickGrid('pickProdGrid', prodsCache, selectedProdId, 'pickProd');
+    const charPhotos = {};
+    await Promise.all(charsCache.map(async c => { charPhotos[c.id] = await DB.getCharacterPrimaryPhoto(c.id).catch(() => null); }));
+    const prodPhotos = {};
+    prodsCache.forEach(p => { prodPhotos[p.id] = Array.isArray(p.images) && p.images[0] ? p.images[0] : null; });
+
+    renderPickGrid('pickCharGrid', charsCache, selectedCharId, 'pickChar', charPhotos);
+    renderPickGrid('pickProdGrid', prodsCache, selectedProdId, 'pickProd', prodPhotos);
     const c = selectedCharId && charsCache.find(x => x.id === selectedCharId);
     const p = selectedProdId && prodsCache.find(x => x.id === selectedProdId);
-    document.getElementById('compChar').textContent = c ? c.name : '?';
-    document.getElementById('compProd').textContent = p ? p.name : '?';
+    document.getElementById('compChar').innerHTML = c ? (charPhotos[c.id] ? `<img src="${charPhotos[c.id]}" style="width:100%;height:100%;object-fit:cover;border-radius:9px"/>` : c.name) : '?';
+    document.getElementById('compProd').innerHTML = p ? (prodPhotos[p.id] ? `<img src="${prodPhotos[p.id]}" style="width:100%;height:100%;object-fit:cover;border-radius:9px"/>` : p.name) : '?';
     document.getElementById('genCompositeBtn').disabled = !(c && p);
     if (c && c.status !== 'avatar_ready' && c.status !== 'voice_ready' && c.status !== 'complete') {
       document.getElementById('step1Hint').innerHTML = `⚠️ ${escapeHtml(c.name)} masih berstatus "${escapeHtml(c.status || '—')}" — avatar belum siap. Composite tetap bisa dicoba untuk keperluan prototype.`;
@@ -223,22 +242,18 @@
       } else {
         job = await DB.updateVideoJob(job.id, { character_id: c.id, product_id: p.id, product_name: p.name });
       }
-      // Panggil backend n8n -> Magnific Nano Banana compositing (beneran, bukan simulasi)
-      const result = await DB.generateComposite(job.id);
-      job = await DB.getVideoJob(job.id); // refresh, ambil composite_image_url terbaru
-
-      const resultEl = document.getElementById('compResult');
-      if (job.composite_image_url) {
-        resultEl.innerHTML = `<img src="${job.composite_image_url}" alt="Composite" style="width:100%;height:100%;object-fit:cover">`;
-      } else {
-        resultEl.textContent = 'Composite siap ✓';
+      if (N8N_READY) {
+        const result = await n8nCall('generate-composite', { job_id: job.id, character_id: c.id, product_id: p.id });
+        job = await DB.updateVideoJob(job.id, { composite_image_url: result.composite_image_url });
       }
+      document.getElementById('compResult').innerHTML = job.composite_image_url
+        ? `<img src="${escapeHtml(job.composite_image_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px"/>`
+        : 'Composite siap ✓';
       document.getElementById('pageTitle').textContent = job.title;
-      toast('Composite karakter + produk berhasil dibuat.');
+      toast(N8N_READY ? 'Composite berhasil digenerate lewat Magnific.' : 'Composite karakter + produk berhasil dibuat (simulasi — n8n belum dikonfigurasi).');
       document.getElementById('step1Hint').innerHTML = `Composite siap. <a href="#" onclick="goStep(2);return false;" style="color:var(--coral);font-weight:600">Lanjut ke rencana scene →</a>`;
     } catch (err) {
       toast('Gagal generate composite: ' + err.message);
-      document.getElementById('compResult').textContent = 'Gagal — coba lagi';
     } finally {
       btn.disabled = false; btn.textContent = 'Generate ulang';
     }
@@ -250,6 +265,7 @@
     { id: 'story', name: 'Versi cerita (30 detik)', desc: 'Hook 0-3s → Value prop 3-15s → Demo/bukti 15-25s → CTA 25-30s. Fokus konversi.' },
     { id: 'unbox', name: 'Unboxing santai', desc: 'Karakter buka paket, reaksi natural, baru masuk ke poin jual produk.' },
   ];
+  let backgroundsCache = null;
 
   async function renderStep2() {
     document.getElementById('styleGrid').innerHTML = styleOptions.map(s => `
@@ -263,50 +279,152 @@
 
   async function pickStyle(id) {
     selectedStyle = id;
-    document.getElementById('framePlanPanel').style.display = '';
-    document.getElementById('framePlanList').innerHTML = `<div class="field-hint">AI sedang menyusun rencana scene…</div>`;
+    const frames = buildFramePlan(id, 0);
     try {
-      // AI beneran nyusun rencana lewat backend n8n — ganti buildFramePlan() hardcoded lama
-      await DB.generateFramePlan(job.id, id);
-      job = await DB.getVideoJob(job.id);
+      job = await DB.updateVideoJob(job.id, {
+        frame_plan: { style: id, variant: 0, frames },
+        frames_count: frames.length,
+        status: 'scripting',
+      });
     } catch (err) {
-      toast('Gagal generate rencana: ' + err.message);
+      toast('Gagal simpan rencana: ' + err.message);
     }
     await renderStep2();
   }
 
-  document.getElementById('regenPlanBtn').addEventListener('click', async () => {
+  async function regeneratePlan() {
     if (!selectedStyle) return;
-    await pickStyle(selectedStyle); // panggil ulang -> AI kasih variasi baru
-  });
+    const currentVariant = (job.frame_plan && job.frame_plan.variant) || 0;
+    const nextVariant = currentVariant === 0 ? 1 : 0;
+    const btn = document.getElementById('regenPlanBtn');
+    btn.disabled = true; btn.textContent = 'Menyusun ulang…';
+    const frames = buildFramePlan(selectedStyle, nextVariant);
+    try {
+      job = await DB.updateVideoJob(job.id, { frame_plan: { style: selectedStyle, variant: nextVariant, frames }, frames_count: frames.length });
+      renderFramePlan();
+      toast('Rencana scene disusun ulang — cek & edit lagi kalau perlu.');
+    } catch (err) {
+      toast('Gagal menyusun ulang: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🔄 Generate rencana lain';
+    }
+  }
+
+  function buildFramePlan(styleId, variant) {
+    const c = charsCache.find(x => x.id === job.character_id) || { name: 'Karakter' };
+    const p = prodsCache.find(x => x.id === job.product_id) || { name: job.product_name || 'Produk' };
+    const plans = {
+      short: [
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} langsung tunjukkan ${p.name} sambil bilang "kalian juga ngerasain ini nggak sih?"` },
+          { label: 'Value Prop', time_range: '3-9s', script: `${c.name} jelasin 1 manfaat utama ${p.name}.` },
+          { label: 'CTA', time_range: '9-15s', script: `${c.name} ajak follow & checkout keranjang kuning.` },
+        ],
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} pegang ${p.name}, ekspresi kaget: "kenapa baru tahu ini sekarang?!"` },
+          { label: 'Value Prop', time_range: '3-9s', script: `${c.name} bandingin sebelum & sesudah pakai ${p.name}.` },
+          { label: 'CTA', time_range: '9-15s', script: `${c.name} tunjuk ke arah keranjang kuning, ajak checkout sekarang.` },
+        ],
+      ],
+      story: [
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} buka dengan pertanyaan relate soal masalah yang dijawab ${p.name}.` },
+          { label: 'Value Prop', time_range: '3-15s', script: `${c.name} jelasin fitur & manfaat ${p.name} satu-satu.` },
+          { label: 'Demo/Bukti', time_range: '15-25s', script: `${c.name} demo pemakaian ${p.name} secara langsung.` },
+          { label: 'CTA', time_range: '25-30s', script: `${c.name} rekap manfaat + ajak checkout.` },
+        ],
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} cerita pengalaman pribadi sebelum ketemu ${p.name}.` },
+          { label: 'Value Prop', time_range: '3-15s', script: `${c.name} tunjukkan momen "aha" pakai ${p.name}.` },
+          { label: 'Demo/Bukti', time_range: '15-25s', script: `${c.name} kasih lihat hasil nyata / testimoni singkat.` },
+          { label: 'CTA', time_range: '25-30s', script: `${c.name} ajak followers coba sendiri, link di keranjang kuning.` },
+        ],
+      ],
+      unbox: [
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} terima paket, ekspresi penasaran.` },
+          { label: 'Reaksi', time_range: '3-10s', script: `${c.name} buka paket ${p.name}, reaksi spontan.` },
+          { label: 'Value Prop', time_range: '10-20s', script: `${c.name} coba & jelasin kenapa ${p.name} worth it.` },
+          { label: 'CTA', time_range: '20-25s', script: `${c.name} ajak checkout sambil pegang produk.` },
+        ],
+        [
+          { label: 'Hook', time_range: '0-3s', script: `${c.name} taruh paket ${p.name} di meja, ajak "buka bareng yuk".` },
+          { label: 'Reaksi', time_range: '3-10s', script: `${c.name} kaget lihat detail kemasan/isi ${p.name}.` },
+          { label: 'Value Prop', time_range: '10-20s', script: `${c.name} langsung praktik pakai sambil komentar jujur.` },
+          { label: 'CTA', time_range: '20-25s', script: `${c.name} kasih kode/alasan buru-buru checkout.` },
+        ],
+      ],
+    };
+    return plans[styleId][variant % plans[styleId].length].map((f, i) => ({ frame_number: i + 1, ...f }));
+  }
 
   function renderFramePlan() {
     const frames = (job.frame_plan && job.frame_plan.frames) || [];
+    if (!backgroundsCache) {
+      document.getElementById('framePlanList').innerHTML = `<div class="empty">Memuat…</div>`;
+      DB.getBackgrounds().then(bgs => { backgroundsCache = bgs; renderFramePlan(); }).catch(() => { backgroundsCache = []; renderFramePlan(); });
+      return;
+    }
     document.getElementById('framePlanList').innerHTML = frames.map((f, i) => `
       <div class="frame-card reveal" style="animation-delay:${i * 40}ms">
-        <div class="frame-thumb">${sceneIcon(f.label)}</div>
+        <div class="frame-thumb" onclick="openBgPicker(${i})" style="cursor:pointer" title="Klik untuk pilih background">${f._thumbUrl ? `<img src="${f._thumbUrl}" alt=""/>` : f.label}</div>
         <div class="frame-body">
-          <div class="frame-label"><span>${f.label} · ${f.time_range}</span></div>
-          <div class="frame-script" contenteditable="true" data-frame-index="${i}" onblur="onScriptEdit(this)">${escapeHtml(f.script)}</div>
+          <div class="frame-label"><span>${escapeHtml(f.label)} · ${escapeHtml(f.time_range)}</span></div>
+          <textarea class="frame-edit-script" data-idx="${i}" rows="2" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;color:var(--text);resize:vertical">${escapeHtml(f.script)}</textarea>
+        </div>
+        <div class="frame-actions">
+          <button class="icon-btn" title="Simpan perubahan" onclick="saveFrameEdit(${i})">💾</button>
         </div>
       </div>`).join('');
   }
 
-  // Simpan edit manual ke script scene — bagian dari "bisa diedit sebelum generate"
-  async function onScriptEdit(el) {
-    const idx = Number(el.dataset.frameIndex);
-    const newText = el.textContent.trim();
-    const frames = (job.frame_plan && job.frame_plan.frames) || [];
-    if (!frames[idx] || frames[idx].script === newText) return;
-    frames[idx].script = newText;
+  async function saveFrameEdit(i) {
+    const ta = document.querySelector(`.frame-edit-script[data-idx="${i}"]`);
+    const frames = [...job.frame_plan.frames];
+    frames[i] = { ...frames[i], script: ta.value };
     try {
-      job = await DB.updateVideoJob(job.id, { frame_plan: { style: selectedStyle, frames } });
-      toast('Script scene diperbarui.');
+      job = await DB.updateVideoJob(job.id, { frame_plan: { ...job.frame_plan, frames } });
+      toast('Script scene disimpan.');
     } catch (err) {
-      toast('Gagal simpan edit: ' + err.message);
+      toast('Gagal simpan: ' + err.message);
     }
   }
 
+  let bgPickerIdx = null;
+  async function openBgPicker(i) {
+    bgPickerIdx = i;
+    if (!backgroundsCache) backgroundsCache = await DB.getBackgrounds().catch(() => []);
+    document.getElementById('bgPickerGrid').innerHTML = (backgroundsCache.length ? backgroundsCache.map(b => `
+      <div class="tile" onclick="chooseBg('${b.id}')" style="cursor:pointer">
+        <div class="tile-media" style="aspect-ratio:1/1">${b._signedUrl ? `<img src="${b._signedUrl}" alt=""/>` : (b.name || '?').charAt(0)}</div>
+        <div class="tile-body" style="padding:6px"><div class="tile-title" style="font-size:11px">${escapeHtml(b.name || 'Tanpa nama')}</div></div>
+      </div>`).join('') : `<div class="empty" style="grid-column:1/-1">Belum ada background tersimpan — upload dulu.</div>`);
+    openModal('bgPickerModal');
+  }
+  async function chooseBg(bgId) {
+    const bg = backgroundsCache.find(b => b.id === bgId);
+    if (!bg || bgPickerIdx === null) return;
+    const frames = [...job.frame_plan.frames];
+    frames[bgPickerIdx] = { ...frames[bgPickerIdx], background_id: bgId, _thumbUrl: bg._signedUrl };
+    job = await DB.updateVideoJob(job.id, { frame_plan: { ...job.frame_plan, frames } });
+    closeModal('bgPickerModal');
+    renderFramePlan();
+  }
+  document.getElementById('bgUploadInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const bg = await DB.addBackground({ name: file.name.replace(/\.[^.]+$/, ''), aspect_ratio: '9:16' }, file);
+      backgroundsCache.unshift(bg);
+      openBgPicker(bgPickerIdx);
+      toast('Background diupload.');
+    } catch (err) {
+      toast('Gagal upload: ' + err.message);
+    }
+    e.target.value = '';
+  });
+
+  document.getElementById('regenPlanBtn').addEventListener('click', regeneratePlan);
   document.getElementById('approvePlanBtn').addEventListener('click', () => {
     if (!selectedStyle) return toast('Pilih gaya video dulu.');
     goStep(3);
@@ -331,17 +449,11 @@
       const statusCls = { pending: 'st-draft', generating: 'st-generating', review: 'st-review', approved: 'st-complete', regenerating: 'st-generating' }[f.status] || 'st-draft';
       let actionBtn = '';
       if (f.status === 'pending') actionBtn = `<button class="icon-btn" title="Generate" onclick="genFrame('${f.id}')">▶</button>`;
-      else if (f.status === 'review') actionBtn = `<button class="icon-btn" title="Setujui" onclick="approveFrame('${f.id}')">✓</button><button class="icon-btn" title="Render ulang video" onclick="regenFrame('${f.id}')">↻</button>`;
-      else if (f.status === 'approved') actionBtn = `<button class="icon-btn" title="Render ulang video" onclick="regenFrame('${f.id}')">↻</button>`;
-
-      // Thumbnail: pakai clip_url asli kalau sudah ada (video), else ikon placeholder
-      const thumbInner = f.clip_url
-        ? `<video src="${f.clip_url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
-        : (f.status === 'generating' || f.status === 'regenerating' ? '…' : sceneIcon(label));
-
+      else if (f.status === 'review') actionBtn = `<button class="icon-btn" title="Setujui" onclick="approveFrame('${f.id}')">✓</button><button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`;
+      else if (f.status === 'approved') actionBtn = `<button class="icon-btn" title="Render ulang" onclick="regenFrame('${f.id}')">↻</button>`;
       return `
       <div class="frame-card" id="fc-${f.id}">
-        <div class="frame-thumb">${thumbInner}</div>
+        <div class="frame-thumb">${f.clip_url ? `<video src="${escapeHtml(f.clip_url)}" muted></video>` : f.background_image_url ? `<img src="${escapeHtml(f.background_image_url)}" alt=""/>` : f.status === 'approved' ? '✓ klip' : f.status === 'generating' || f.status === 'regenerating' ? '…' : label}</div>
         <div class="frame-body">
           <div class="frame-label"><span>${escapeHtml(label)}${time ? ' · ' + escapeHtml(time) : ''}</span><span class="act-status ${statusCls}">${statusText}</span></div>
           <div class="frame-script">${escapeHtml(f.script || plan.script || '')}</div>
@@ -356,14 +468,19 @@
   async function genFrame(id) {
     await DB.updateFrame(id, { status: 'generating' });
     await renderStep3();
-    try {
-      // Panggil backend n8n -> Voiceover + OmniHuman (beneran, bukan setTimeout)
-      await DB.generateFrameClip(id);
-    } catch (err) {
-      toast('Gagal generate scene: ' + err.message);
-      await DB.updateFrame(id, { status: 'pending' });
+    if (N8N_READY) {
+      try {
+        const f = (await DB.getFrames(job.id)).find(x => x.id === id);
+        const result = await n8nCall('generate-frame', { frame_id: id, video_job_id: job.id, script: f.script, background_id: f.background_id });
+        await DB.updateFrame(id, { status: 'review', clip_url: result.clip_url, background_image_url: result.background_image_url });
+      } catch (err) {
+        toast('Gagal generate scene: ' + err.message);
+        await DB.updateFrame(id, { status: 'pending' });
+      }
+      await renderStep3();
+      return;
     }
-    await renderStep3();
+    setTimeout(async () => { await DB.updateFrame(id, { status: 'review' }); await renderStep3(); }, 900);
   }
   async function approveFrame(id) {
     await DB.updateFrame(id, { status: 'approved' });
@@ -372,12 +489,7 @@
   async function regenFrame(id) {
     await DB.updateFrame(id, { status: 'regenerating' });
     await renderStep3();
-    try {
-      await DB.generateFrameClip(id); // script/background sama, render ulang videonya saja
-    } catch (err) {
-      toast('Gagal render ulang: ' + err.message);
-    }
-    await renderStep3();
+    setTimeout(async () => { await DB.updateFrame(id, { status: 'review' }); await renderStep3(); }, 900);
   }
 
   function updateProduceBtn(frames) {
@@ -388,14 +500,17 @@
 
   document.getElementById('produceBtn').addEventListener('click', async () => {
     const btn = document.getElementById('produceBtn');
-    btn.disabled = true; btn.textContent = 'Menggabungkan…';
+    btn.disabled = true; btn.textContent = 'Memproses…';
     try {
-      // Panggil backend n8n -> Magnific Video Combiner (gabung semua klip approved)
-      await DB.produceVideo(job.id);
-      job = await DB.getVideoJob(job.id);
+      if (N8N_READY) {
+        const result = await n8nCall('produce-video', { job_id: job.id });
+        job = await DB.updateVideoJob(job.id, { status: 'completed', current_step: 4, final_video_url: result.final_video_url });
+      } else {
+        job = await DB.updateVideoJob(job.id, { status: 'completed', current_step: 4 });
+      }
       goStep(4);
     } catch (err) {
-      toast('Gagal produce video: ' + err.message);
+      toast('Gagal produce: ' + err.message);
       btn.disabled = false; btn.textContent = 'Produce';
     }
   });
@@ -403,21 +518,19 @@
   // ── STEP 4 ──────────────────────────────
   function renderStep4() {
     document.getElementById('finalTitle').textContent = job.title + ' — selesai';
-    const thumb = document.getElementById('finalThumb');
-    const dlBtn = document.getElementById('downloadBtn');
     if (job.final_video_url) {
-      thumb.innerHTML = `<video src="${job.final_video_url}" controls style="width:100%;height:100%;object-fit:cover"></video>`;
-      dlBtn.href = job.final_video_url;
-    } else {
-      thumb.textContent = 'Video final';
-      dlBtn.removeAttribute('href');
+      document.getElementById('finalThumb').innerHTML = `<video src="${escapeHtml(job.final_video_url)}" controls style="width:100%;height:100%;object-fit:cover;border-radius:9px"></video>`;
     }
   }
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    if (job.final_video_url) { window.open(job.final_video_url, '_blank'); return; }
+    toast('Ini prototype — hubungkan Video Combiner Magnific lewat n8n (js/n8n-client.js) untuk file video sungguhan.');
+  });
 
   // ── INIT ──────────────────────────────
   (async () => {
     await AUTH.guard();
-    document.getElementById('acctBtn') && document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
 
     try {
       charsCache = await DB.getCharacters();
@@ -435,11 +548,7 @@
         selectedStyle = job.frame_plan && job.frame_plan.style;
         document.getElementById('pageTitle').textContent = job.title;
         await refreshStep1();
-        if (job.composite_image_url) {
-          document.getElementById('compResult').innerHTML = `<img src="${job.composite_image_url}" alt="Composite" style="width:100%;height:100%;object-fit:cover">`;
-        } else {
-          document.getElementById('compResult').textContent = 'Composite siap ✓';
-        }
+        document.getElementById('compResult').textContent = 'Composite siap ✓';
         renderStepper(Math.max(1, job.current_step || 1));
         if (job.current_step === 2) await renderStep2();
         if (job.current_step === 3) await renderStep3();

@@ -1,26 +1,31 @@
 /* ══════════════════════════════════════
    BA UGC — Data layer (LIVE)
-   Bicara langsung ke skema Supabase ASLI.
+   Bicara langsung ke skema Supabase ASLI (bukan skema yang saya karang
+   di supabase/schema.sql — itu sudah usang, abaikan).
 
-   UPDATE dari versi sebelumnya:
-   - Tambah N8N_BASE_URL — ganti dengan URL n8n kamu, dipakai buat semua
-     panggilan generate (composite, frame plan, frame clip, produce) dan
-     pembuatan akun staff.
-   - Step 1 (genCompositeBtn), Step 2 (pickStyle), Step 3 (genFrame) di
-     video-studio.html sekarang beneran manggil AI lewat fungsi-fungsi
-     baru di bawah — bukan simulasi timeout lagi.
-   - Tambah fungsi user_profiles (getStaffList, createStaff) untuk
-     halaman staff.html.
+   Status per tabel:
+   - characters      : READ ONLY. Penciptaan karakter (Character Creator)
+                        SENGAJA belum disambung — alur aslinya berbasis
+                        collecting_photos bertahap (lihat characters.html),
+                        bukan generate instan. Menunggu desain ulang.
+   - products        : full CRUD, live.
+   - video_jobs      : full CRUD, live. `title` bukan kolom asli — dihitung
+                        di sini dari nama karakter + product_name.
+   - frames          : full CRUD, live. Rencana scene (script/label/waktu
+                        per frame) disimpan sebagai JSON di
+                        video_jobs.frame_plan (kolom ini masih kosong di
+                        semua baris asli, jadi struktur JSON di bawah ini
+                        adalah usulan, bukan yang sudah given).
+
+   frame_plan JSON shape yang dipakai di sini:
+   {
+     "style": "short" | "story" | "unbox",
+     "frames": [
+       { "frame_number": 1, "label": "Hook", "time_range": "0-3s", "script": "..." },
+       ...
+     ]
+   }
    ══════════════════════════════════════ */
-
-// ⚠️ GANTI dengan URL n8n kamu (contoh: https://xxx.sumopod.my.id/webhook)
-const N8N_BASE_URL = 'https://GANTI-DENGAN-URL-N8N-KAMU/webhook';
-
-// ⚠️ WAJIB SAMA PERSIS dengan nilai "PASTE_SHARED_SECRET_DI_SINI" yang diisi
-// di tiap node "Cek Secret (...)" di n8n. Ini bukan pengganti autentikasi
-// user (itu tugas Supabase Auth) — ini cuma nyaring supaya orang yang nemu/
-// nebak URL webhook dari luar nggak bisa manggilnya sembarangan.
-const BAUGC_SHARED_SECRET = 'PASTE_SHARED_SECRET_DI_SINI';
 
 const DB = (() => {
   function client() {
@@ -30,27 +35,13 @@ const DB = (() => {
     return supabaseClient;
   }
 
-  async function callWebhook(path, body) {
-    const res = await fetch(`${N8N_BASE_URL}/${path}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-BAUGC-Secret': BAUGC_SHARED_SECRET,
-      },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 401) throw new Error(`Backend menolak akses (${path}) — cek BAUGC_SHARED_SECRET di data.js sudah sama dengan yang di n8n.`);
-    if (!res.ok) throw new Error(`Backend gagal (${path}): ${res.status}`);
-    return res.json();
-  }
-
   function titleOf(job) {
     const charName = (job.characters && job.characters.name) || 'Karakter';
     const prodName = (job.products && job.products.name) || job.product_name || 'Produk';
     return `${charName} × ${prodName}`;
   }
 
-  // ── Characters (READ ONLY — Character Creator masih menunggu desain ulang) ──
+  // ── Characters (READ ONLY) ──────────────────────
   async function getCharacters() {
     const { data, error } = await client().from('characters').select('*').order('created_at', { ascending: false });
     if (error) throw error;
@@ -78,26 +69,13 @@ const DB = (() => {
     if (error) throw error;
     return data;
   }
-  async function uploadProductImages(files) {
-    const urls = [];
-    for (const file of files) {
-      const path = `product-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const { error } = await client().storage.from('product-assets').upload(path, file);
-      if (error) throw error;
-      const { data } = client().storage.from('product-assets').getPublicUrl(path);
-      urls.push(data.publicUrl);
-    }
-    return urls;
-  }
 
   // ── Video jobs ───────────────────────
   async function getVideoJobs() {
-    const user = await AUTH.getUser();
-    let query = client().from('video_jobs').select('*, characters(name), products(name)').order('created_at', { ascending: false });
-    // Staff cuma lihat video miliknya sendiri (RLS juga menegakkan ini di server,
-    // filter di sini cuma supaya query lebih ringan / UX lebih cepat)
-    if (user && user.role !== 'admin') query = query.eq('created_by', user.id);
-    const { data, error } = await query;
+    const { data, error } = await client()
+      .from('video_jobs')
+      .select('*, characters(name), products(name)')
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return data.map(j => ({ ...j, title: titleOf(j) }));
   }
@@ -111,10 +89,9 @@ const DB = (() => {
     return data ? { ...data, title: titleOf(data) } : null;
   }
   async function addVideoJob(fields) {
-    const user = await AUTH.getUser();
     const { data, error } = await client()
       .from('video_jobs')
-      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, created_by: user ? user.id : null, ...fields })
+      .insert({ current_step: 1, status: 'analyzing', frames_count: 0, ...fields })
       .select('*, characters(name), products(name)')
       .single();
     if (error) throw error;
@@ -132,6 +109,8 @@ const DB = (() => {
   }
 
   // ── Frames ───────────────────────────
+  // Rencana (Step 2) ditulis ke video_jobs.frame_plan lewat updateVideoJob.
+  // Baris `frames` baru dibuat saat Step 3 mulai generate eksekusi per-scene.
   async function getFrames(videoJobId) {
     const { data, error } = await client().from('frames').select('*').eq('video_job_id', videoJobId).order('frame_number', { ascending: true });
     if (error) throw error;
@@ -154,74 +133,7 @@ const DB = (() => {
     return data;
   }
 
-  // ── GENERATE — panggil backend n8n (Magnific) ──────────────
-  // Ganti simulasi lama (setTimeout/toast) dengan panggilan beneran.
-
-  // Step 1: compositing karakter + produk
-  async function generateComposite(jobId) {
-    return callWebhook('generate-composite', { job_id: jobId });
-  }
-
-  // Step 2: AI susun rencana scene (ganti buildFramePlan() yang hardcoded)
-  async function generateFramePlan(jobId, style) {
-    return callWebhook('generate-frame-plan', { job_id: jobId, style });
-  }
-
-  // Step 3: generate 1 klip video untuk 1 frame (TTS + OmniHuman)
-  async function generateFrameClip(frameId) {
-    return callWebhook('generate-frame-clip', { frame_id: frameId });
-  }
-
-  // Step 4: gabung semua klip approved jadi 1 video final
-  async function produceVideo(jobId) {
-    return callWebhook('produce-video', { job_id: jobId });
-  }
-
-  // ── Staff management (admin only — RLS di Supabase juga menegakkan ini) ──
-  async function getStaffList() {
-    const { data, error } = await client().from('user_profiles').select('*').order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
-  }
-  async function createStaff({ email, password, name }) {
-    // Lewat backend n8n karena butuh service_role key — TIDAK BOLEH dari browser.
-    return callWebhook('create-staff', { email, password, name });
-  }
-
-  // ── Character Creator ──────────────────
-  async function uploadCharacterRefPhoto(file) {
-    const path = `ref-${Date.now()}.jpg`;
-    const { error } = await client().storage.from('character-assets').upload(path, file);
-    if (error) throw error;
-    const { data } = client().storage.from('character-assets').getPublicUrl(path);
-    return data.publicUrl;
-  }
-  async function createCharacter(fields) {
-    // Bikin baris characters (status: generating) lalu backend n8n yang isi avatar_id/voice_id-nya.
-    const user = await AUTH.getUser();
-    const { data, error } = await client()
-      .from('characters')
-      .insert({ status: 'generating', created_by: user ? user.id : null, ...fields })
-      .select().single();
-    if (error) throw error;
-    // Trigger generate di backend (async — hasil masuk lewat update baris characters ini)
-    await callWebhook('generate-character', { character_id: data.id });
-    return data;
-  }
-  async function previewVoice(voiceId) {
-    return callWebhook('preview-voice', { voice_id: voiceId });
-  }
-
-  // ── Profil (ganti password) ──────────────
-  async function updateOwnPassword(newPassword) {
-    if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
-      throw new Error('Ganti password perlu Supabase Auth aktif (tidak tersedia di mode demo).');
-    }
-    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-    if (error) throw error;
-  }
-
-  // ── Dashboard aggregates ──
+  // ── Dashboard aggregates (dihitung di client dari getVideoJobs()) ──
   function stats(jobs) {
     return {
       step1: jobs.filter(j => j.current_step === 1 && j.status !== 'completed').length,
@@ -232,15 +144,51 @@ const DB = (() => {
     };
   }
 
+  // ── Storage helpers (untuk thumbnail) ──
+  async function signedUrl(bucket, path, expiresSec = 3600) {
+    if (!path) return null;
+    const { data, error } = await client().storage.from(bucket).createSignedUrl(path, expiresSec);
+    if (error) { console.warn('signedUrl gagal', bucket, path, error.message); return null; }
+    return data.signedUrl;
+  }
+  async function getCharacterPrimaryPhoto(characterId) {
+    const { data, error } = await client()
+      .from('character_photos')
+      .select('storage_path')
+      .eq('character_id', characterId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return signedUrl('character-assets', data.storage_path);
+  }
+  async function uploadFile(bucket, path, file) {
+    const { error } = await client().storage.from(bucket).upload(path, file, { upsert: true });
+    if (error) throw error;
+    return path;
+  }
+
+  // ── Backgrounds (untuk thumbnail scene) ──
+  async function getBackgrounds() {
+    const { data, error } = await client().from('backgrounds').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    const withUrls = await Promise.all(data.map(async b => ({ ...b, _signedUrl: await signedUrl('product-assets', b.storage_path) })));
+    return withUrls;
+  }
+  async function addBackground(fields, file) {
+    const path = `bg_${Date.now()}_${(file.name || 'upload').replace(/[^a-zA-Z0-9._-]/g, '')}`;
+    await uploadFile('product-assets', path, file);
+    const { data, error } = await client().from('backgrounds').insert({ storage_path: path, type: 'uploaded', ...fields }).select().single();
+    if (error) throw error;
+    return { ...data, _signedUrl: await signedUrl('product-assets', path) };
+  }
+
   return {
-    getCharacters, getCharacter,
-    getProducts, getProduct, addProduct, uploadProductImages,
+    getCharacters, getCharacter, getCharacterPrimaryPhoto,
+    getProducts, getProduct, addProduct,
     getVideoJobs, getVideoJob, addVideoJob, updateVideoJob,
     getFrames, materializeFrames, updateFrame,
-    generateComposite, generateFramePlan, generateFrameClip, produceVideo,
-    getStaffList, createStaff,
-    uploadCharacterRefPhoto, createCharacter, previewVoice,
-    updateOwnPassword,
+    getBackgrounds, addBackground, signedUrl, uploadFile,
     stats,
   };
 })();

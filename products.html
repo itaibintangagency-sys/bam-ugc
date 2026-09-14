@@ -35,16 +35,16 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
-    <a href="staff.html" class="nav-item" data-admin-only>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Staff
+    <a href="profile.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Profil
     </a>
   </nav>
   <div class="sidebar-foot">
-    <a href="profile.html" class="acct" style="text-decoration:none">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
       <div class="acct-avatar" data-acct-avatar>P</div>
       <div><div class="acct-name" data-acct-name>Patrik</div><div class="acct-role" data-acct-role>Admin</div></div>
-    </a>
+    </button>
   </div>
 </aside>
 
@@ -108,15 +108,6 @@
           <input type="text" id="prodPrice" placeholder="mis. Rp89.000"/>
         </div>
       </div>
-
-      <div class="field">
-        <label>Foto produk</label>
-        <div class="dropzone" id="prodDropzone" style="border:1.5px dashed var(--line);border-radius:10px;padding:20px;text-align:center;cursor:pointer">
-          <span class="field-hint" id="prodDropzoneLabel">Klik atau seret foto ke sini (bisa lebih dari 1)</span>
-          <input type="file" id="prodFileInput" accept="image/*" multiple hidden/>
-        </div>
-        <div id="prodPreviewGrid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeModal('addProductModal')">Batal</button>
@@ -163,14 +154,17 @@
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><strong>Belum ada produk</strong>Tambah produk pertama untuk mulai generate video.</div>`;
       return;
     }
-    grid.innerHTML = list.map(p => `
+    grid.innerHTML = list.map(p => {
+      const img = Array.isArray(p.images) && p.images[0] ? p.images[0] : null;
+      return `
       <div class="tile" onclick="openProdDetail('${p.id}')">
-        <div class="tile-media">${p.images && p.images.length ? `<img src="${p.images[0]}" alt="${escapeHtml(p.name)}">` : p.name.charAt(0)}<span class="tile-badge">${escapeHtml(platformLabel(p.platform))}</span></div>
+        <div class="tile-media">${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}"/>` : p.name.charAt(0)}<span class="tile-badge">${escapeHtml(platformLabel(p.platform))}</span></div>
         <div class="tile-body">
           <div class="tile-title">${escapeHtml(p.name)}</div>
           <div class="tile-sub">${escapeHtml(p.price || '')}</div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
   const PLATFORM_LABELS = { shopee: 'Shopee', tiktok: 'TikTok Shop', tokopedia: 'Tokopedia', manual: 'Manual' };
   function platformLabel(v) { return PLATFORM_LABELS[v] || v; }
@@ -179,35 +173,14 @@
   document.getElementById('searchInput').addEventListener('input', renderProducts);
   document.getElementById('platformFilter').addEventListener('change', renderProducts);
 
-  // ── Upload foto produk ──────────────────────
-  let prodImageFiles = [];
-  const prodDropzone = document.getElementById('prodDropzone');
-  const prodFileInput = document.getElementById('prodFileInput');
-  prodDropzone.addEventListener('click', () => prodFileInput.click());
-  prodFileInput.addEventListener('change', e => handleProdFiles(e.target.files));
-  prodDropzone.addEventListener('dragover', e => e.preventDefault());
-  prodDropzone.addEventListener('drop', e => { e.preventDefault(); handleProdFiles(e.dataTransfer.files); });
-
-  function handleProdFiles(fileList) {
-    prodImageFiles = Array.from(fileList);
-    document.getElementById('prodDropzoneLabel').textContent = `${prodImageFiles.length} foto dipilih — klik untuk ganti`;
-    document.getElementById('prodPreviewGrid').innerHTML = prodImageFiles.map(f =>
-      `<img src="${URL.createObjectURL(f)}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)">`
-    ).join('');
-  }
-  function resetProdForm() {
-    prodImageFiles = [];
-    document.getElementById('prodDropzoneLabel').textContent = 'Klik atau seret foto ke sini (bisa lebih dari 1)';
-    document.getElementById('prodPreviewGrid').innerHTML = '';
-  }
-
   async function openProdDetail(id) {
     let p;
     try { p = await DB.getProduct(id); } catch (err) { return toast('Gagal memuat produk: ' + err.message); }
     if (!p) return;
     document.getElementById('prodDetailName').textContent = p.name;
+    const img = Array.isArray(p.images) && p.images[0] ? p.images[0] : null;
     document.getElementById('prodDetailBody').innerHTML = `
-      ${p.images && p.images.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${p.images.map(img => `<img src="${img}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`).join('')}</div>` : ''}
+      ${img ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" style="width:100%;max-width:220px;border-radius:10px;margin-bottom:14px;display:block"/>` : ''}
       <div class="field-row">
         <div><div class="field-hint">Platform</div><div style="font-weight:600;margin-top:2px">${escapeHtml(platformLabel(p.platform))}</div></div>
         <div><div class="field-hint">Harga</div><div style="font-weight:600;margin-top:2px">${escapeHtml(p.price || '—')}</div></div>
@@ -238,22 +211,14 @@
     const btn = document.getElementById('saveProductBtn');
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try {
-      let imageUrls = [];
-      if (prodImageFiles.length) {
-        btn.textContent = 'Mengupload foto…';
-        imageUrls = await DB.uploadProductImages(prodImageFiles);
-      }
-      btn.textContent = 'Menyimpan…';
       await DB.addProduct({
         name,
         url: document.getElementById('scrapeUrl').value.trim() || null,
         platform: document.getElementById('prodPlatform').value,
         price: document.getElementById('prodPrice').value.trim(),
-        images: imageUrls,
       });
       closeModal('addProductModal');
       ['prodName','prodPrice','scrapeUrl'].forEach(id => document.getElementById(id).value = '');
-      resetProdForm();
       await renderProducts();
       toast(`${name} ditambahkan ke library.`);
     } catch (err) {
@@ -265,6 +230,7 @@
 
   (async () => {
     await AUTH.guard();
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
   })();
 </script>
 </body>

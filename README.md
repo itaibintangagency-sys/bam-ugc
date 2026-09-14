@@ -80,3 +80,18 @@ Setelah langkah 2, `login.html` otomatis pindah dari demo-session ke Supabase Au
 - **Generate composite / generate scene / produce video** — disimulasikan dengan `setTimeout`, belum memanggil Magnific API (OmniHuman, Nano Banana, Video Combiner). Status di `video_jobs`/`frames` sudah ditulis pakai enum asli (`analyzing`/`scripting`/`generating_video`/dst, `pending`/`generating`/`review`/`approved`), jadi begitu n8n mulai update status yang sama dari backend, tampilan di app ini otomatis ikut berubah — tidak perlu ubah kode frontend.
 - **Ambil data dari link produk** — disimulasikan, belum memanggil Apify scraper.
 - **Character Creator** — murni pratinjau UI, tidak menulis ke database (lihat tabel di atas).
+
+## 6. Sambungkan ke Magnific (lewat n8n, bukan langsung)
+
+API key Magnific **tidak boleh** dipanggil langsung dari browser — siapa saja yang buka DevTools bisa mencurinya. Jalur amannya: browser → webhook n8n → Magnific.
+
+1. Buka `js/n8n-client.js`, isi `N8N_WEBHOOK_BASE` dengan URL webhook n8n kamu.
+2. Begitu diisi, tombol "Generate composite", generate per-scene, dan "Produce" di Video Studio otomatis manggil webhook itu (bukan simulasi lagi).
+3. Kontrak request/response yang dipakai (endpoint, body, field yang diharapkan balik) ada di komentar paling atas `js/n8n-client.js` — itu usulan awal saya, **sesuaikan dengan workflow n8n kamu yang sebenarnya**, bukan spek yang sudah disepakati bersama tim n8n.
+4. Selama `N8N_WEBHOOK_BASE` kosong, semua tombol itu tetap jalan pakai simulasi seperti sebelumnya — tidak ada yang rusak.
+
+## 7. Halaman Profil & Kelola Staff
+
+- **Ganti password** — sudah live, langsung lewat Supabase Auth (`profile.html`).
+- **Kelola staff (lihat daftar)** — butuh tabel `profiles` di database (belum ada di skema yang kamu kasih). Kalau belum ada, halaman Profil bakal nampilin SQL yang perlu dijalankan — saya sengaja tidak auto-run, jalankan sendiri di SQL Editor setelah dicek.
+- **Tambah staff baru** — **tidak bisa** dilakukan langsung dari browser dengan anon key (itu memang dibatasi Supabase demi keamanan — kalau bisa, siapa saja bisa bikin akun). Untuk sekarang, buat staff baru manual lewat Supabase Dashboard → Authentication → Users → Add user (sama seperti bikin akun admin pertama di bagian 4). Kalau nanti mau tombol "Tambah staff" beneran jalan, perlu backend terpisah (Supabase Edge Function atau workflow n8n) yang pegang `service_role` key — jangan taruh `service_role` key di frontend manapun.

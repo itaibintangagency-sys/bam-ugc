@@ -30,14 +30,16 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 9l5-3v12l-5-3"/></svg>
       Video Studio
     </a>
+
     <div class="nav-section-gap"></div>
+
     <a href="history.html" class="nav-item">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
-    <a href="staff.html" class="nav-item" data-admin-only>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Staff
+    <a href="profile.html" class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Profil
     </a>
   </nav>
   <div class="sidebar-foot">
@@ -56,77 +58,170 @@
     </div>
   </div>
 
-  <div class="wizard-panel" style="max-width:440px">
-    <div class="block-title" style="margin-bottom:4px">Informasi akun</div>
-    <div class="field-hint" style="margin-bottom:18px" id="profileEmail">Memuat…</div>
+  <!-- INFO AKUN -->
+  <div class="block" style="margin-bottom:20px">
+    <div class="block-head"><span class="block-title">Info akun</span></div>
+    <div class="field-row">
+      <div><div class="field-hint">Email</div><div style="font-weight:600;margin-top:2px" id="acctEmail">—</div></div>
+      <div><div class="field-hint">Role</div><div style="font-weight:600;margin-top:2px" id="acctRoleDisplay">—</div></div>
+    </div>
+  </div>
 
+  <!-- GANTI PASSWORD -->
+  <div class="block" style="margin-bottom:20px;max-width:420px">
+    <div class="block-head"><span class="block-title">Ganti password</span></div>
     <div class="field">
-      <label for="nameInput">Nama tampilan</label>
-      <input type="text" id="nameInput" placeholder="Nama kamu"/>
+      <label for="newPassword">Password baru</label>
+      <input type="password" id="newPassword" placeholder="Minimal 8 karakter"/>
     </div>
-    <button class="btn btn-ghost" id="saveNameBtn" style="margin-bottom:28px">Simpan nama</button>
+    <div class="field">
+      <label for="confirmPassword">Konfirmasi password baru</label>
+      <input type="password" id="confirmPassword" placeholder="Ulangi password baru"/>
+    </div>
+    <button class="btn btn-primary" id="changePasswordBtn">Simpan password baru</button>
+    <div class="field-hint" id="pwHint" style="margin-top:10px"></div>
+  </div>
 
-    <div class="block-title" style="margin-bottom:4px;border-top:1px solid var(--line);padding-top:22px">Ganti password</div>
-    <div class="field-hint" style="margin-bottom:18px">Minimal 8 karakter.</div>
-    <div class="field">
-      <label for="newPassInput">Password baru</label>
-      <input type="password" id="newPassInput" placeholder="Password baru"/>
+  <!-- KELOLA STAFF -->
+  <div class="activity">
+    <div class="activity-head">
+      <span>Kelola staff</span>
+      <button class="btn btn-primary" onclick="openModal('addStaffModal')" style="padding:8px 14px;font-size:12px">+ Tambah staff</button>
     </div>
-    <div class="field">
-      <label for="confirmPassInput">Konfirmasi password baru</label>
-      <input type="password" id="confirmPassInput" placeholder="Ulangi password baru"/>
-    </div>
-    <button class="btn btn-primary" id="savePassBtn">Ganti password</button>
+    <div id="staffList"></div>
   </div>
 </main>
+
+<!-- TAMBAH STAFF MODAL -->
+<div class="modal-overlay" id="addStaffModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Tambah staff</div>
+      <button class="modal-close" onclick="closeModal('addStaffModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="auth-error show" style="background:var(--gold-10);color:#8a6d00;margin-bottom:16px">
+        ⚠️ Membuat akun baru butuh akses admin di server (bukan cuma dari browser) — ini demi keamanan, supaya orang luar nggak bisa bikin akun sendiri lewat halaman ini. Isi form di bawah untuk menyiapkan datanya, tapi <strong>klik "Kirim undangan" belum benar-benar membuat akun</strong> sampai backend-nya ada.
+      </div>
+      <div class="field">
+        <label for="staffEmail">Email staff</label>
+        <input type="email" id="staffEmail" placeholder="staff@bintangagency.id"/>
+      </div>
+      <div class="field">
+        <label for="staffName">Nama</label>
+        <input type="text" id="staffName" placeholder="Nama lengkap"/>
+      </div>
+      <div class="field">
+        <label for="staffRole">Role</label>
+        <select id="staffRole">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('addStaffModal')">Batal</button>
+      <button class="btn btn-primary" id="inviteStaffBtn">Kirim undangan</button>
+    </div>
+  </div>
+</div>
 
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 <script>
-  let currentUser = null;
-
-  document.getElementById('saveNameBtn').addEventListener('click', async () => {
-    const name = document.getElementById('nameInput').value.trim();
-    if (!name) return toast('Nama tidak boleh kosong.');
-    try {
-      if (typeof SUPABASE_READY !== 'undefined' && SUPABASE_READY) {
-        const { error } = await supabaseClient.from('user_profiles').update({ name }).eq('id', currentUser.id);
-        if (error) throw error;
-      }
-      toast('Nama disimpan. Muat ulang halaman untuk lihat perubahan di sidebar.');
-    } catch (err) {
-      toast('Gagal simpan nama: ' + err.message);
+  (async () => {
+    const user = await AUTH.guard();
+    if (user) {
+      document.getElementById('acctEmail').textContent = user.email || '—';
+      document.getElementById('acctRoleDisplay').textContent = user.role || 'Admin';
     }
-  });
+    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
+    await loadStaffList();
+  })();
 
-  document.getElementById('savePassBtn').addEventListener('click', async () => {
-    const p1 = document.getElementById('newPassInput').value;
-    const p2 = document.getElementById('confirmPassInput').value;
-    if (p1.length < 8) return toast('Password minimal 8 karakter.');
-    if (p1 !== p2) return toast('Konfirmasi password tidak cocok.');
-    const btn = document.getElementById('savePassBtn');
+  document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+    const pw = document.getElementById('newPassword').value;
+    const cpw = document.getElementById('confirmPassword').value;
+    const hint = document.getElementById('pwHint');
+    hint.style.color = 'var(--dim)';
+    if (pw.length < 8) { hint.textContent = 'Password minimal 8 karakter.'; hint.style.color = '#B4432E'; return; }
+    if (pw !== cpw) { hint.textContent = 'Konfirmasi password tidak sama.'; hint.style.color = '#B4432E'; return; }
+    if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
+      hint.textContent = 'Supabase belum dikonfigurasi — ganti password cuma jalan setelah js/supabase-client.js diisi.';
+      hint.style.color = '#B4432E';
+      return;
+    }
+    const btn = document.getElementById('changePasswordBtn');
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try {
-      await DB.updateOwnPassword(p1);
+      const { error } = await supabaseClient.auth.updateUser({ password: pw });
+      if (error) throw error;
+      hint.textContent = 'Password berhasil diganti.';
+      hint.style.color = 'var(--teal)';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
       toast('Password berhasil diganti.');
-      document.getElementById('newPassInput').value = '';
-      document.getElementById('confirmPassInput').value = '';
     } catch (err) {
-      toast('Gagal ganti password: ' + err.message);
+      hint.textContent = 'Gagal: ' + err.message;
+      hint.style.color = '#B4432E';
     } finally {
-      btn.disabled = false; btn.textContent = 'Ganti password';
+      btn.disabled = false; btn.textContent = 'Simpan password baru';
     }
   });
 
-  (async () => {
-    currentUser = await AUTH.guard();
-    if (!currentUser) return;
-    document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
-    document.getElementById('profileEmail').textContent = currentUser.email;
-    document.getElementById('nameInput').value = currentUser.name || '';
-  })();
+  // ── Kelola staff ──────────────────────────────
+  // Bergantung pada tabel `profiles` (belum tentu ada di database kamu — lihat
+  // pesan fallback di bawah kalau belum). Ini BUKAN skema yang saya jalankan
+  // otomatis; SQL-nya cuma ditampilkan sebagai usulan kalau tabelnya belum ada.
+  const PROFILES_TABLE_SQL = `create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  role text default 'staff' check (role in ('admin','staff')),
+  created_at timestamptz default now()
+);
+alter table profiles enable row level security;
+create policy "authenticated read profiles" on profiles for select using (auth.role() = 'authenticated');
+create policy "self update own profile" on profiles for update using (auth.uid() = id);`;
+
+  async function loadStaffList() {
+    const el = document.getElementById('staffList');
+    if (typeof SUPABASE_READY === 'undefined' || !SUPABASE_READY) {
+      el.innerHTML = `<div class="empty"><strong>Supabase belum dikonfigurasi</strong>Isi js/supabase-client.js dulu.</div>`;
+      return;
+    }
+    const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+    if (error) {
+      el.innerHTML = `<div class="empty" style="text-align:left;padding:24px 26px">
+        <strong>Tabel "profiles" belum ada</strong>
+        Kelola staff butuh tabel ini di Supabase kamu untuk nyimpen role admin/staff (auth.users bawaan Supabase nggak bisa dibaca langsung dari browser). Jalankan SQL ini di SQL Editor kalau mau diaktifkan:
+        <pre style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:10px;font-size:11px;overflow-x:auto;white-space:pre">${escapeHtml(PROFILES_TABLE_SQL)}</pre>
+      </div>`;
+      return;
+    }
+    if (!data.length) {
+      el.innerHTML = `<div class="empty"><strong>Belum ada staff terdaftar</strong>Klik "+ Tambah staff" untuk mulai.</div>`;
+      return;
+    }
+    el.innerHTML = data.map(p => `
+      <div class="act-row">
+        <div class="act-thumb" style="border-radius:50%"></div>
+        <div class="act-main">
+          <div class="act-title">${escapeHtml(p.full_name || '—')}</div>
+          <div class="act-meta">${escapeHtml(p.id)}</div>
+        </div>
+        <span class="act-status ${p.role === 'admin' ? 'st-complete' : 'st-draft'}">${p.role === 'admin' ? 'Admin' : 'Staff'}</span>
+        <span class="act-time"></span>
+      </div>`).join('');
+  }
+
+  document.getElementById('inviteStaffBtn').addEventListener('click', () => {
+    const email = document.getElementById('staffEmail').value.trim();
+    if (!email) return toast('Isi email staff dulu.');
+    closeModal('addStaffModal');
+    toast('Belum ada backend untuk kirim undangan — buat manual dulu di Supabase Dashboard → Authentication → Users.');
+  });
 </script>
 </body>
 </html>

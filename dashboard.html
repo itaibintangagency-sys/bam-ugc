@@ -39,20 +39,20 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       Riwayat
     </a>
-    <a href="staff.html" class="nav-item" data-admin-only>
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Staff
+    <a href="profile.html" class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Profil
     </a>
   </nav>
 
   <div class="sidebar-foot">
-    <a href="profile.html" class="acct" style="text-decoration:none">
+    <button class="acct acct-btn" id="acctBtn" title="Keluar">
       <div class="acct-avatar" data-acct-avatar>P</div>
       <div>
         <div class="acct-name" data-acct-name>Patrik</div>
         <div class="acct-role" data-acct-role>Admin</div>
       </div>
-    </a>
+    </button>
   </div>
 </aside>
 
@@ -189,7 +189,7 @@
       const [label, cls] = statusMap[j.status] || statusMap.analyzing;
       return `
       <a href="video-studio.html?job=${j.id}" class="act-row clickable">
-        <div class="act-thumb"></div>
+        <div class="act-thumb">${j.composite_image_url ? `<img src="${escapeHtml(j.composite_image_url)}" alt=""/>` : ''}</div>
         <div class="act-main">
           <div class="act-title">${escapeHtml(j.title)}</div>
           <div class="act-meta">${j.frames_count ? j.frames_count + ' scene' : 'Belum ada scene'}</div>
@@ -198,6 +198,10 @@
         <span class="act-time">${timeAgo(new Date(j.created_at).getTime())}</span>
       </a>`;
     }).join('') || `<div class="empty"><strong>Belum ada aktivitas</strong>Mulai video pertama dari tombol "Video baru".</div>`;
+
+    document.getElementById('acctBtn').addEventListener('click', () => {
+      if (confirm('Keluar dari BA UGC?')) AUTH.signOut();
+    });
   })();
 </script>
 </body>
