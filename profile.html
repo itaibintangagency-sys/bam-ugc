@@ -60,6 +60,17 @@
     <div class="block-title" style="margin-bottom:4px">Informasi akun</div>
     <div class="field-hint" style="margin-bottom:18px" id="profileEmail">Memuat…</div>
 
+    <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px">
+      <div id="avatarPreview" style="width:64px;height:64px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:24px;color:var(--dim);overflow:hidden;flex-shrink:0">?</div>
+      <div>
+        <label class="btn btn-ghost" style="display:inline-flex;cursor:pointer;margin-bottom:4px">
+          Ganti foto profil
+          <input type="file" id="avatarInput" accept="image/*" style="display:none"/>
+        </label>
+        <div class="field-hint" id="avatarHint">JPG/PNG, ukuran wajar.</div>
+      </div>
+    </div>
+
     <div class="field">
       <label for="nameInput">Nama tampilan</label>
       <input type="text" id="nameInput" placeholder="Nama kamu"/>
@@ -126,7 +137,35 @@
     document.getElementById('acctBtn').addEventListener('click', () => { if (confirm('Keluar dari BA UGC?')) AUTH.signOut(); });
     document.getElementById('profileEmail').textContent = currentUser.email;
     document.getElementById('nameInput').value = currentUser.name || '';
+
+    const avatarPreview = document.getElementById('avatarPreview');
+    avatarPreview.textContent = (currentUser.name || currentUser.email || '?').charAt(0).toUpperCase();
+    if (currentUser.avatarPath) {
+      DB.getAvatarUrl(currentUser.avatarPath).then(url => {
+        if (url) avatarPreview.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover"/>`;
+      }).catch(() => {});
+    }
   })();
+
+  document.getElementById('avatarInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const hint = document.getElementById('avatarHint');
+    hint.textContent = 'Mengupload…';
+    try {
+      const url = await DB.uploadAvatar(currentUser.id, file);
+      currentUser.avatarPath = `${currentUser.id}/avatar.${(file.name.split('.').pop() || 'jpg').toLowerCase()}`;
+      document.getElementById('avatarPreview').innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover"/>`;
+      const sidebarAvatar = document.querySelector('[data-acct-avatar]');
+      if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+      hint.textContent = 'Foto profil berhasil diganti.';
+      toast('Foto profil berhasil diganti.');
+    } catch (err) {
+      hint.textContent = 'Gagal upload: ' + err.message;
+      toast('Gagal upload foto: ' + err.message);
+    }
+    e.target.value = '';
+  });
 </script>
 </body>
 </html>
