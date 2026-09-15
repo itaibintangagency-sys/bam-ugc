@@ -26,6 +26,7 @@ const AUTH = {
         email: data.user.email,
         name: profile.name || (data.user.email || '').split('@')[0],
         role: profile.role,
+        avatarPath: profile.avatar_path || null,
       };
     }
     const raw = localStorage.getItem(this.SESSION_KEY);
@@ -46,7 +47,7 @@ const AUTH = {
 
     if (error || !data) {
       console.warn('user_profiles belum ada untuk user ini — fallback ke role "staff". Minta admin tambahkan baris user_profiles secara manual atau lewat halaman Kelola Staff.', error);
-      this._cachedProfile = { id: userId, name: null, role: 'staff' };
+      this._cachedProfile = { id: userId, name: null, role: 'staff', avatar_path: null };
       return this._cachedProfile;
     }
     this._cachedProfile = data;
@@ -86,7 +87,14 @@ const AUTH = {
     const avatarEl = document.querySelector('[data-acct-avatar]');
     if (nameEl) nameEl.textContent = user.name || user.email;
     if (roleEl) roleEl.textContent = user.role === 'admin' ? 'Admin' : 'Staff';
-    if (avatarEl) avatarEl.textContent = (user.name || user.email || '?').charAt(0).toUpperCase();
+    if (avatarEl) {
+      avatarEl.textContent = (user.name || user.email || '?').charAt(0).toUpperCase();
+      if (user.avatarPath && typeof DB !== 'undefined') {
+        DB.getAvatarUrl(user.avatarPath).then(url => {
+          if (url) avatarEl.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+        }).catch(() => {});
+      }
+    }
 
     // Sembunyikan menu/elemen khusus admin kalau user ini staff
     if (user.role !== 'admin') {

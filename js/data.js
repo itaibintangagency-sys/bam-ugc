@@ -221,6 +221,23 @@ const DB = (() => {
     if (error) throw error;
   }
 
+  // ── Avatar profil ──────────────────────
+  async function uploadAvatar(userId, file) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${userId}/avatar.${ext}`;
+    const { error } = await client().storage.from('avatars').upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { error: updErr } = await client().from('user_profiles').update({ avatar_path: path }).eq('id', userId);
+    if (updErr) throw updErr;
+    return getAvatarUrl(path);
+  }
+  async function getAvatarUrl(avatarPath) {
+    if (!avatarPath) return null;
+    const { data, error } = await client().storage.from('avatars').createSignedUrl(avatarPath, 3600);
+    if (error) { console.warn('getAvatarUrl gagal', error.message); return null; }
+    return data.signedUrl;
+  }
+
   // ── Dashboard aggregates ──
   function stats(jobs) {
     return {
@@ -241,6 +258,7 @@ const DB = (() => {
     getStaffList, createStaff,
     uploadCharacterRefPhoto, createCharacter, previewVoice,
     updateOwnPassword,
+    uploadAvatar, getAvatarUrl,
     stats,
   };
 })();
