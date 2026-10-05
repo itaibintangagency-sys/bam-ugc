@@ -471,3 +471,12 @@ main{
 .auth-wrap .btn-primary { font-size: 16px; min-height: 48px; }
 .auth-wrap .auth-error { color: #8A2A17; background: #FDE3DC; border: 1px solid #8A2A17; font-size: 16px; font-weight: 600; }
 .auth-wrap .auth-foot { font-size: 14px; color: #5A4636; }
+
+/* Tombol Keluar di sidebar (5 Okt 2026). Teks #1E130C di latar --panel dan garis #9A8068: kontras tinggi. */
+.logout-btn {
+  display: block; width: 100%; margin-top: 12px; min-height: 40px; padding: 0 12px;
+  font: inherit; font-size: 14px; font-weight: 700; color: #1E130C;
+  background: var(--panel); border: 2px solid #9A8068; border-radius: 10px; cursor: pointer;
+}
+.logout-btn:hover { background: #FFF3E4; }
+.logout-btn:focus-visible { outline: 3px solid #1D4ED8; outline-offset: 2px; }

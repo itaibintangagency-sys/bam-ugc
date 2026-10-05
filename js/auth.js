@@ -115,3 +115,27 @@ const AUTH = {
     return user;
   },
 };
+
+/* ══════════════════════════════════════
+   Tombol "Keluar" yang terlihat di semua halaman (5 Okt 2026)
+   Sebelumnya logout hanya ada di profile.html, staff.html, dan video-studio.html sebagai
+   tombol akun tanpa label (hanya tooltip); di Dashboard, Karakter, Produk, dan Riwayat tidak ada.
+   Dipasang otomatis di .sidebar-foot, sehingga tidak perlu mengubah tiap halaman.
+   ══════════════════════════════════════ */
+(function () {
+  function pasangKeluar() {
+    const foot = document.querySelector('.sidebar-foot');
+    if (!foot || foot.querySelector('[data-keluar]')) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'logout-btn';
+    b.setAttribute('data-keluar', '');
+    b.textContent = 'Keluar';
+    b.addEventListener('click', function () {
+      if (confirm('Keluar dari BA UGC?')) AUTH.signOut();
+    });
+    foot.appendChild(b);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pasangKeluar);
+  else pasangKeluar();
+})();
