@@ -1,0 +1,10 @@
+node_modules/
+.env
+agent/work/
+agent/logs/
+agent/debug/
+agent/local/inbox/*
+agent/local/outbox/*
+agent/reports/
+!agent/local/inbox/.gitkeep
+!agent/local/outbox/.gitkeep
