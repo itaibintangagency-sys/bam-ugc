@@ -458,7 +458,18 @@ main{
 .act-title { font-size: 14px; } .act-meta { font-size: 12.5px; } .act-status { font-size: 12px; } .act-time { font-size: 12px; }
 .empty { font-size: 14px; } .tile-title { font-size: 14px; } .tile-sub { font-size: 12px; } .tile-badge { font-size: 11px; }
 .composite-result { font-size: 12px; color: #C2410C; }
-
+/* Isian yang diisi otomatis oleh Chrome (5 Okt 2026): pertahankan latar krem dan teks gelap */
+:root { color-scheme: light; }
+.auth-wrap .field input:-webkit-autofill,
+.auth-wrap .field input:-webkit-autofill:hover,
+.auth-wrap .field input:-webkit-autofill:focus,
+.auth-wrap .field input:-webkit-autofill:active {
+  -webkit-text-fill-color: #1E130C !important;
+  caret-color: #1E130C;
+  -webkit-box-shadow: 0 0 0 1000px #FFF3E4 inset !important;
+  box-shadow: 0 0 0 1000px #FFF3E4 inset !important;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
 /* Halaman login (hanya di dalam .auth-wrap) */
 .auth-wrap .auth-card { max-width: 420px; background: #FFFBF5; }
 .auth-wrap .auth-mark { font-size: 32px; }
