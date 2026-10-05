@@ -1,0 +1,17 @@
+{
+  "catatan": "Daftar suara yang terlihat di Flow (screenshot 2026-10-02). Daftar di Flow bergulir dan lebih panjang. Admin dapat menambah suara lain lewat pengaturan.",
+  "lengkap": false,
+  "suara": [
+    {"name": "Achernar", "gender": "perempuan", "desc": "Female, soft, high pitch"},
+    {"name": "Achird", "gender": "laki-laki", "desc": "Male, friendly, mid pitch"},
+    {"name": "Algenib", "gender": "laki-laki", "desc": "Male, gravelly, low pitch"},
+    {"name": "Algieba", "gender": "laki-laki", "desc": "Male, easy-going, mid-low pitch"},
+    {"name": "Alnilam", "gender": "laki-laki", "desc": "Male, firm, mid-low pitch"},
+    {"name": "Aoede", "gender": "perempuan", "desc": "Female, breezy, mid pitch"},
+    {"name": "Autonoe", "gender": "perempuan", "desc": "Female, bright, mid pitch"},
+    {"name": "Callirrhoe", "gender": "perempuan", "desc": "Female, easy-going, mid pitch"},
+    {"name": "Charon", "gender": "laki-laki", "desc": "Male, informative, lower pitch"},
+    {"name": "Despina", "gender": "perempuan", "desc": "Female, smooth, mid pitch"},
+    {"name": "Enceladus", "gender": "laki-laki", "desc": "Male, breathy, lower pitch"}
+  ]
+}

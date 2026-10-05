@@ -1,0 +1,17 @@
+{
+  "A-01": {"utama": "S-01", "alternatif": ["S-02", "S-03", "S-12"]},
+  "A-02": {"utama": "S-03", "alternatif": ["S-01", "S-05", "S-12"]},
+  "A-03": {"utama": "S-12", "alternatif": ["S-17", "S-01", "S-23"]},
+  "A-04": {"utama": "S-01", "alternatif": ["S-03", "S-12", "S-14"]},
+  "A-05": {"utama": "S-05", "alternatif": ["S-04", "S-02", "S-01"]},
+  "A-06": {"utama": "S-05", "alternatif": ["S-02", "S-24", "S-01"]},
+  "A-07": {"utama": "S-01", "alternatif": ["S-07", "S-08", "S-24"]},
+  "A-08": {"utama": "S-07", "alternatif": ["S-06", "S-12", "S-24"]},
+  "A-09": {"utama": "S-01", "alternatif": ["S-09", "S-02", "S-24"]},
+  "A-10": {"utama": "S-08", "alternatif": ["S-01", "S-20", "S-18"]},
+  "A-11": {"utama": "S-06", "alternatif": ["S-10", "S-01", "S-07"]},
+  "A-12": {"utama": "S-01", "alternatif": ["S-02", "S-06", "S-07"]},
+  "A-13": {"utama": "S-08", "alternatif": ["S-09", "S-01", "S-24"]},
+  "A-14": {"utama": "S-16", "alternatif": ["S-19", "S-12", "S-24"]},
+  "A-15": {"utama": "S-24", "alternatif": ["S-02", "S-03", "S-01"]}
+}

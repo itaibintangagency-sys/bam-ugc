@@ -1,0 +1,289 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>mockflow</title>
+<style>
+  body { background:#000; color:#fff; font-family:sans-serif; margin:0; }
+  .grid { display:flex; flex-wrap:wrap; gap:10px; padding:90px 16px 200px; }
+  .card { width:140px; height:250px; background:#222; position:relative; overflow:hidden; font-size:11px; }
+  .card img { width:100%; height:100%; object-fit:cover; cursor:pointer; }
+  .footer-left { position:absolute; bottom:4px; left:6px; }
+  .composer { position:fixed; left:160px; bottom:20px; width:560px; background:#1a1a1a; padding:10px; border-radius:12px; }
+  #ed { min-height:20px; border:1px solid #444; white-space:pre-wrap; max-height:120px; overflow:auto; }
+  #pop { display:none; position:fixed; top:40px; left:420px; width:300px; background:#222; padding:8px; z-index:5; }
+  #pop.open { display:block; }
+  #panel { display:none; position:fixed; inset:0; background:#202124; z-index:10; }
+  #detail { display:none; position:fixed; inset:0; background:#000; z-index:8; }
+  #menu { position:absolute; right:20px; top:60px; background:#222; display:none; }
+  #menu.open { display:block; } #sub { display:none; position:absolute; right:200px; top:40px; background:#2a2a2a; } #sub.open { display:block; }
+  button { color:#000; margin:2px; }
+  #cap { position:fixed; inset:0; background:rgba(255,255,255,.6); z-index:20; }
+</style></head><body>
+<div id="home" style="display:none;padding:80px"><h1>Google Flow</h1><button id="newproj">Project baru</button></div>
+<div id="project">
+  <div style="position:fixed;top:10px;left:10px;z-index:3">
+    <button aria-label="Beranda">home</button><input aria-label="Teks yang dapat diedit" value="Okt 01 - 18:25"/>
+    <button aria-label="Opsi lainnya untuk project">more_vert</button>
+    <button aria-label="Menu tambahkan media">add</button><span id="extra"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="composer">
+    <div id="chips"></div>
+    <div contenteditable="true" id="ed"></div>
+    <button type="button" aria-label="Hapus perintah" id="clr">close</button>
+    <button type="button" aria-label="Tambahkan bahan ke kotak perintah" id="plus">add</button>
+    <button aria-pressed="false" id="agentbtn" onclick="this.setAttribute('aria-pressed', this.getAttribute('aria-pressed')==='true'?'false':'true')">Agen</button>
+    <button aria-label="Pemicu setelan" id="chip"><span id="chiptxt">Video · 360p · 8 dtk</span> <span id="chiprat">crop_16_9</span> <span id="chipn">x2</span></button>
+    <button type="submit" aria-label="Mulai pembuatan" id="gen">arrow_forward</button>
+  </div>
+</div>
+
+<div id="acct" style="position:fixed;bottom:4px;left:4px"><a role="button" aria-label="Google Account: Uji Bintang  
+(uji@contoh.test)">U</a></div>
+<div id="detail">
+  <button aria-label="Tombol kembali untuk membuka halaman sebelumnya" id="back">arrow_back</button>
+  <button aria-label="Opsi lainnya" id="more">more_vert</button>
+  <pre id="detailprompt" style="max-width:420px;white-space:pre-wrap;font-size:11px"></pre>
+  <video class="main-video" aria-label="Video yang dihasilkan" width="224" height="399" muted></video>
+  <button aria-label="Gunakan kembali perintah">keyboard_return</button>
+  <div id="menu">
+    <button role="menuitem" id="m-fav">favorite<br>Favorit</button><br>
+    <button role="menuitem" id="m-share">share<br>Bagikan media</button><br>
+    <button role="menuitem" id="m-dl">download<br>Download media</button><br>
+    <button role="menuitem" id="m-del">delete<br>Pindahkan ke sampah</button>
+  </div>
+  <div id="sub">
+    <button role="menuitem">270p<br>GIF Animasi</button><br>
+    <button role="menuitem" id="orig">360p<br>Ukuran asli</button><br>
+    <button role="menuitem" id="up">720p<br>Resolusi ditingkatkan</button><a href="#" id="upg">Upgrade</a>
+  </div>
+</div>
+
+<div id="pop">
+  <div><button role="radio" aria-checked="false" data-g="mode"><i>image</i>Gambar</button><button role="radio" aria-checked="true" data-g="mode"><i>videocam</i>Video</button></div>
+  <div><button role="radio" aria-checked="false" data-g="sub"><i>crop_free</i>Frame</button><button role="radio" aria-checked="true" data-g="sub"><i>chrome_extension</i>Bahan</button></div>
+  <div><button role="radio" aria-checked="true" data-g="ratio"><i>crop_16_9</i>16:9</button><button role="radio" aria-checked="false" data-g="ratio"><i>crop_9_16</i>9:16</button></div>
+  <button aria-label="Pilih rangkaian model" id="model">Omni 1.1 Flash<i>arrow_drop_down</i></button>
+  <div><button role="radio" aria-checked="true" data-g="res">360p</button><button role="radio" aria-checked="false" data-g="res">720p</button></div>
+  <div><button role="radio" aria-checked="false" data-g="dur">4 dtk</button><button role="radio" aria-checked="false" data-g="dur">6 dtk</button><button role="radio" aria-checked="true" data-g="dur">8 dtk</button><button role="radio" aria-checked="false" data-g="dur">10 dtk</button></div>
+  <div><button role="radio" aria-checked="false" data-g="n">x1</button><button role="radio" aria-checked="true" data-g="n">x2</button><button role="radio" aria-checked="false" data-g="n">x3</button><button role="radio" aria-checked="false" data-g="n">x4</button></div>
+  <p>Pembuatan akan menggunakan <a href="#" id="cred">12 kredit</a></p>
+</div>
+
+<div id="panel">
+  <button aria-label="Tutup" id="pclose">close</button>
+  <input aria-label="Telusuri aset" id="psearch" placeholder="Telusuri aset" style="width:300px"><button aria-label="Upload media" id="upl">upload</button>
+  <div role="listbox" aria-label="Daftar aset" id="assets"></div>
+     <div id="preview" style="display:none"><img id="pvimg" alt="" style="width:120px"><button id="addprompt">Add to prompt</button></div>
+</div>
+<input type="file" id="f" style="display:none">
+
+<script>
+const $ = id => document.getElementById(id);
+const P = new URLSearchParams(location.search);
+const LANG = P.get('lang') === 'en' ? 'en' : 'id';
+const LG = LANG === 'en'
+  ? { thumbAlt: 'Generated video thumbnail', failWord: 'Failed', failMsg: 'This prompt may violate our policy on sexual content. Try another prompt or send feedback. You do not need to use credits for this generation.', credits: 'credits', addPrompt: 'Add to prompt', uploading: 'Uploading', character: 'Character', gif: 'Animated GIF', orig: 'Original size', upsc: 'Upscaled' }
+  : { thumbAlt: 'Thumbnail video yang dihasilkan', failWord: 'Gagal', failMsg: 'Perintah ini mungkin melanggar kebijakan kami tentang pembuatan konten seksual. Coba perintah lain atau kirim masukan. Anda tidak perlu menggunakan kredit untuk pembuatan ini.', credits: 'kredit', addPrompt: 'Tambahkan ke perintah', uploading: 'Mengupload', character: 'Karakter', gif: 'GIF Animasi', orig: 'Ukuran asli', upsc: 'Resolusi ditingkatkan' };
+const FAILN = Number(P.get('fail') || 0), DELAY = Number(P.get('delay') || 700);
+let cards = [], chips = [], gc = 0, finishCount = 0, vidCount = 0, assetN = 0, mentionMode = false;
+const CHARACTERS = (P.get('chars') || 'Sari,Dewi').split(',').filter(Boolean);
+window.__mentions = []; window.__lastGen = null; window.__projectsCreated = 0;
+window.__downloads = 0; window.__forbidden = 0; window.__generated = 0;
+  window.__attachedNames = [];
+
+const img = c => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='140' height='250'><rect width='140' height='250' fill='${c}'/></svg>`);
+cards = [{ type: 'video', id: 'v0', src: img('#445566'), title: 'Video lama' }, { type: 'user', id: 'u0', src: img('#665544'), title: 'lama.png' }];
+if (P.get('extra') === '1') $('extra').innerHTML = '<button aria-label="Tombol baru">new</button>';
+if (P.get('nochip') === '1') $('chip').style.display = 'none';
+
+function renderGrid() {
+  $('grid').innerHTML = '';
+  for (const c of cards) {
+    const d = document.createElement('div'); d.className = 'card';
+    if (c.type === 'video') {
+      const lazy = P.get('lazythumbs') === '1' && String(c.id).startsWith('g');
+      d.innerHTML = (lazy ? `<div class="lazyimg" style="width:140px;height:250px;background:#445"></div>` : `<img class="thumbnail" alt="${LG.thumbAlt}" src="${c.src}">`)
+        + `<span class="badge">360p</span><div class="footer-left" role="button">play_circle<br>${c.title}</div>`;
+      (lazy ? d.querySelector('.lazyimg') : d.querySelector('img')).onclick = () => { location.hash = '#/edit/' + c.id; };
+    } else if (c.type === 'user') {
+      d.innerHTML = `<img class="image" alt="Kartu yang menampilkan gambar pengguna" src="${c.src}"><div class="footer-left" role="button">image<br>${c.title}</div>`;
+    } else if (c.type === 'proc') {
+      d.innerHTML = `<div style="height:200px;background:#333"></div><div class="footer-left">{ "project": {...</div><button aria-label="Gunakan kembali perintah">keyboard_return</button>`;
+    } else if (c.type === 'fail') {
+      d.innerHTML = `<div>⚠</div><div>${LG.failWord}</div><p>${c.msg}</p><button class="rt">refresh</button><button>undo</button><button>delete</button>`;
+      d.querySelector('.rt').onclick = () => { c.type = 'proc'; renderGrid(); setTimeout(() => finish(c.id), DELAY); };
+    }
+    $('grid').appendChild(d);
+  }
+}
+function renderChips() {
+  $('chips').innerHTML = '';
+  const oldStyle = P.get('legacy') === '1' || P.get('oldchips') === '1';
+  for (const c of chips) {
+    if (oldStyle) { const b = document.createElement('button'); b.className = 'chip-container'; b.setAttribute('aria-label', 'Bahan'); b.innerHTML = `<img class="chip-image" alt="Gambar bahan" src="${c.src}"><i>cancel</i>`; $('chips').appendChild(b); }
+    else { const d = document.createElement('div'); d.className = 'attach'; d.innerHTML = `<img alt="" style="width:50px;height:50px" src="${c.src}">`; $('chips').appendChild(d); }
+  }
+}
+let selectedAsset = null;
+function hidePreview() { $('preview').style.display = 'none'; selectedAsset = null; }
+function renderAssets() {
+  $('assets').innerHTML = '';
+  const q = ($('psearch').value || '').toLowerCase();
+  if (mentionMode) {
+    for (const n of CHARACTERS.filter(n => n.toLowerCase().includes(q))) {
+      const b = document.createElement('button'); b.setAttribute('role', 'option'); b.className = 'asset-item';
+      b.innerText = n + '\n' + LG.character;
+      b.onclick = () => {
+        const ed = $('ed'); ed.innerText = ed.innerText.replace(/@$/, '');
+        const sp = document.createElement('span'); sp.className = 'mention'; sp.setAttribute('contenteditable', 'false'); sp.textContent = '@' + n;
+        ed.appendChild(sp); window.__mentions.push(n); mentionMode = false; $('panel').style.display = 'none'; $('psearch').value = '';
+        ed.focus(); const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      };
+      $('assets').appendChild(b);
+    }
+    return;
+  }
+  for (const a of [...assets].reverse().filter(a => a.name.toLowerCase().includes(q))) {
+    const b = document.createElement('button'); b.setAttribute('role', 'option'); b.className = 'asset-item';
+    b.innerText = (a.busy ? LG.uploading + '\n' : '') + a.name + '\nImage';
+    b.onclick = () => {
+      if (a.busy) return;
+      if (P.get('legacy') === '1') { chips = [...chips, { src: a.src }].slice(0, Number(P.get('maxchips') || 3)); renderChips(); $('panel').style.display = 'none'; return; }
+      selectedAsset = a; $('pvimg').src = a.src; $('preview').style.display = 'block';
+      $('addprompt').textContent = LG.addPrompt; $('addprompt').style.display = P.get('noadd') === '1' ? 'none' : 'inline-block';
+    };
+    $('assets').appendChild(b);
+  }
+}
+$('addprompt').onclick = () => {
+  if (!selectedAsset || P.get('noadd') === '1') return;
+  chips = [...chips, { src: selectedAsset.src }].slice(0, Number(P.get('maxchips') || 3)); renderChips(); $('panel').style.display = 'none'; hidePreview();
+  if (P.get('resetsettings') === '1') { const r = [...document.querySelectorAll('[data-g=dur]')].find(x => parseInt(x.innerText) === 8); if (r) r.click(); }
+};
+$('psearch').addEventListener('input', renderAssets);
+$('ed').addEventListener('input', () => {
+  if (/@$/.test($('ed').innerText.replace(/\n$/, ''))) { mentionMode = true; $('panel').style.display = 'block'; renderAssets(); $('psearch').focus(); }
+});
+let assets = [];
+function upd() {
+  const r = document.querySelector('[data-g=res][aria-checked=true]').innerText.trim();
+  const d = document.querySelector('[data-g=dur][aria-checked=true]').innerText.trim();
+  const n = parseInt(document.querySelector('[data-g=n][aria-checked=true]').innerText.match(/\d+/)[0]);
+  $('cred').textContent = Math.round((r === '360p' ? 0.75 : 1.5) * parseInt(d) * n) + ' ' + LG.credits;
+  $('chiptxt').textContent = 'Video · ' + r + ' · ' + d; $('chipn').textContent = 'x' + n;
+  const ratioOn = document.querySelector('[data-g=ratio][aria-checked=true]'); $('chiprat').textContent = ratioOn && /9:16/.test(ratioOn.innerText) ? 'crop_9_16' : 'crop_16_9';
+}
+document.querySelectorAll('[role=radio]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-g=' + b.dataset.g + ']').forEach(x => x.setAttribute('aria-checked', 'false')); b.setAttribute('aria-checked', 'true'); upd(); });
+window.__chipClicks = 0;
+$('chip').onclick = () => {
+  window.__chipClicks++;
+  if (P.get('flakypopup') === '1' && window.__chipClicks === 1) return;         // klik pertama diabaikan
+  const isOpen = $('pop').classList.contains('open'), d = Number(P.get('slowpopup') || 0);
+  if (d && !isOpen) { setTimeout(() => $('pop').classList.add('open'), d); return; }  // pop-up lambat muncul
+  $('pop').classList.toggle('open');
+};
+if (P.get('onlyimage') === '1') [...document.querySelectorAll('[data-g=mode]')].filter(x => /Video/i.test(x.innerText)).forEach(x => x.remove());
+if (P.get('capload')) {   // captcha saat halaman dimuat, hilang sendiri setelah sekian milidetik (meniru manusia)
+  const d = document.createElement('div'); d.id = 'cap';
+  d.innerHTML = '<iframe src="https://www.google.com/recaptcha/api2/bframe" style="width:400px;height:500px;background:#fff"></iframe>';
+  document.body.appendChild(d); setTimeout(() => d.remove(), Number(P.get('capload')));
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('pop').classList.remove('open'); $('menu').classList.remove('open'); $('sub').classList.remove('open'); const am = document.getElementById('appmenu'); if (am) am.style.display = 'none'; } });
+$('plus').onclick = () => { mentionMode = false; hidePreview(); $('panel').style.display = 'block'; renderAssets(); };
+$('pclose').onclick = () => { mentionMode = false; $('panel').style.display = 'none'; hidePreview(); };
+$('upl').onclick = () => $('f').click();
+$('f').onchange = e => {
+  const f = e.target.files[0]; const a = { name: f.name, src: img('#' + ((++assetN * 97531) % 0xffffff).toString(16).padStart(6, '0')), busy: true };
+  assets.push(a); cards.unshift({ type: 'user', id: 'u' + assetN, src: a.src, title: f.name }); renderAssets(); renderGrid();
+  setTimeout(() => { a.busy = false; renderAssets(); }, 900); e.target.value = '';
+};
+$('clr').onclick = () => { $('ed').innerText = ''; };
+
+function finish(id) {
+  const c = cards.find(x => x.id === id); if (!c) return;
+  finishCount++;
+  if (finishCount <= FAILN) { c.type = 'fail'; c.msg = LG.failMsg; }
+  else { c.type = 'video'; c.src = img('hsl(' + ((++vidCount) * 47 % 360) + ',55%,40%)'); c.title = 'Fashion product review video pro…'; window.__generated++;
+    if (P.get('topisold') === '1') { cards.splice(cards.indexOf(c), 1); cards.push(c); } }
+  renderGrid();
+}
+$('gen').onclick = () => {
+  const needChip = P.get('nochips') !== '1';
+  if ((needChip && !chips.length) || !$('ed').innerText.trim()) return;
+  window.__lastGen = { chip: $('chiptxt').textContent + ' ' + $('chipn').textContent, prompt: $('ed').innerText, chips: chips.length };
+  const id = 'g' + (++gc);
+  cards.unshift({ type: 'proc', id, prompt: $('ed').innerText }); chips = []; $('ed').innerText = ''; renderChips(); renderGrid();
+  if (P.get('captcha') === '1' && gc === 1) { const d = document.createElement('div'); d.id = 'cap'; d.innerHTML = '<iframe src="https://www.google.com/recaptcha/api2/bframe" style="width:400px;height:500px;background:#fff"></iframe>'; document.body.appendChild(d); }
+  setTimeout(() => finish(id), DELAY);
+};
+
+// detail
+function route() {
+  const m = location.hash.match(/^#\/edit\/(.+)$/);
+  const home = location.hash === '#/home';
+  $('home').style.display = home ? 'block' : 'none';
+  $('project').style.display = (m || home) ? 'none' : 'block'; $('detail').style.display = m ? 'block' : 'none';
+  if (!m && !home) renderGrid();
+  if (m) { const card = cards.find(x => x.id === m[1]); $('detailprompt').textContent = card && card.prompt ? card.prompt.slice(0, 700) : ''; window.__detailId = m[1]; }
+}
+$('newproj').onclick = () => { window.__projectsCreated++; document.querySelector('[aria-label="Teks yang dapat diedit"]').value = 'Okt 02 - 11:17'; cards = []; location.hash = '#/project/new-' + window.__projectsCreated; };
+window.addEventListener('hashchange', route);
+$('back').onclick = () => { location.hash = ''; };
+$('more').onclick = () => { $('menu').classList.toggle('open'); };
+$('m-dl').onclick = () => { $('sub').classList.toggle('open'); };
+$('m-del').onclick = () => { window.__forbidden++; };
+$('m-share').onclick = () => { window.__forbidden++; };
+$('m-fav').onclick = () => { window.__forbidden++; };
+$('up').onclick = () => { window.__forbidden++; };
+$('upg').onclick = e => { e.preventDefault(); window.__forbidden++; };
+$('orig').onclick = () => {
+  window.__dlTries = (window.__dlTries || 0) + 1; window.__downloadedPrompt = $('detailprompt').textContent || '';
+  if (P.get('dlfail') === '1' && window.__dlTries === 1) { $('menu').classList.remove('open'); $('sub').classList.remove('open'); return; }   // unduhan pertama tidak menghasilkan berkas
+  const bytes = new Uint8Array(40000); bytes.set([0, 0, 0, 24, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d]); for (let i = 12; i < bytes.length; i++) bytes[i] = i % 251;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: 'video/mp4' })); a.download = 'video-' + Date.now() + '.mp4';
+  document.body.appendChild(a); a.click(); a.remove(); window.__downloads++;
+  $('menu').classList.remove('open'); $('sub').classList.remove('open');
+};
+function applyLang() {
+  if (LANG !== 'en') return;
+  const A = (sel, attr, v) => { const e = document.querySelector(sel); if (e) { if (attr === 'text') e.textContent = v; else if (attr === 'html') e.innerHTML = v; else e.setAttribute(attr, v); } };
+  A('#newproj', 'text', 'New project');
+  A('[aria-label="Teks yang dapat diedit"]', 'aria-label', 'Editable text');
+  A('[aria-label="Opsi lainnya untuk project"]', 'aria-label', 'More options for the project');
+  A('[aria-label="Menu tambahkan media"]', 'aria-label', 'Add media menu');
+  A('#clr', 'aria-label', 'Clear prompt');
+  A('#plus', 'aria-label', 'Add ingredients to the prompt box');
+  A('#agentbtn', 'text', 'Agent');
+  A('#chip', 'aria-label', 'Settings trigger');
+  A('#gen', 'aria-label', 'Start generation');
+  A('#back', 'aria-label', 'Back button to go to previous page');
+  A('#more', 'aria-label', 'More options');
+  A('video.main-video', 'aria-label', 'Generated video');
+  A('#detail [aria-label="Gunakan kembali perintah"]', 'aria-label', 'Reuse prompt');
+  A('#m-fav', 'html', 'favorite<br>Favourite'); A('#m-share', 'html', 'share<br>Share media');
+  A('#m-dl', 'html', 'download<br>Download media'); A('#m-del', 'html', 'delete<br>Move to bin');
+  A('#sub [role=menuitem]:first-child', 'html', '270p<br>Animated GIF'); A('#orig', 'html', '360p<br>Original size'); A('#up', 'html', '720p<br>Upscaled');
+  A('#model', 'aria-label', 'Select model family');
+  A('#pclose', 'aria-label', 'Close'); A('#psearch', 'aria-label', 'Search assets'); A('#psearch', 'placeholder', 'Search assets');
+  const map = { 'Gambar': 'Image', 'Frame': 'Frames', 'Bahan': 'Ingredients', '4 dtk': '4s', '6 dtk': '6s', '8 dtk': '8s', '10 dtk': '10s' };
+  document.querySelectorAll('[role=radio]').forEach(b => { const n = [...b.childNodes].reverse().find(x => x.nodeType === 3); if (n && map[n.textContent.trim()]) n.textContent = map[n.textContent.trim()]; });
+  const pr = document.querySelector('#pop p'); if (pr) pr.innerHTML = 'Generating will use <a href="#" id="cred">12 credits</a>';
+  document.documentElement.lang = 'en';
+}
+if (P.get('detail') === 'new') {   // tampilan penyunting: ikon unduh di toolbar, titik tiga membuka menu aplikasi
+  $('menu').style.display = 'none';
+  const tb = document.createElement('div'); tb.id = 'toolbar'; tb.style.cssText = 'position:fixed;top:14px;right:20px;z-index:4';
+  tb.innerHTML = '<span>360P</span> <button id="dlicon">download</button><button id="trashicon">delete</button><button id="hidehist">history Hide history</button>';
+  $('detail').appendChild(tb);
+  if (P.get('nodl') === '1') $('dlicon').remove();
+  if (P.get('dlaria') === '1') $('dlicon').setAttribute('aria-label', LANG === 'en' ? 'Download' : 'Unduh');
+  const am = document.createElement('div'); am.id = 'appmenu'; am.style.cssText = 'display:none;position:fixed;right:20px;top:70px;background:#222;z-index:5';
+  am.innerHTML = '<button role="menuitem" id="ap-dl">download<br>Download project</button><br><button role="menuitem">help<br>Product Help</button><br><button role="menuitem">play_arrow<br>Flow Music</button>';
+  $('detail').appendChild(am);
+  $('ap-dl').onclick = () => { window.__forbidden++; };
+  $('more').onclick = () => { am.style.display = am.style.display === 'block' ? 'none' : 'block'; };
+  if ($('dlicon')) $('dlicon').onclick = () => $('sub').classList.toggle('open');
+  $('trashicon').onclick = () => { window.__forbidden++; };
+}
+if (P.get('novideo') === '1') { const v = document.querySelector('video.main-video'); if (v) v.remove(); }
+applyLang(); upd(); renderGrid(); route();
+</script></body></html>

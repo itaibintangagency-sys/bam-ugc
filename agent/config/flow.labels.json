@@ -1,0 +1,145 @@
+{
+  "version": "2026-10-04-andal",
+  "chrome": {
+    "cdp_url": "http://127.0.0.1:9222",
+    "page_match": "flow.google"
+  },
+  "expectModel": "Omni 1.1 Flash",
+  "forbiddenClicks": [
+    "Pindahkan ke sampah",
+    "Move to bin",
+    "Move to trash",
+    "Upgrade",
+    "Resolusi ditingkatkan",
+    "Upscaled",
+    "Bagikan media",
+    "Share media",
+    "Favorit",
+    "Favourite",
+    "Favorite",
+    "Delete",
+    "Hapus",
+    "Download project",
+    "Unduh project"
+  ],
+  "timeouts": {
+    "generate_sec": 900,
+    "upload_sec": 120,
+    "poll_ms": 2500,
+    "start_sec": 90,
+    "settle_sec": 8,
+    "find_video_sec": 120
+  },
+  "languages": {
+    "en": {
+      "nama": "English",
+      "tidak_terverifikasi": [
+        "labels.clearPrompt",
+        "labels.agentToggle",
+        "failure.words"
+      ],
+      "labels": {
+        "settingsChip": "Settings trigger",
+        "addIngredient": "Add ingredients to the prompt box",
+        "clearPrompt": "Clear prompt",
+        "generate": "Start generation",
+        "modelPicker": "Select model family",
+        "uploadMedia": "Upload media",
+        "closePanel": "Close",
+        "back": "Back button to go to previous page",
+        "moreOptions": "More options",
+        "reusePrompt": "Reuse prompt",
+        "newProject": "New project",
+        "projectTitleInput": "Editable text",
+        "agentToggle": "Agent",
+        "mentionSearch": "Search assets",
+        "addToPrompt": "Add to prompt"
+      },
+      "alts": {
+        "videoThumb": "Generated video thumbnail"
+      },
+      "menus": {
+        "downloadMenu": "Download media",
+        "downloadOriginal": "Original size"
+      },
+      "radios": {
+        "mode": "Video",
+        "submode": "Ingredients",
+        "ratio_9_16": "9:16",
+        "ratio_16_9": "16:9",
+        "dur": "{n}s"
+      },
+      "credits": [
+        "credits",
+        "credit"
+      ],
+      "failure": {
+        "words": [
+          "Failed"
+        ],
+        "classify": [
+          {
+            "kind": "policy",
+            "pattern": "policy|policies|violat|sexual|not allowed"
+          },
+          {
+            "kind": "quota",
+            "pattern": "credits|quota|limit reached|usage limit"
+          }
+        ]
+      }
+    },
+    "id": {
+      "nama": "Indonesia",
+      "labels": {
+        "settingsChip": "Pemicu setelan",
+        "addIngredient": "Tambahkan bahan ke kotak perintah",
+        "clearPrompt": "Hapus perintah",
+        "generate": "Mulai pembuatan",
+        "modelPicker": "Pilih rangkaian model",
+        "uploadMedia": "Upload media",
+        "closePanel": "Tutup",
+        "back": "Tombol kembali untuk membuka halaman sebelumnya",
+        "moreOptions": "Opsi lainnya",
+        "reusePrompt": "Gunakan kembali perintah",
+        "newProject": "Project baru",
+        "projectTitleInput": "Teks yang dapat diedit",
+        "agentToggle": "Agen",
+        "mentionSearch": "Telusuri aset",
+        "addToPrompt": "Tambahkan ke perintah"
+      },
+      "alts": {
+        "videoThumb": "Thumbnail video yang dihasilkan"
+      },
+      "menus": {
+        "downloadMenu": "Download media",
+        "downloadOriginal": "Ukuran asli"
+      },
+      "radios": {
+        "mode": "Video",
+        "submode": "Bahan",
+        "ratio_9_16": "9:16",
+        "ratio_16_9": "16:9",
+        "dur": "{n} dtk"
+      },
+      "credits": [
+        "kredit"
+      ],
+      "failure": {
+        "words": [
+          "Gagal"
+        ],
+        "classify": [
+          {
+            "kind": "policy",
+            "pattern": "kebijakan|melanggar"
+          },
+          {
+            "kind": "quota",
+            "pattern": "kredit|kuota|batas penggunaan"
+          }
+        ]
+      }
+    }
+  }
+}

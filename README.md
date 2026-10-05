@@ -1,140 +1,102 @@
-# BA UGC — Prototype
+# BA UGC v2 — generator video UGC (fondasi)
 
-Prototype klik-jadi untuk platform generate video UGC internal Bintang Agency. Semua halaman, navigasi, dan alur (Video Studio 4-step, Character Creator, Product Library) sudah bisa diklik end-to-end. Saat ini datanya jalan di **mode prototype** (tersimpan di `localStorage` browser) supaya bisa langsung dites tanpa setup apa pun.
+Pembangunan ulang BA UGC mengikuti alur yang sudah disepakati:
+karakter → produk → batch (1 karakter, maksimal 10 produk) → storyboard → JSON → produksi di Google Flow → caption dan hashtag.
 
-## Struktur
+## Isi paket (tahap 1: fondasi)
 
-```
-index.html          → redirect ke login/dashboard sesuai sesi
-login.html           → Supabase Auth (email+password), fallback demo-session
-dashboard.html        → kapasitas produksi, pipeline, karakter aktif, aktivitas terbaru
-characters.html       → library karakter + character creator (game-style preset picker)
-products.html         → library produk + tambah produk (scrape-simulasi / manual)
-video-studio.html     → wizard 4 langkah: Pilih → Rencana → Generate → Produce
-history.html          → semua video job, bisa difilter & dilanjutkan
-css/style.css          → 1 file token desain + semua komponen (dipakai semua halaman)
-js/data.js             → "database" prototype (localStorage), API-nya sudah dibentuk
-                          persis seperti tabel Supabase — tinggal ganti isinya nanti
-js/supabase-client.js  → init supabase-js, isi URL + anon key di sini
-js/auth.js              → login/logout/guard, otomatis pakai Supabase kalau sudah dikonfigurasi
-js/app.js                → toast, modal, helper kecil
-supabase/schema.sql      → skema tabel siap-pakai untuk Supabase
-```
-
-## 1. Coba lokal dulu
-
-Karena semua fetch pakai path relatif, buka lewat local server (bukan `file://`):
-
-```bash
-cd ba-ugc
-python3 -m http.server 8080
-# buka http://localhost:8080
-```
-
-⚠️ **Login bisa dicoba tanpa setup apa pun** (mode demo-session, email/password apa saja yang tidak kosong). Tapi begitu masuk ke Dashboard/Produk/Video Studio, halaman-halaman itu sekarang manggil Supabase asli langsung — **tidak akan menampilkan apa-apa (atau muncul pesan error) sampai `js/supabase-client.js` diisi** kredensial yang valid (lihat bagian 4). Ini bukan lagi mode mock-lokal seperti sebelumnya.
-
-## 2. Push ke GitHub
-
-```bash
-cd ba-ugc
-git init
-git add .
-git commit -m "BA UGC prototype"
-git branch -M main
-git remote add origin <url-repo-github-kamu>
-git push -u origin main
-```
-
-## 3. Deploy ke Vercel
-
-1. Buka [vercel.com](https://vercel.com) → **New Project** → import repo GitHub di atas.
-2. Framework preset: pilih **Other** (situs statis, tidak butuh build step).
-3. Deploy — selesai, dapat URL `*.vercel.app`.
-
-## 4. Sambungkan Supabase
-
-Project Supabase untuk BA UGC **sudah ada** (dipakai juga oleh bot Telegram untuk mengumpulkan foto karakter) — jangan jalankan `supabase/schema.sql`, itu arsip skema lama yang tidak dipakai lagi.
-
-1. Buka **Project Settings → API** di project Supabase yang sudah ada → salin **Project URL** dan **anon public key**.
-2. Isi ke `js/supabase-client.js`:
-   ```js
-   const SUPABASE_URL = 'https://xxxx.supabase.co';
-   const SUPABASE_ANON_KEY = 'ey...';
-   ```
-3. Pastikan RLS policy & 3 storage bucket (`character-assets`, `product-assets`, `video-outputs`) sudah ada di project itu — dicek manual di dashboard, bukan lewat file ini.
-4. Buka **Authentication → Users** → buat akun admin pertama secara manual kalau belum ada (staff tidak bisa daftar sendiri, sesuai desain role).
-
-Setelah langkah 2, `login.html` otomatis pindah dari demo-session ke Supabase Auth sungguhan — tidak perlu ubah kode lain.
-
-### Status koneksi data per tabel
-`js/data.js` sekarang bicara langsung ke Supabase (bukan `localStorage` lagi), tapi cakupannya beda per tabel:
-
-| Tabel | Status | Catatan |
+| Folder | Fungsi | Status uji |
 |---|---|---|
-| `products` | Live, full CRUD | Form "Produk baru" langsung insert ke Supabase |
-| `video_jobs`, `frames` | Live, full CRUD | `title` dihitung di app dari nama karakter + `product_name`, bukan kolom asli. Rencana scene (script/label per-frame) disimpan sebagai JSON di `video_jobs.frame_plan` — struktur JSON-nya usulan dari saya, belum ada standar resmi, cek dengan tim n8n sebelum backend lain ikut menulis ke kolom yang sama |
-| `characters` | **Read-only** | Video Studio & halaman Karakter menampilkan data asli untuk dipilih, tapi Character Creator (wizard di characters.html) sengaja **tidak menulis apa pun** — alur pembuatan karakter asli berbasis `collecting_photos` bertahap lewat Telegram bot, beda total dari wizard instan di prototype ini. Perlu didesain ulang terpisah sebelum disambung |
+| `core/` | Logika inti: rencana panel dengan acak berbenih, 24 lokasi dengan **ruang rekam suara otomatis**, prompt storyboard (bertulis dan bersih), JSON video, **profil suara karakter** (dua lapis), **JSON video perkenalan**, pemeriksa kata pemicu dan klaim | 24 dari 24 lolos |
+| `supabase/migrations/` | Catatan database berurutan: baseline lama (catatan), perbaikan celah, penutupan unggahan anonim, dan sistem v2 (antrean, RLS, detak agent, telemetri, bucket privat). Lihat `supabase/README.md`. | Rantai migrasi lolos di Postgres lokal |
+| `db/` | Pengujian database dan kueri `export_schema.sql` untuk memperbarui catatan | 25 dari 25 lolos (termasuk putaran-balik terhadap struktur asli dan tahap karakter) |
+| `agent/` | Agent di laptop produksi: menarik job video **dan tugas karakter** (upload foto, video perkenalan 720p 4 detik), memanggil karakter lewat daftar `@`, membuat project baru, perekam layar berpemandu. Mode online (Supabase) dan offline (folder) | 33 dari 33 lolos (halaman Flow tiruan, kedua bahasa) |
 
-## 5. Yang masih simulasi
+**Belum dibangun (tahap berikutnya):** website (wizard karakter, produk, batch), langkah AI (analisis produk, gambar storyboard, caption), dan otomasi pembuatan karakter dan suara di dalam Flow (menunggu hasil perekam layar).
 
-- **Generate composite / generate scene / produce video** — disimulasikan dengan `setTimeout`, belum memanggil Magnific API (OmniHuman, Nano Banana, Video Combiner). Status di `video_jobs`/`frames` sudah ditulis pakai enum asli (`analyzing`/`scripting`/`generating_video`/dst, `pending`/`generating`/`review`/`approved`), jadi begitu n8n mulai update status yang sama dari backend, tampilan di app ini otomatis ikut berubah — tidak perlu ubah kode frontend.
-- **Ambil data dari link produk** — disimulasikan, belum memanggil Apify scraper.
-- **Character Creator** — murni pratinjau UI, tidak menulis ke database (lihat tabel di atas).
+## Yang sudah dan belum terbukti
 
-## 6. Sambungkan ke Magnific (lewat n8n, bukan langsung)
+| Terbukti di Flow asli (dari uji kita sebelumnya) | Baru diuji di halaman tiruan |
+|---|---|
+| Terhubung ke Chrome, upload, melampirkan bahan, isi prompt, atur setelan, generate, tunggu, nama menu unduh | Kartu gagal dan tombol ulang, deteksi video selesai pada banyak video, unduh otomatis, captcha, kesalahan tampilan, pemantau perubahan |
 
-API key Magnific **tidak boleh** dipanggil langsung dari browser — siapa saja yang buka DevTools bisa mencurinya. Jalur amannya: browser → webhook n8n → Magnific.
+Karena itu, **uji pertama di Flow asli harus dilakukan dengan mendampingi** (lihat bagian "Uji pertama" di bawah).
 
-1. Buka `js/n8n-client.js`, isi `N8N_WEBHOOK_BASE` dengan URL webhook n8n kamu.
-2. Begitu diisi, tombol "Generate composite", generate per-scene, dan "Produce" di Video Studio otomatis manggil webhook itu (bukan simulasi lagi).
-3. Kontrak request/response yang dipakai (endpoint, body, field yang diharapkan balik) ada di komentar paling atas `js/n8n-client.js` — itu usulan awal saya, **sesuaikan dengan workflow n8n kamu yang sebenarnya**, bukan spek yang sudah disepakati bersama tim n8n.
-4. Selama `N8N_WEBHOOK_BASE` kosong, semua tombol itu tetap jalan pakai simulasi seperti sebelumnya — tidak ada yang rusak.
 
-## 7. Halaman Profil & Kelola Staff
+## Tahap karakter (baru)
 
-- **Ganti password** — live, langsung lewat Supabase Auth (`profile.html`).
-- **Kelola staff (lihat daftar)** — baca dari tabel `user_profiles` (id, email, name, role) yang sudah ada di project kamu. RLS di sana: admin bisa lihat semua baris, staff cuma bisa lihat baris miliknya sendiri — jadi kalau login sebagai staff dan cuma keliatan 1 baris, itu memang benar begitu adanya, bukan bug.
-- **Role & nama asli** — sekarang ditarik dari `user_profiles.role`/`user_profiles.name` (bukan hardcode "Admin" lagi seperti sebelumnya), ditampilkan di sidebar semua halaman.
-- **Tambah staff baru** — **tidak bisa** dilakukan langsung dari browser dengan anon key. Buat staff baru manual lewat Supabase Dashboard → Authentication → Users → Add user, lalu **cek apakah baris di `user_profiles` ikut otomatis terbuat** (lewat trigger) atau perlu ditambahkan manual — ini belum saya pastikan untuk project kamu. Kalau nanti mau tombol "Tambah staff" beneran jalan, perlu backend terpisah (Supabase Edge Function atau workflow n8n) yang pegang `service_role` key — jangan taruh `service_role` key di frontend manapun.
+Alur status: `draft` → `face_ready` → `dna_locked` → `voice_defined` → `sheet_ready` → `project_ready` → `voice_in_flow` → `intro_review` → `ready`.
 
-## 8. Foto profil (avatar staff)
+| Langkah | Pelaku | Catatan |
+|---|---|---|
+| Profil suara | Staff | Pilih suara dasar dari daftar Flow, lalu atur nada, energi, tempo, gaya, aksen, bahasa. Satu suara dasar hanya untuk satu karakter kecuali admin menyetujui. |
+| Upload foto ke project | Agent (tugas `upload_photos`) | Hanya foto yang disetujui |
+| Buat karakter dan suara di Flow | Staff (manual dulu) | Lalu konfirmasi di app. Otomasinya menunggu hasil perekam layar. |
+| Video perkenalan | Agent (tugas `intro_video`) | 720p, 4 detik, karakter dipanggil lewat `@`. Teks: "Hai, aku {nama}. Senang kenalan sama kamu!" |
+| Review | Staff | Wajah sama? Suara sesuai profil? Bersih dari teks atau watermark? Setuju maka `ready`. Ditolak 3 kali kembali ke `voice_defined`. |
+| Pengecualian | Admin | Menyatakan siap tanpa perkenalan, dengan alasan tertulis (minimal 10 karakter) |
 
-Fitur ganti foto profil di `profile.html` butuh 1 kolom baru + 1 bucket baru yang **belum ada** di project kamu — saya sengaja tidak menjalankan otomatis. Jalankan ini di SQL Editor Supabase kalau mau diaktifkan:
+Batch hanya bisa masuk antrean bila karakternya berstatus `ready`.
 
-```sql
--- 1. Kolom baru buat nyimpen path foto (bukan URL langsung — bucket privat,
---    URL-nya di-generate ulang tiap ditampilkan lewat signed URL)
-alter table user_profiles add column if not exists avatar_path text;
+### Suara: dua lapis
+- **Identitas** (disimpan sekali sebagai Voice di Flow, bahasa Inggris, kolom "Sesuaikan performa"): jenis kelamin, usia, nada, energi, tempo, gaya, aksen, kadar bahasa. `core` menyusunnya otomatis lewat `buildVoicePerformance`.
+- **Per video** (di JSON): suasana, jeda, napas awal, dan **ruang rekam yang otomatis mengikuti lokasi** yang dipilih saat storyboard (`audio.recording_space`).
 
--- 2. Bucket privat buat file-nya
-insert into storage.buckets (id, name, public)
-values ('avatars', 'avatars', false)
-on conflict (id) do nothing;
+### Perekam layar
+`6-rekam-layar-flow.bat` memandu kamu membuka tiap layar Flow (project baru, halaman Karakter, form karakter, daftar suara, daftar `@`, dan lainnya). Di setiap layar tekan Enter, lalu agent memotret daftar elemennya. Tidak ada yang diklik dan tidak ada generate. Kirim folder `agent/recon/<waktu>` ke Claude.
 
--- 3. Siapa boleh apa di bucket ini:
---    - semua user yang login boleh LIHAT foto siapa saja (buat daftar staff)
---    - user cuma boleh UPLOAD/GANTI foto miliknya sendiri
---      (path harus diawali user_id-nya, dijamin lewat foldername check)
-create policy "authenticated read avatars"
-  on storage.objects for select
-  using (bucket_id = 'avatars' and auth.role() = 'authenticated');
+## Dua bahasa (Inggris dan Indonesia)
 
-create policy "users upload own avatar"
-  on storage.objects for insert
-  with check (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+Nama tombol Flow mengikuti bahasa **akun Google** yang login (akun berbeda bisa menampilkan bahasa berbeda). Agent mengenali keduanya sekaligus lewat `agent/config/flow.labels.json` (bagian `languages`, `en` dan `id`). `1-doctor.bat` menyebut bahasa yang terdeteksi, alamat tab yang diperiksa, dan bila tombol tidak ketemu mencetak daftar nama tombol yang terlihat. Doctor juga memeriksa login Supabase dan satu detak agent (tanpa mengambil tugas apa pun).
 
-create policy "users update own avatar"
-  on storage.objects for update
-  using (bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]);
+Label yang belum terverifikasi (Inggris): `clearPrompt`, `agentToggle`, dan kata pada kartu gagal. Ketiganya punya cadangan: hapus prompt lewat keyboard, dan kegagalan tak dikenal berhenti dengan snapshot.
+
+## Memasang agent di laptop (Windows)
+
+1. Folder `agent`: klik dua kali `0-install.bat` (sekali saja).
+2. Klik dua kali `start-chrome.bat`. Login Google manual, lalu buka project Flow. Jangan maximize jendela.
+3. Klik dua kali `1-doctor.bat`. Semua baris harus berawalan ✔.
+
+## Uji pertama tanpa website (mode offline)
+
+1. Siapkan `storyboard.png` dan `prompt.json` (seperti pada uji sebelumnya).
+2. Klik dua kali `4-buat-job-offline.bat` dan isi tiga pertanyaan: alamat project Flow, file storyboard, file JSON. Pilih **360p** untuk uji pertama.
+3. Klik dua kali `5-jalankan-1-job-offline.bat`. Pantau layar Chrome. Hasil video ada di `agent/local/outbox/<id>/video.mp4`.
+4. Kalau gagal, kirim berkas di `agent/debug/` (JSON dan PNG) dan `agent/logs/`.
+
+## Mode online (setelah database dan website siap)
+
+1. Di Supabase SQL Editor, jalankan berurutan: `20261002000100_fix_legacy_rls_grants.sql`, `20261002000150_storage_remove_anon_upload.sql`, `20261002000200_ugc_v2.sql`, `20261002000300_ugc_character_voice.sql`, lalu `20261002000400_hardening.sql` (semuanya aman diulang). Atau jalankan satu berkas gabungan `supabase/run_all/20261002_JALANKAN_SEMUA.sql` (memuat 0100, 0200, 0300, 0400). Berkas baseline ada di folder `supabase/baseline` dan TIDAK untuk dijalankan di produksi. Setelah itu jalankan `db/verify_setup.sql` untuk memeriksa hasilnya.
+2. Buat akun agent (Authentication → Users), lalu jadikan `role = 'agent'` (petunjuknya ada di akhir berkas SQL).
+3. Salin `agent/.env.example` menjadi `agent/.env` dan isi **sendiri** (email, kata sandi, alamat Supabase, kunci anon).
+4. Klik dua kali `2-start-agent.bat`.
+
+## Aturan keselamatan yang tertanam
+
+- Agent **menolak** mengklik: Pindahkan ke sampah, Upgrade, Resolusi ditingkatkan, Bagikan media, Favorit.
+- Generate hanya ditekan bila: tepat 1 bahan terlampir, prompt cukup panjang, model Omni 1.1 Flash, dan semua setelan terpilih.
+- Captcha, sesi Google habis, atau tampilan berubah → agent berhenti, mencatat, menjeda antrean, dan menunggu manusia. Agent tidak mencoba menembusnya.
+- Kegagalan kebijakan diulang otomatis maksimal 2 kali per percobaan, dan 3 percobaan per job (bisa diubah admin di tabel `ugc_settings`).
+- Kategori berisiko tinggi tidak bisa masuk antrean tanpa persetujuan admin.
+- Maksimal 10 video per batch dan 10 batch per hari ditegakkan oleh database.
+
+## Pemantau perubahan Flow ("Analisa Flow")
+
+`3-analisa-flow.bat`: membandingkan tampilan sekarang dengan baseline dan menulis laporan di `agent/reports/`. Tidak menekan generate atau unduh. Jalankan setelah Flow tampak berubah, dan sebelum menjalankan antrean. Nama tombol semua tersimpan di `agent/config/flow.labels.json`, jadi perbaikan cukup mengubah berkas itu.
+
+## Menjalankan pengujian
+
+```
+cd core  && node --test test/core.test.js test/voice.test.js
+cd db    && npm i && npm test
+cd agent && npm i && node --test test/agent.test.js test/agent.char.test.js   # butuh Chromium (CHROME_BIN)
 ```
 
-Kebijakan UPDATE yang sudah ada di `user_profiles` (`update own name`) cek `auth.uid() = id` di level baris, bukan per-kolom — jadi otomatis juga mengizinkan update `avatar_path` tanpa perlu policy tambahan.
+## Batasan yang perlu diketahui
 
-**Kapasitas di Free tier:** foto profil ukuran wajar (ratusan KB) jauh di bawah limit 1GB file storage & 50MB per-file Supabase Free — aman dipakai tanpa upgrade plan. Yang perlu diawasi ke depan bukan foto profil, tapi kalau video/gambar hasil generate Magnific nantinya ikut disimpan di Storage yang sama — itu jauh lebih besar dan lebih cepat mendekati limit.
-
-## 9. Catatan RLS penting (dari skema terbaru)
-
-- **`video_jobs`**: kebijakan `own or admin modify/select` mensyaratkan `created_by = auth.uid()` (kecuali admin). `js/data.js` sudah diperbaiki supaya `addVideoJob` otomatis mengisi `created_by` dengan user yang sedang login — **tanpa ini, staff non-admin tidak akan bisa bikin video job sama sekali** (insert ditolak RLS secara diam-diam, tanpa pesan error yang jelas). Video job lama yang sempat dibuat sebelum perbaikan ini (kalau ada) `created_by`-nya kosong — cuma bisa dilihat/diedit oleh admin sampai diisi manual.
-- **`characters`**: cuma admin yang boleh menulis (`admin write characters`) — cocok dengan keputusan Character Creator tetap dikunci sebagai pratinjau.
-- **`character_photos`**: cuma ada policy SELECT, tidak ada INSERT — upload foto karakter memang didesain lewat proses lain (kemungkinan bot Telegram dengan akses lebih tinggi), bukan dari app ini.
-- **`products`, `backgrounds`, `frames`**: belum ada info RLS-nya sejauh ini — kalau nanti insert dari halaman Produk/Video Studio gagal tanpa alasan jelas, kemungkinan besar karena RLS di tabel ini juga, perlu dicek terpisah.
+- Agent hanya mendukung tata letak jendela Chrome yang sempit (kapsul pengaturan di kanan bawah kotak prompt). Ukuran jendela harus tetap.
+- Video terbaru diasumsikan berada di kiri atas grid project.
+- Unduhan ditangkap lewat Chrome; bila gagal, agent mencari berkas di folder unduhan (`DOWNLOAD_DIR`).
+- Satu agent memproses satu video pada satu waktu.
+- Pemanggilan karakter lewat `@` dan pembuatan project baru baru diuji di halaman tiruan. Perilaku aslinya di Flow perlu dibuktikan dengan perekam layar dan uji pertama yang didampingi.
+- Agent tidak membuat karakter dan suara di dalam Flow (belum dipetakan). Itu langkah manual staff dulu.

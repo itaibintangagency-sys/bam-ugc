@@ -1,0 +1,7 @@
+{
+  "name": "bam-ugc-db",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "test": "node --test test/db.test.mjs test/chain.test.mjs test/roundtrip.test.mjs test/characters.test.mjs test/verify.test.mjs test/urutan.test.mjs test/hardening.test.mjs" },
+  "devDependencies": { "@electric-sql/pglite": "^0.5.8" }
+}

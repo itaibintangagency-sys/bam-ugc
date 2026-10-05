@@ -1,0 +1,34 @@
+{
+  "kelompok": {
+    "ruang_tinggal": {
+      "id": "Ruang kecil berperabot, gema ringan",
+      "en": "Small furnished room with light natural reverb, voice close to the microphone.",
+      "lokasi": ["S-01", "S-02", "S-03", "S-05", "S-08", "S-09", "S-11"]
+    },
+    "permukaan_keras": {
+      "id": "Ruang kecil berpermukaan keras, pantulan lebih hidup",
+      "en": "Small room with hard surfaces and slightly livelier reflections, voice close to the microphone.",
+      "lokasi": ["S-04", "S-06", "S-07", "S-10"]
+    },
+    "kabin": {
+      "id": "Kabin mobil, ruang sempit dan teredam",
+      "en": "Inside a parked car with tight, dampened acoustics, voice close to the microphone.",
+      "lokasi": ["S-19"]
+    },
+    "luar": {
+      "id": "Ruang terbuka tanpa gema, latar alam pelan",
+      "en": "Open air with no room reverb and soft distant ambience, voice close to the microphone.",
+      "lokasi": ["S-12", "S-13", "S-14", "S-15", "S-16", "S-17"]
+    },
+    "keramaian": {
+      "id": "Latar obrolan pelan di belakang, suara jelas di depan",
+      "en": "Quiet background chatter at a low level with the voice clearly in front, close to the microphone.",
+      "lokasi": ["S-18", "S-21", "S-22"]
+    },
+    "studio": {
+      "id": "Kering, hampir tanpa gema, dekat mikrofon",
+      "en": "Dry, almost reverb-free acoustics with the voice close to the microphone.",
+      "lokasi": ["S-20", "S-23", "S-24"]
+    }
+  }
+}

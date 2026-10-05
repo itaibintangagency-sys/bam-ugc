@@ -1,0 +1,17 @@
+{
+  "A-01": {"nama": "Busana dipakai", "risiko": "rendah", "panel1_label": "TAMPILAN PENUH + PEMBUKA"},
+  "A-02": {"nama": "Aksesori kepala, leher, dan tangan dipakai", "risiko": "rendah", "panel1_label": "TAMPILAN PENUH + PEMBUKA"},
+  "A-03": {"nama": "Alas kaki", "risiko": "rendah", "panel1_label": "TAMPILAN PENUH + PEMBUKA"},
+  "A-04": {"nama": "Tas dan koper", "risiko": "rendah", "panel1_label": "TAMPILAN PENUH + PEMBUKA"},
+  "A-05": {"nama": "Perawatan dan kecantikan topikal", "risiko": "sedang", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-06": {"nama": "Wewangian dan aromaterapi", "risiko": "sedang", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-07": {"nama": "Kesehatan, suplemen, dan obat", "risiko": "tinggi", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-08": {"nama": "Makanan dan minuman", "risiko": "sedang", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-09": {"nama": "Produk anak dan bayi (tanpa karakter anak)", "risiko": "sedang", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-10": {"nama": "Elektronik dan gadget", "risiko": "rendah", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-11": {"nama": "Peralatan elektrik rumah dan dapur", "risiko": "rendah", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-12": {"nama": "Perlengkapan rumah non-elektrik", "risiko": "rendah", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-13": {"nama": "Hobi, koleksi, mainan, dan souvenir", "risiko": "rendah", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-14": {"nama": "Perawatan kendaraan", "risiko": "sedang", "panel1_label": "TAMPILAN PRODUK UTUH + PEMBUKA"},
+  "A-15": {"nama": "Pakaian dalam dan produk sensitif", "risiko": "tinggi", "panel1_label": "TAMPILAN KEMASAN + PEMBUKA"}
+}

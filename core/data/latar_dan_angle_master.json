@@ -1,0 +1,519 @@
+{
+  "tempat": [
+    {
+      "id": "S-01",
+      "nama": "Ruang tamu minimalis modern",
+      "tipe": "dalam rumah",
+      "cahaya": "soft natural daylight from a window",
+      "suhu_warna_k": 4500,
+      "isi_latar": "sofa krem, tanaman kecil, dinding off-white",
+      "risiko": "tidak ada",
+      "prompt_en": "A modern minimalist Indonesian living room with a warm off-white wall, a cream sofa and a small potted plant, lit only by soft natural daylight from a window, lived-in and uncluttered, ordinary everyday-photo look."
+    },
+    {
+      "id": "S-02",
+      "nama": "Kamar tidur rapi",
+      "tipe": "dalam rumah",
+      "cahaya": "soft diffused daylight through sheer curtains",
+      "suhu_warna_k": 4300,
+      "isi_latar": "seprai netral, nakas kayu, jendela bertirai tipis",
+      "risiko": "tidak ada",
+      "prompt_en": "A neat Indonesian bedroom with neutral bed linen, a wooden nightstand and a window with sheer curtains, soft diffused daylight, slightly lived-in."
+    },
+    {
+      "id": "S-03",
+      "nama": "Sudut cermin dan lemari pakaian",
+      "tipe": "dalam rumah",
+      "cahaya": "soft window daylight",
+      "suhu_warna_k": 4500,
+      "isi_latar": "cermin tinggi, rak atau lemari pakaian sederhana",
+      "risiko": "pantulan cermin dapat memperlihatkan perangkat perekam",
+      "prompt_en": "A corner of a bedroom with a tall mirror and a simple clothes rack or wardrobe, soft window daylight, minimal everyday clutter."
+    },
+    {
+      "id": "S-04",
+      "nama": "Kamar mandi bersih",
+      "tipe": "dalam rumah",
+      "cahaya": "neutral white light mixed with a little daylight from a high window",
+      "suhu_warna_k": 5000,
+      "isi_latar": "keramik terang, wastafel, rak kecil",
+      "risiko": "label merek pada botol harus tidak terbaca",
+      "prompt_en": "A clean ordinary Indonesian bathroom with light ceramic tiles, a sink and a small shelf, neutral white light mixed with a little daylight from a high window, slight humidity, no brand labels visible."
+    },
+    {
+      "id": "S-05",
+      "nama": "Meja rias dekat jendela",
+      "tipe": "dalam rumah",
+      "cahaya": "soft side daylight",
+      "suhu_warna_k": 4500,
+      "isi_latar": "cermin, nampan polos, sedikit properti netral",
+      "risiko": "pantulan cermin",
+      "prompt_en": "A small vanity table by a window with a mirror and a plain tray, soft daylight from the side, a few neutral props only."
+    },
+    {
+      "id": "S-06",
+      "nama": "Dapur rumah",
+      "tipe": "dalam rumah",
+      "cahaya": "daylight from a window mixed with warm ceiling light",
+      "suhu_warna_k": 4000,
+      "isi_latar": "meja dapur, beberapa peralatan sehari-hari",
+      "risiko": "merek peralatan lain di latar",
+      "prompt_en": "A tidy home kitchen with a countertop and a few everyday utensils, daylight from a window mixed with warm ceiling light, realistic small clutter."
+    },
+    {
+      "id": "S-07",
+      "nama": "Meja makan",
+      "tipe": "dalam rumah",
+      "cahaya": "soft side daylight",
+      "suhu_warna_k": 4500,
+      "isi_latar": "meja kayu, taplak polos atau permukaan kosong",
+      "risiko": "tidak ada",
+      "prompt_en": "A wooden dining table near a window with a plain tablecloth or a bare surface, soft side daylight."
+    },
+    {
+      "id": "S-08",
+      "nama": "Meja kerja",
+      "tipe": "dalam rumah",
+      "cahaya": "soft side daylight plus a warm desk lamp",
+      "suhu_warna_k": 4200,
+      "isi_latar": "laptop, buku catatan, lampu meja kecil",
+      "risiko": "logo pada perangkat lain",
+      "prompt_en": "A home desk with a laptop, a notebook and a small lamp, soft daylight from the side plus a warm desk lamp, neutral wall."
+    },
+    {
+      "id": "S-09",
+      "nama": "Kamar anak tanpa anak",
+      "tipe": "dalam rumah",
+      "cahaya": "soft daylight",
+      "suhu_warna_k": 4500,
+      "isi_latar": "rak rendah, boneka tertata rapi, karpet bermain",
+      "risiko": "tidak boleh ada anak atau bayi",
+      "prompt_en": "A tidy child's room with a low shelf, soft toys arranged neatly and a play mat, soft daylight; no child or infant present."
+    },
+    {
+      "id": "S-10",
+      "nama": "Ruang cuci dan area jemur",
+      "tipe": "dalam rumah",
+      "cahaya": "even daylight from a side window or a neutral ceiling light",
+      "suhu_warna_k": 5000,
+      "isi_latar": "mesin cuci, rak jemur, keranjang",
+      "risiko": "merek mesin lain",
+      "prompt_en": "A utility area with a washing machine, a drying rack and a basket, even daylight from a side window or a neutral ceiling light."
+    },
+    {
+      "id": "S-11",
+      "nama": "Sudut ibadah yang rapi",
+      "tipe": "dalam rumah",
+      "cahaya": "soft window daylight",
+      "suhu_warna_k": 4500,
+      "isi_latar": "sajadah terlipat, rak kecil",
+      "risiko": "tampilkan dengan hormat, tanpa gerak berlebihan",
+      "prompt_en": "A calm, tidy corner of a room with a folded prayer mat and a small shelf, soft window daylight, respectful and uncluttered."
+    },
+    {
+      "id": "S-12",
+      "nama": "Teras rumah",
+      "tipe": "luar rumah",
+      "cahaya": "bright diffuse daylight in open shade",
+      "suhu_warna_k": 5200,
+      "isi_latar": "ubin bermotif, beberapa tanaman, bangku rendah",
+      "risiko": "orang lewat di jalan",
+      "prompt_en": "The front terrace of an Indonesian house with patterned floor tiles, a few potted plants and a low bench, open shade with bright diffuse daylight."
+    },
+    {
+      "id": "S-13",
+      "nama": "Taman atau halaman",
+      "tipe": "luar rumah",
+      "cahaya": "dappled morning sunlight",
+      "suhu_warna_k": 5500,
+      "isi_latar": "tanaman hijau, jalan setapak berpaving",
+      "risiko": "bayangan keras pada wajah",
+      "prompt_en": "A small garden or yard with green plants and a paved path, dappled morning sunlight, soft shadows."
+    },
+    {
+      "id": "S-14",
+      "nama": "Balkon apartemen",
+      "tipe": "luar rumah",
+      "cahaya": "bright overcast daylight",
+      "suhu_warna_k": 5600,
+      "isi_latar": "pagar balkon, siluet kota yang lembut, kursi kecil",
+      "risiko": "gedung dengan papan nama",
+      "prompt_en": "An apartment balcony with a railing and a blurred soft city skyline, bright overcast daylight, a small chair."
+    },
+    {
+      "id": "S-15",
+      "nama": "Rooftop saat golden hour",
+      "tipe": "luar rumah",
+      "cahaya": "warm low backlight with soft bounce on the face",
+      "suhu_warna_k": 3500,
+      "isi_latar": "langit berkabut, siluet gedung",
+      "risiko": "highlight terbakar, bayangan keras",
+      "prompt_en": "An open rooftop terrace in Jakarta at golden hour with a hazy skyline behind, warm low backlight and soft bounce on the face."
+    },
+    {
+      "id": "S-16",
+      "nama": "Carport atau garasi",
+      "tipe": "luar rumah",
+      "cahaya": "even shade daylight",
+      "suhu_warna_k": 5500,
+      "isi_latar": "dinding polos, kendaraan sebagian terlihat",
+      "risiko": "plat nomor harus tidak terbaca",
+      "prompt_en": "A residential carport with a plain wall and a vehicle partly visible without a readable license plate, even shade daylight."
+    },
+    {
+      "id": "S-17",
+      "nama": "Jalan komplek pagi hari",
+      "tipe": "luar rumah",
+      "cahaya": "soft warm morning sunlight",
+      "suhu_warna_k": 4800,
+      "isi_latar": "pepohonan, motor terparkir",
+      "risiko": "orang lewat harus tidak dikenali",
+      "prompt_en": "A quiet residential street in the early morning with trees and parked scooters, soft warm sunlight, no identifiable bystanders."
+    },
+    {
+      "id": "S-18",
+      "nama": "Kafe kekinian",
+      "tipe": "luar rumah",
+      "cahaya": "warm pendant light plus window daylight",
+      "suhu_warna_k": 3800,
+      "isi_latar": "beton ekspos, lampu gantung hangat",
+      "risiko": "papan nama dan logo merek tidak boleh terbaca",
+      "prompt_en": "A modern Indonesian specialty coffee shop corner with exposed concrete and warm pendant lights plus window daylight, no readable signage or brand logos."
+    },
+    {
+      "id": "S-19",
+      "nama": "Interior mobil (kursi penumpang)",
+      "tipe": "luar rumah",
+      "cahaya": "soft window light",
+      "suhu_warna_k": 5200,
+      "isi_latar": "plafon dan bangku belakang terlihat",
+      "risiko": "sopir, setir, plat nomor tidak masuk frame",
+      "prompt_en": "The passenger seat of a family car in daylight with the ceiling and rear bench visible, soft window light, no steering wheel or driver in frame."
+    },
+    {
+      "id": "S-20",
+      "nama": "Studio backdrop polos",
+      "tipe": "dalam rumah",
+      "cahaya": "soft diffused light from one side",
+      "suhu_warna_k": 5000,
+      "isi_latar": "latar krem atau abu muda polos",
+      "risiko": "kurang terasa UGC, aman untuk kesetiaan produk",
+      "prompt_en": "A simple plain cream or light grey backdrop with soft diffused light from one side and minimal shadows."
+    },
+    {
+      "id": "S-21",
+      "nama": "Warung atau pasar tradisional",
+      "tipe": "luar rumah",
+      "cahaya": "mixed daylight and warm bulbs",
+      "suhu_warna_k": 4200,
+      "isi_latar": "barang gantung, bangku plastik",
+      "risiko": "orang di latar harus buram dan tidak dikenali",
+      "prompt_en": "A small traditional warung or market stall with hanging goods and a plastic stool, mixed daylight and warm bulbs, background people kept blurred and unidentifiable."
+    },
+    {
+      "id": "S-22",
+      "nama": "Minimarket tanpa logo",
+      "tipe": "dalam ruang publik",
+      "cahaya": "bright fluorescent light with a slight green tint",
+      "suhu_warna_k": 4800,
+      "isi_latar": "rak buram",
+      "risiko": "merek di rak tidak boleh terbaca",
+      "prompt_en": "A convenience-store aisle with bright fluorescent light and a slight green tint, shelves blurred with no readable brand names or logos."
+    },
+    {
+      "id": "S-23",
+      "nama": "Sudut olahraga atau gym kecil",
+      "tipe": "dalam rumah",
+      "cahaya": "even neutral light",
+      "suhu_warna_k": 5000,
+      "isi_latar": "matras, cermin, dinding polos",
+      "risiko": "logo alat olahraga",
+      "prompt_en": "A small home workout corner or a modest gym with a mat, a mirror and plain walls, even neutral light."
+    },
+    {
+      "id": "S-24",
+      "nama": "Meja tabletop flat lay",
+      "tipe": "dalam rumah",
+      "cahaya": "soft window light from one side",
+      "suhu_warna_k": 4800,
+      "isi_latar": "permukaan kayu atau linen polos, satu dua properti netral",
+      "risiko": "properti tidak boleh menambah klaim",
+      "prompt_en": "A top-down tabletop on a plain wood or linen surface with soft window light from one side and one or two neutral props."
+    }
+  ],
+  "angle": [
+    {
+      "id": "C-01",
+      "nama": "Full body depan",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 3 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4-f/5.6",
+      "gerak_default": "M-1",
+      "panel_cocok": "1,5",
+      "fungsi": "Menampilkan busana atau sepatu utuh",
+      "risiko": "Detail kecil kurang jelas",
+      "prompt_en": "Full-body shot from the front at eye level, camera about three meters away, 35mm equivalent, subject fully visible head to feet, subtle natural handheld sway."
+    },
+    {
+      "id": "C-02",
+      "nama": "Medium-full (lutut ke atas)",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 2 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-1",
+      "panel_cocok": "1,5",
+      "fungsi": "Produk utuh dengan karakter lebih dekat",
+      "risiko": "Panjang busana terpotong",
+      "prompt_en": "Medium-full shot from the front, framed from the knees up, eye level, 35mm equivalent, subtle handheld."
+    },
+    {
+      "id": "C-03",
+      "nama": "Medium (pinggang ke atas)",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "sekitar 1,2 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "1,5",
+      "fungsi": "Produk dipegang atau ditunjukkan di dada",
+      "risiko": "Tangan menutupi label",
+      "prompt_en": "Medium shot as a half-body shot, eye level, 35mm equivalent, the subject holding or presenting the product at mid-body height, label facing the camera."
+    },
+    {
+      "id": "C-04",
+      "nama": "Medium close-up (dada ke atas)",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 0,8 m",
+      "lensa_setara": "50mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "2,3",
+      "fungsi": "Detail dekat wajah: kerah, aksesori, kemasan di dekat wajah",
+      "risiko": "Latar terlalu buram",
+      "prompt_en": "Medium close-up as an upper-body shot, eye level, 50mm equivalent, gentle background softness, the product detail near the face clearly visible."
+    },
+    {
+      "id": "C-05",
+      "nama": "Close-up detail produk",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "sekitar 0,5 m",
+      "lensa_setara": "50-85mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "2,3",
+      "fungsi": "Satu detail produk yang ditunjuk atau disentuh karakter",
+      "risiko": "AI mengarang detail yang tidak ada di referensi",
+      "prompt_en": "Close-up of one product detail, 50-85mm equivalent at f/2.8, the subject's hand pointing to or touching the detail, background softly blurred, the product exactly as in the reference."
+    },
+    {
+      "id": "C-06",
+      "nama": "Extreme close-up (tekstur)",
+      "tinggi_kamera": "dekat produk",
+      "jarak": "sangat dekat",
+      "lensa_setara": "85mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-0",
+      "panel_cocok": "3",
+      "fungsi": "Tekstur permukaan",
+      "risiko": "Hanya bila foto close-up ada. Risiko tekstur karangan tinggi",
+      "prompt_en": "Extreme close-up of a surface texture, 85mm equivalent, steady, only as shown in the close-up reference."
+    },
+    {
+      "id": "C-07",
+      "nama": "Tiga perempat 45 derajat",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 2,5 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-1",
+      "panel_cocok": "4",
+      "fungsi": "Siluet dan jatuhnya produk",
+      "risiko": "Konstruksi belakang bergeser",
+      "prompt_en": "Three-quarter view, camera 45 degrees to the subject's side, medium-full, eye level, 35mm equivalent; the subject turns her body while the camera does not orbit."
+    },
+    {
+      "id": "C-08",
+      "nama": "Profil samping 90 derajat",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 2,5 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-1",
+      "panel_cocok": "4",
+      "fungsi": "Bentuk samping, tumit, panjang",
+      "risiko": "Dokumen kursus: masih cukup aman",
+      "prompt_en": "Side profile view at 90 degrees, eye level, 35mm equivalent, the subject stands naturally without spinning."
+    },
+    {
+      "id": "C-09",
+      "nama": "Dari belakang",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "sekitar 2,5 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-1",
+      "panel_cocok": "4",
+      "fungsi": "Konstruksi belakang bila foto belakang ada",
+      "risiko": "Dilarang bila tidak ada foto belakang",
+      "prompt_en": "Back view, medium-full, the subject slightly looks back over the shoulder toward the camera, no spin."
+    },
+    {
+      "id": "C-10",
+      "nama": "Low angle dari lantai",
+      "tinggi_kamera": "dekat lantai",
+      "jarak": "sekitar 1 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-1",
+      "panel_cocok": "4",
+      "fungsi": "Alas kaki dan kaki",
+      "risiko": "Sol atau tumit dikarang",
+      "prompt_en": "Low angle with the camera near the floor looking slightly up at the feet and legs, 35mm equivalent, f/4, steady."
+    },
+    {
+      "id": "C-11",
+      "nama": "High angle menunduk 35 derajat",
+      "tinggi_kamera": "di atas subjek",
+      "jarak": "sekitar 1 m",
+      "lensa_setara": "50mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "3,4",
+      "fungsi": "Produk di meja atau isi tas",
+      "risiko": "Proporsi produk berubah",
+      "prompt_en": "High angle looking down about 35 degrees, medium shot, 50mm equivalent, moderate background blur."
+    },
+    {
+      "id": "C-12",
+      "nama": "Top-down tegak lurus",
+      "tinggi_kamera": "di atas meja",
+      "jarak": "sekitar 0,6 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/5.6",
+      "gerak_default": "M-0",
+      "panel_cocok": "3,4",
+      "fungsi": "Tampilan flat lay dan isi set",
+      "risiko": "Tidak cocok untuk produk dipakai",
+      "prompt_en": "Top-down shot straight above the tabletop, 35mm equivalent, steady with a very slight natural hand tremor."
+    },
+    {
+      "id": "C-13",
+      "nama": "POV tangan orang pertama",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "sekitar 0,4 m",
+      "lensa_setara": "24-28mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "3,4",
+      "fungsi": "Demonstrasi pemakaian dengan wajah tidak terlihat",
+      "risiko": "Tangan atau jari rusak",
+      "prompt_en": "First-person POV of the subject's own hands demonstrating the product at mid-body height, the face not visible, 24-28mm equivalent, natural handheld shake, natural fingers."
+    },
+    {
+      "id": "C-14",
+      "nama": "Over-the-shoulder",
+      "tinggi_kamera": "di belakang bahu",
+      "jarak": "sekitar 1,5 m",
+      "lensa_setara": "50mm",
+      "aperture": "f/2.8",
+      "gerak_default": "M-1",
+      "panel_cocok": "3",
+      "fungsi": "Konteks penggunaan di depan karakter",
+      "risiko": "Paling berisiko: model mengarang sisi yang tidak terlihat (dokumen kursus)",
+      "prompt_en": "Over-the-shoulder view looking past the subject's shoulder toward the product in front of her, 50mm equivalent, f/2.8."
+    },
+    {
+      "id": "C-15",
+      "nama": "Selfie kamera depan, wajah terpotong",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "jarak lengan",
+      "lensa_setara": "24mm",
+      "aperture": "f/2.0",
+      "gerak_default": "M-2",
+      "panel_cocok": "1,3",
+      "fungsi": "Format hand selfie",
+      "risiko": "Tangan atau ponsel terlihat",
+      "prompt_en": "Front-camera selfie at arm's length, the frame cutting across the chin, one arm extending diagonally from the lower left and cropped at the wrist, 24mm equivalent."
+    },
+    {
+      "id": "C-16",
+      "nama": "Mirror selfie",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "sekitar 1,5 m dari cermin",
+      "lensa_setara": "24-35mm",
+      "aperture": "f/2.0",
+      "gerak_default": "M-1",
+      "panel_cocok": "1,5",
+      "fungsi": "Format mirror selfie",
+      "risiko": "Pantulan perangkat perekam",
+      "prompt_en": "Mirror selfie with natural handheld micro sway, the subject's face clearly visible in the mirror."
+    },
+    {
+      "id": "C-17",
+      "nama": "Dutch angle sampai 10 derajat",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "dekat",
+      "lensa_setara": "85mm",
+      "aperture": "f/1.8",
+      "gerak_default": "M-2",
+      "panel_cocok": "1",
+      "fungsi": "Hook yang dinamis",
+      "risiko": "Jangan lebih dari 15 derajat",
+      "prompt_en": "Close-up with a subtle dutch angle of about 10 degrees, eye level, 85mm equivalent, f/1.8."
+    },
+    {
+      "id": "C-18",
+      "nama": "Wide establishing",
+      "tinggi_kamera": "setinggi mata",
+      "jarak": "jauh",
+      "lensa_setara": "35mm",
+      "aperture": "f/8",
+      "gerak_default": "M-0",
+      "panel_cocok": "1",
+      "fungsi": "Membuka konteks tempat",
+      "risiko": "Produk terlalu kecil untuk panel produk",
+      "prompt_en": "Wide establishing shot, 35mm equivalent at f/8, deep focus so everything is sharp from foreground to background."
+    },
+    {
+      "id": "C-19",
+      "nama": "Mengikuti langkah (walk-and-talk)",
+      "tinggi_kamera": "setinggi dada",
+      "jarak": "sekitar 2 m",
+      "lensa_setara": "35mm",
+      "aperture": "f/4",
+      "gerak_default": "M-2",
+      "panel_cocok": "1,5",
+      "fungsi": "Alas kaki sambil berjalan",
+      "risiko": "Risiko tinggi pada kesetiaan produk",
+      "prompt_en": "Handheld follow shot of the subject walking slowly toward the camera, 35mm equivalent, natural footstep bounce."
+    }
+  ],
+  "gerak_kamera": [
+    {
+      "id": "M-0",
+      "nama": "Diam",
+      "deskripsi": "Kamera nyaris tanpa gerak, hanya getar tangan sangat halus. Untuk detail dan flat lay."
+    },
+    {
+      "id": "M-1",
+      "nama": "Handheld halus (default)",
+      "deskripsi": "Getar dan sway kecil, tidak teratur, tidak mekanis, seperti ponsel yang dipegang santai."
+    },
+    {
+      "id": "M-2",
+      "nama": "Handheld jelas",
+      "deskripsi": "Getar, sway, dan micro-reframing lebih terlihat. Untuk hook dan gaya amatir mentah."
+    }
+  ],
+  "dilarang": [
+    "orbit atau putar 360 derajat",
+    "dolly dramatis",
+    "crane atau drone",
+    "zoom dramatis",
+    "push-in sinematik",
+    "transisi sinematik",
+    "gerak runway"
+  ]
+}
