@@ -26,9 +26,9 @@ npm run build
 
 ## Memasang di Vercel
 
-1. Vercel → **Add New → Project** → pilih repo ini.
+1. Vercel → **Add New → Project** → pilih repo ini. (Proyek yang sudah ada juga bisa dipakai: Settings → General → **Root Directory** → `web`, lalu Redeploy.)
 2. **Root Directory**: `web`. Framework: Vite (terdeteksi otomatis). Build: `npm run build`. Output: `dist`.
-3. **Environment Variables**: `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` (keduanya publik; nilainya sama dengan di `js/supabase-client.js` atau Supabase → Project Settings → API).
+3. **Environment Variables**: `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` (keduanya publik). Ambil dari Supabase → Project Settings → API: URL proyek dan kunci **anon** (bukan `service_role`).
 4. Deploy. Jangan pernah mengisi kunci `service_role`, kunci OpenRouter, atau `BAUGC_SHARED_SECRET` di Vercel untuk proyek ini.
 
 `vercel.json` mengarahkan semua alamat ke `index.html` agar `/masuk` bisa dibuka langsung.
@@ -39,6 +39,11 @@ npm run build
 - Teks utama dan pendukung memenuhi **AAA (7:1)**; tombol utama, logo, dan galat memenuhi AA atau lebih; garis tepi isian dan cincin fokus minimal 3:1.
 - `test/contrast.test.js` membaca warna langsung dari `src/styles/tokens.css`. **Mengubah warna tanpa memeriksa kontras membuat tes gagal.**
 - Mode kontras tinggi sistem (`prefers-contrast: more`) menebalkan teks dan garis.
+
+## Riwayat
+
+Prototipe lama (halaman HTML di akar repo: login, dasbor, karakter, produk, video studio, riwayat, staf, profil, beserta `js/` dan `css/`) dihapus pada 5 Okt 2026. Salinannya ada di cabang `arsip-prototipe` dan di riwayat commit.
+Prototipe itu memakai jalur lama (Magnific, OmniHuman, n8n) dan tabel lama (`characters`, `products`, `video_jobs`, `frames`), bukan pipeline v2.
 
 ## Batasan yang diketahui
 
