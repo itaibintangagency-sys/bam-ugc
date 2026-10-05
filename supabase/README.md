@@ -8,11 +8,12 @@ Aturan kerja: **setiap perubahan database = satu berkas baru di sini**, dijalank
 | Berkas | Fungsi | Status pada database produksi |
 |---|---|---|
 | `baseline/20261002000000_baseline_legacy.sql` | CATATAN struktur lama (7 tabel, 2 fungsi, 4 trigger, 17 policy, 4 bucket). Direkonstruksi dari ekspor 2026-10-02. | **Jangan dijalankan.** Database sudah memilikinya. Dipakai hanya untuk membangun lingkungan uji dari nol. |
-| `20261002000100_fix_legacy_rls_grants.sql` | Menutup celah: RLS pada `frames`/`products`/`backgrounds`, cabut TRUNCATE, kunci `search_path`, tambah indeks | Belum dijalankan |
-| `20261002000150_storage_remove_anon_upload.sql` | Menutup unggahan anonim ke bucket publik `product-assets` | Belum dijalankan (cek dulu bahwa tidak ada workflow yang memakai kunci anon untuk mengunggah) |
-| `20261002000200_ugc_v2.sql` | Sistem baru: antrean batch/job, agent, telemetri, bucket privat `ugc-*` | Belum dijalankan |
-| `migrations/20261002000400_hardening.sql` | **Penguatan keamanan dan kinerja** dari analisis Supabase: menutup kenaikan role oleh staff, mencabut hak fungsi anon, indeks, dan merapikan policy. | Belum dijalankan |
-| `20261002000300_ugc_character_voice.sql` | Tahap karakter: profil suara, foto, tugas agent (upload foto, video perkenalan), status sampai `ready`, gerbang batch. Juga memperbaiki penjaga status: konteks tanpa pengguna login (service_role, SQL Editor, n8n) tidak lagi terblokir. | Belum dijalankan |
+| `20261002000100_fix_legacy_rls_grants.sql` | Menutup celah: RLS pada `frames`/`products`/`backgrounds`, cabut TRUNCATE, kunci `search_path`, tambah indeks | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
+| `20261002000150_storage_remove_anon_upload.sql` | Menutup unggahan anonim ke bucket publik `product-assets` | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
+| `20261002000200_ugc_v2.sql` | Sistem baru: antrean batch/job, agent, telemetri, bucket privat `ugc-*` | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
+| `migrations/20261002000400_hardening.sql` | **Penguatan keamanan dan kinerja** dari analisis Supabase: menutup kenaikan role oleh staff, mencabut hak fungsi anon, indeks, dan merapikan policy. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
+| `20261002000300_ugc_character_voice.sql` | Tahap karakter: profil suara, foto, tugas agent (upload foto, video perkenalan), status sampai `ready`, gerbang batch. Juga memperbaiki penjaga status: konteks tanpa pengguna login (service_role, SQL Editor, n8n) tidak lagi terblokir. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
+| `20261005000500_agent_online_parity.sql` | Agent online setara agent offline: klaim job membawa `flow_asset_url`, penanda generate, data ruang karakter, dan foto wajah; `ugc_requeue_own`; kolom `flow_account_name` | **Belum dijalankan.** Jalankan setelah 0100–0400 (aman diulang) |
 
 ## Hasil audit ekspor 2026-10-02
 
