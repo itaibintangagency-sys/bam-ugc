@@ -8,3 +8,6 @@ agent/local/outbox/*
 agent/reports/
 !agent/local/inbox/.gitkeep
 !agent/local/outbox/.gitkeep
+dist/
+agent/recon/
+tools/uji-gambar/hasil/
