@@ -26,7 +26,7 @@ async function seed(db, { jobs = 1, account = 'Uji Bintang', face = 'chr/face_fr
     out.batch = (await db.query(`insert into ugc_batches (character_id, resolution, duration_sec, location_mode, status, note, created_by) values ($1,$2,$3,$4,$5,$6,$7) returning id`, [b.character_id, b.resolution, b.duration_sec, b.location_mode, b.status, b.note, b.created_by])).rows[0].id;
     for (let i = 1; i <= jobs; i++) {
       const p = T.productRow('Produk ' + i, U.admin);
-      const prod = (await db.query(`insert into ugc_products (name, status, photos, profile, created_by, confirmed_by, confirmed_at) values ($1,$2,$3,$4,$5,$6,$7) returning id`, [p.name, p.status, JSON.stringify(p.photos), JSON.stringify(p.profile), p.created_by, p.confirmed_by, p.confirmed_at])).rows[0].id;
+      const prod = (await db.query(`insert into ugc_products (name, status, photos, profile, archetype_id, created_by, confirmed_by, confirmed_at) values ($1,$2,$3,$4,$5,$6,$7,$8) returning id`, [p.name, p.status, JSON.stringify(p.photos), JSON.stringify(p.profile), p.archetype_id, p.created_by, p.confirmed_by, p.confirmed_at])).rows[0].id;
       const j = T.jobRow({ id: '10000000-0000-0000-0000-00000000000' + i, batchId: out.batch, productId: prod, seq: i, storyboardPath: `${out.batch}/j${i}.png`, videoJson: '{"project":{"title":"x"},"character":{"appearance":"A young woman with long, wavy, light-brown hair."}}', userId: U.admin });
       await db.query(`insert into ugc_jobs (id, batch_id, product_id, seq, status, storyboard_variant, storyboard_path, video_json, created_by) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, [j.id, j.batch_id, j.product_id, j.seq, j.status, j.storyboard_variant, j.storyboard_path, j.video_json, j.created_by]);
       out.jobs.push(j.id);

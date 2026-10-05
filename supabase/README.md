@@ -14,6 +14,9 @@ Aturan kerja: **setiap perubahan database = satu berkas baru di sini**, dijalank
 | `migrations/20261002000400_hardening.sql` | **Penguatan keamanan dan kinerja** dari analisis Supabase: menutup kenaikan role oleh staff, mencabut hak fungsi anon, indeks, dan merapikan policy. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
 | `20261002000300_ugc_character_voice.sql` | Tahap karakter: profil suara, foto, tugas agent (upload foto, video perkenalan), status sampai `ready`, gerbang batch. Juga memperbaiki penjaga status: konteks tanpa pengguna login (service_role, SQL Editor, n8n) tidak lagi terblokir. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
 | `20261005000500_agent_online_parity.sql` | Agent online setara agent offline: klaim job membawa `flow_asset_url`, penanda generate, data ruang karakter, dan foto wajah; `ugc_requeue_own`; kolom `flow_account_name` | **Belum dijalankan.** Jalankan setelah 0100–0400 (aman diulang) |
+| `20261005000600_selaraskan_katalog.sql` | Katalog di database: 15 arketipe, 24 lokasi, peta 226 kategori. Produk mendapat arketipe dari kategori, risiko tidak bisa diturunkan staf, DNA karakter dibekukan sejak `dna_locked`. Berhenti bila tabel sudah berisi data | Sudah dijalankan |
+| `20261005000700_gerbang_risiko.sql` | Menutup jalan pintas antrean: staf tidak bisa menyisipkan batch atau job langsung `queued`, memalsukan persetujuan admin, atau mengisi kolom sistem job. Gerbang risiko tinggi membaca risiko PRODUK. `ugc_approve_risk`. Kebijakan katalog tanpa tumpang tindih | **Belum dijalankan.** Jalankan setelah 0600 |
+| `20261005000710_risiko_kategori.sql` | OPSIONAL: 5 kategori bayi (anak + klaim kesehatan) dinaikkan ke risiko tinggi; risiko lama tidak bisa diturunkan staf dengan mengganti kategori | **Belum dijalankan.** Jalankan setelah 0700 bila kebijakan disetujui |
 
 ## Hasil audit ekspor 2026-10-02
 

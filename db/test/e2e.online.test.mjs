@@ -255,3 +255,54 @@ test('doctor online: database yang BELUM menjalankan 0500 → pemeriksaan gagal 
     assert.ok(bad.some(r => r.name === 'Login Supabase sebagai akun agent' && !r.pass && /Login Supabase gagal/.test(r.note)));
   } finally { process.env.AGENT_PASSWORD = 'pw-agent'; process.env.SUPABASE_URL = url0; await lama.close(); void old; }
 });
+
+async function oneLocalJob(opts = {}) {
+  const dir = path.join(TMP, `produk-${Date.now()}-${Math.floor(Math.random() * 1e6)}`); fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'download.png'), PNG); fs.writeFileSync(path.join(dir, 'video.json'), VIDEO_JSON);
+  const id = enqueueLocal({ room: CODE, storyboard: path.join(dir, 'download.png'), json: path.join(dir, 'video.json'), res: '360p', ...opts });
+  await sleep(1100); return id;
+}
+
+test('arketipe dan kategori pada job lokal: --archetype dibatasi A-01..A-15, tercatat di job.json, dan menjadi arketipe produk di database', async () => {
+  assert.throws(() => enqueueLocal({ room: CODE, storyboard: SB, json: JS, res: '360p', archetype: 'A-99' }), /Arketipe "A-99" tidak dikenal/);
+  assert.equal(T.localPending(LOCAL, CODE).length, 0, 'penolakan tidak meninggalkan job');
+  await oneLocalJob({ archetype: 'A-05' });
+  const spec = JSON.parse(fs.readFileSync(path.join(T.localPending(LOCAL, CODE)[0].dir, 'job.json'), 'utf8')); assert.equal(spec.archetype_id, 'A-05');
+  await setDbUrl(REAL);
+  const r = await T.pushBatch(await asUser('admin'), LOCAL, { room: CODE }, () => {});
+  const prod = (await fake.sql(`select p.archetype_id, p.risk_level from ugc_jobs j join ugc_products p on p.id = j.product_id where j.id = $1`, [r.jobs[0].job_id])).rows[0];
+  assert.deepEqual(prod, { archetype_id: 'A-05', risk_level: 'sedang' });
+  await fake.sql(`update ugc_jobs set status = 'canceled' where id = $1`, [r.jobs[0].job_id]);
+});
+
+test('produk berisiko tinggi: pengiriman berhenti dengan petunjuk SQL untuk admin, batch TIDAK dibatalkan, job lokal ditandai terkirim; setelah admin menyetujui job masuk antrean', async () => {
+  await oneLocalJob({ archetype: 'A-07' });
+  await setDbUrl(REAL);
+  const admin = await asUser('admin');
+  const err = await T.pushBatch(admin, LOCAL, { room: CODE }, () => {}).then(() => null, e => e);
+  assert.ok(err && err.needsApproval, String(err && err.message));
+  assert.match(err.message, /berisiko tinggi/); assert.match(err.message, /select ugc_approve_risk\('[0-9a-f-]{36}'/); assert.match(err.message, /select ugc_enqueue_batch\('[0-9a-f-]{36}'\)/);
+  assert.equal((await fake.sql(`select status from ugc_batches where id = $1`, [err.batchId])).rows[0].status, 'approved', 'batch tidak dibatalkan');
+  assert.equal(T.localPending(LOCAL, CODE).length, 0, 'job lokal ditandai terkirim, tidak terkirim dua kali');
+  const [j] = (await fake.sql(`select id, status from ugc_jobs where batch_id = $1`, [err.batchId])).rows; assert.equal(j.status, 'approved');
+  await admin.rpc('ugc_approve_risk', { p_job: j.id, p_note: 'izin edar sudah diperiksa' });
+  assert.equal(await admin.rpc('ugc_enqueue_batch', { p_batch: err.batchId }), 1);
+  assert.equal((await fake.sql(`select status from ugc_jobs where id = $1`, [j.id])).rows[0].status, 'queued');
+  await fake.sql(`update ugc_jobs set status = 'canceled' where id = $1`, [j.id]);
+});
+
+test('kategori yang salah ketik ditolak SEBELUM mengirim apa pun, dengan pesan awam; kategori yang benar menurunkan arketipe dari peta', async () => {
+  await oneLocalJob({ category: 'Pakaian Wanita > Piyama Ngawur' });
+  await setDbUrl(REAL);
+  const admin = await asUser('admin');
+  const batchesBefore = (await fake.sql(`select count(*)::int as n from ugc_batches`)).rows[0].n;
+  await assert.rejects(() => T.pushBatch(admin, LOCAL, { room: CODE }, () => {}), /Kategori produk tidak dikenal: "Pakaian Wanita > Piyama Ngawur"\. Salin kunci kategori persis dari kolom Kunci_Lookup.*Tidak ada yang dikirim/);
+  assert.equal((await fake.sql(`select count(*)::int as n from ugc_batches`)).rows[0].n, batchesBefore, 'tidak ada batch atau produk yang dibuat (diperiksa sebelum mengirim)');
+  assert.equal(T.localPending(LOCAL, CODE).length, 1, 'job lokal belum ditandai terkirim, bisa dikirim ulang');
+  fs.rmSync(T.localPending(LOCAL, CODE)[0].dir, { recursive: true, force: true });
+  await oneLocalJob({ category: 'Pakaian Wanita > Pakaian Tidur & Piyama > Daster' });
+  const r = await T.pushBatch(admin, LOCAL, { room: CODE }, () => {});
+  const prod = (await fake.sql(`select p.archetype_id, p.category_key, p.risk_level from ugc_jobs j join ugc_products p on p.id = j.product_id where j.id = $1`, [r.jobs[0].job_id])).rows[0];
+  assert.deepEqual(prod, { archetype_id: 'A-01', category_key: 'Pakaian Wanita > Pakaian Tidur & Piyama > Daster', risk_level: 'rendah' });
+  await fake.sql(`update ugc_jobs set status = 'canceled' where id = $1`, [r.jobs[0].job_id]);
+});
