@@ -1,0 +1,31 @@
+:root {
+  /* Warna: rasio kontras diperiksa otomatis oleh test/contrast.test.js */
+  --bg: #FFF3E4;
+  --panel: #FFFBF5;
+  --text: #1E130C;          /* teks utama di --bg dan --panel */
+  --muted: #5A4636;         /* label, sub judul, catatan kaki */
+  --accent: #C2410C;        /* tombol utama dan logo; teks putih di atasnya */
+  --accent-hover: #9A3412;
+  --on-accent: #FFFFFF;
+  --border: #9A8068;     /* garis tepi isian dan tombol sekunder (komponen UI) */
+  --border-soft: #F0DFC8;   /* hiasan saja: kartu, pemisah */
+  --focus: #1D4ED8;         /* cincin fokus keyboard */
+  --danger-text: #8A2A17;
+  --danger-bg: #FDE3DC;
+  --warn-text: #6B4200;
+  --warn-bg: #FFF0C2;
+  --ok-text: #0A5233;
+  --ok-bg: #D9F3E5;
+
+  /* Ukuran huruf: dasar 16px; tidak ada teks di bawah 14px */
+  --fs-base: 1rem;
+  --fs-small: 0.875rem;
+  --fs-label: 0.9375rem;
+  --fs-title: 1.75rem;
+  --radius: 12px;
+  --tap: 48px;               /* tinggi minimum isian dan tombol */
+}
+
+@media (prefers-contrast: more) {
+  :root { --muted: #3B2A1D; --border: #5C4631; --border-soft: #8F7660; }
+}

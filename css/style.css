@@ -440,3 +440,34 @@ main{
   .act-status{grid-area:status;justify-self:start}
   .act-time{grid-area:time;justify-self:end;font-size:10.5px}
 }
+
+/* ═══ Keterbacaan (5 Okt 2026) ═══
+   Diukur langsung di dashboard prototipe: 46 elemen teks, 26 berhuruf di bawah 14px (terkecil 10,5px),
+   28 berkontras di bawah 4,5:1 (terendah 2,57:1). Setelah blok ini: 0 elemen di bawah 4,5:1 (terendah 4,73:1),
+   huruf terkecil 12px. Warna hanya diganti; ukuran huruf dinaikkan sedikit tanpa mengubah tata letak. */
+:root { --dim: #5A4636; }                       /* teks pendukung: 4,3:1 -> 8,6:1 */
+.mark span, .auth-mark span { color: #C2410C; } /* logo koral 2,6:1 -> 5,0:1 */
+.btn-primary, .btn-new { background: #C2410C; color: #FFFFFF; font-weight: 700; }   /* 2,7:1 -> 5,2:1 */
+.btn-primary:hover, .btn-new:hover { background: #9A3412; opacity: 1; }
+.btn { font-size: 14px; }
+.nav-item { font-size: 14.5px; } .acct-name { font-size: 14px; } .acct-role { font-size: 12px; } .greet { font-size: 14px; }
+.cap-label { font-size: 13.5px; } .cap-unit { font-size: 14px; } .cap-plan { font-size: 13px; }
+.cap-upgrade { font-size: 13px; color: #C2410C; } .cap-bar-marks { font-size: 12px; } .block-link { font-size: 13px; }
+.pl-name { font-size: 14px; } .pl-step.hot .pl-count { color: #C2410C; } .pl-step.done .pl-count { color: #0B6B68; }
+.char-name { font-size: 13.5px; } .char-tag { font-size: 12px; } .char-add span, .tile-add span { font-size: 12px; }
+.act-title { font-size: 14px; } .act-meta { font-size: 12.5px; } .act-status { font-size: 12px; } .act-time { font-size: 12px; }
+.empty { font-size: 14px; } .tile-title { font-size: 14px; } .tile-sub { font-size: 12px; } .tile-badge { font-size: 11px; }
+.composite-result { font-size: 12px; color: #C2410C; }
+
+/* Halaman login (hanya di dalam .auth-wrap) */
+.auth-wrap .auth-card { max-width: 420px; background: #FFFBF5; }
+.auth-wrap .auth-mark { font-size: 32px; }
+.auth-wrap .auth-sub { font-size: 16px; color: #5A4636; }
+.auth-wrap .field label { font-size: 15px; font-weight: 600; color: #5A4636; }
+.auth-wrap .field input[type=email],
+.auth-wrap .field input[type=password] { font-size: 16px; min-height: 48px; padding: 12px 14px; color: #1E130C; border: 2px solid #9A8068; }
+.auth-wrap .field input::placeholder { color: #6B5848; opacity: 1; }
+.auth-wrap .field input:focus { outline: 3px solid #1D4ED8; outline-offset: 2px; border-color: #1D4ED8; }
+.auth-wrap .btn-primary { font-size: 16px; min-height: 48px; }
+.auth-wrap .auth-error { color: #8A2A17; background: #FDE3DC; border: 1px solid #8A2A17; font-size: 16px; font-weight: 600; }
+.auth-wrap .auth-foot { font-size: 14px; color: #5A4636; }

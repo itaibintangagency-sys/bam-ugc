@@ -9,10 +9,12 @@ karakter → produk → batch (1 karakter, maksimal 10 produk) → storyboard �
 |---|---|---|
 | `core/` | Logika inti: rencana panel dengan acak berbenih, 24 lokasi dengan **ruang rekam suara otomatis**, prompt storyboard (bertulis dan bersih), JSON video, **profil suara karakter** (dua lapis), **JSON video perkenalan**, pemeriksa kata pemicu dan klaim | 24 dari 24 lolos |
 | `supabase/migrations/` | Catatan database berurutan: baseline lama (catatan), perbaikan celah, penutupan unggahan anonim, dan sistem v2 (antrean, RLS, detak agent, telemetri, bucket privat). Lihat `supabase/README.md`. | Rantai migrasi lolos di Postgres lokal |
-| `db/` | Pengujian database dan kueri `export_schema.sql` untuk memperbarui catatan | 25 dari 25 lolos (termasuk putaran-balik terhadap struktur asli dan tahap karakter) |
+| `db/` | Pengujian database dan kueri `export_schema.sql` untuk memperbarui catatan | 72 lolos (5 Okt 2026, Postgres tiruan PGlite; belum diuji di Supabase asli) |
 | `agent/` | Agent di laptop produksi: menarik job video **dan tugas karakter** (upload foto, video perkenalan 720p 4 detik), memanggil karakter lewat daftar `@`, membuat project baru, perekam layar berpemandu. Mode online (Supabase) dan offline (folder) | 20 dari 20 lolos (halaman Flow tiruan) |
+| `tools/uji-gambar/` | Alat uji gambar OpenRouter: wajah, lembar sudut, storyboard bersih (kunci hanya di `.env` laptop) | 16 dari 16 lolos |
+| `web/` | Website React + Vite untuk Vercel. Fase 1: login, peran, dasbor. CSS berkontras tinggi dengan tes otomatis | 30 tes lulus dan build berhasil (5 Okt 2026); tampilan belum diuji di browser sungguhan |
 
-**Belum dibangun (tahap berikutnya):** website (wizard karakter, produk, batch), langkah AI (analisis produk, gambar storyboard, caption), dan otomasi pembuatan karakter dan suara di dalam Flow (menunggu hasil perekam layar).
+**Belum dibangun (tahap berikutnya):** fase 2 sampai 5 website (wizard karakter, produk, batch; fase 1 sudah ada di `web/`), langkah AI (analisis produk, gambar storyboard, caption), dan otomasi pembuatan karakter dan suara di dalam Flow (menunggu hasil perekam layar).
 
 ## Yang sudah dan belum terbukti
 
