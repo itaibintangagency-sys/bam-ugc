@@ -3,6 +3,7 @@
 // yang berfokus pada pakaian/produk dan framing. Hanya mengubah teks prompt,
 // bukan makna framing.
 const RULES = [
+  [/\bmedium close-up as an? upper[- ]body shot\b/gi, 'Medium close-up shot'],   // tanpa ini hasilnya "Medium close-up as an medium close-up shot"
   [/\bfull[- ]body\b/gi, 'full-length'],
   [/\bhalf[- ]body\b/gi, 'half-length'],
   [/\bupper[- ]body\b/gi, 'medium close-up'],

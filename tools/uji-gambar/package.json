@@ -1,0 +1,8 @@
+{
+  "name": "bam-ugc-uji-gambar",
+  "version": "0.1.0",
+  "description": "Alat uji gambar BA UGC: kemampuan model, wajah, lembar sudut, dan storyboard bersih lewat OpenRouter",
+  "scripts": { "test": "node --test test/uji.test.js" },
+  "license": "UNLICENSED",
+  "private": true
+}

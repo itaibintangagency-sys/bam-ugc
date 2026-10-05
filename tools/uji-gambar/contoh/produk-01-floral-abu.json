@@ -1,0 +1,45 @@
+{
+ "_catatan": "Fakta dan detail dibaca dari gambar storyboard lama; mohon diperiksa pemilik. Ubah foto_folder ke folder foto produk (png, jpg, webp; maksimal 6). Nama berkas boleh memuat 'depan', 'close', 'tekstur' agar peran foto tepat.",
+ "nama": "Daster floral abu pastel",
+ "arketipe": "A-01",
+ "lokasi": "S-01",
+ "seed": 9,
+ "gestur": "open_palm",
+ "foto_folder": "C:\\aset\\foto\\01_daster-floral-abu",
+ "fakta_id": [
+  "Warna dasar abu dengan motif bunga pastel",
+  "Kerah bulat dengan resleting depan",
+  "Lengan pendek",
+  "Panjang midi"
+ ],
+ "fakta_en": [
+  "Gray base with a pastel floral print",
+  "Round neckline with a front zipper",
+  "Short sleeves",
+  "Midi length",
+  "Denser print toward the hem"
+ ],
+ "warna": [],
+ "detail": [
+  {
+   "slot": "detail_utama",
+   "teks_en": "round neckline with a front zipper",
+   "label": "kerah"
+  },
+  {
+   "slot": "motif_kain",
+   "teks_en": "gray base with a soft pastel floral print",
+   "label": "motif"
+  },
+  {
+   "slot": "lengan_bawahan_hem",
+   "teks_en": "short sleeves",
+   "label": "lengan"
+  },
+  {
+   "slot": "siluet_panjang",
+   "teks_en": "pastel floral print near the hem and the midi length",
+   "label": "motif & panjang"
+  }
+ ]
+}

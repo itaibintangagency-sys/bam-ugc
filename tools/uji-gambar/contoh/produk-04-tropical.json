@@ -1,0 +1,44 @@
+{
+ "_catatan": "Fakta dan detail dibaca dari gambar storyboard lama; mohon diperiksa pemilik. Ubah foto_folder ke folder foto produk (png, jpg, webp; maksimal 6). Nama berkas boleh memuat 'depan', 'close', 'tekstur' agar peran foto tepat.",
+ "nama": "Dress tropical floral",
+ "arketipe": "A-01",
+ "lokasi": "S-01",
+ "seed": 9,
+ "gestur": "open_palm",
+ "foto_folder": "C:\\aset\\foto\\04_dress-tropical-floral",
+ "fakta_id": [
+  "Warna dasar putih dengan motif bunga tropis",
+  "Kerah bulat dengan bukaan kecil di depan",
+  "Lengan pendek",
+  "Potongan midi"
+ ],
+ "fakta_en": [
+  "White base with a tropical floral print",
+  "Round neckline with a small opening at the front",
+  "Short sleeves",
+  "Midi cut"
+ ],
+ "warna": [],
+ "detail": [
+  {
+   "slot": "detail_utama",
+   "teks_en": "round neckline with a small opening at the front",
+   "label": "kerah"
+  },
+  {
+   "slot": "motif_kain",
+   "teks_en": "tropical floral print: pink flowers and green and teal leaves on white fabric",
+   "label": "motif"
+  },
+  {
+   "slot": "lengan_bawahan_hem",
+   "teks_en": "short sleeves",
+   "label": "lengan"
+  },
+  {
+   "slot": "siluet_panjang",
+   "teks_en": "short sleeves and a relaxed straight-falling midi cut",
+   "label": "siluet & potongan"
+  }
+ ]
+}

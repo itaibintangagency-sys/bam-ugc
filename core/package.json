@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Logika inti BA UGC: rencana panel, prompt storyboard, JSON video, lint kata pemicu",
   "main": "src/index.js",
-  "scripts": { "test": "node --test test/core.test.js test/voice.test.js test/wording.test.js test/english.test.js" },
+  "scripts": { "test": "node --test test/core.test.js test/voice.test.js test/wording.test.js test/english.test.js test/karakter.test.js test/dna.test.js" },
   "license": "UNLICENSED",
   "private": true
 }

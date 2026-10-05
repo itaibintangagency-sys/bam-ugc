@@ -10,7 +10,7 @@ karakter → produk → batch (1 karakter, maksimal 10 produk) → storyboard �
 | `core/` | Logika inti: rencana panel dengan acak berbenih, 24 lokasi dengan **ruang rekam suara otomatis**, prompt storyboard (bertulis dan bersih), JSON video, **profil suara karakter** (dua lapis), **JSON video perkenalan**, pemeriksa kata pemicu dan klaim | 24 dari 24 lolos |
 | `supabase/migrations/` | Catatan database berurutan: baseline lama (catatan), perbaikan celah, penutupan unggahan anonim, dan sistem v2 (antrean, RLS, detak agent, telemetri, bucket privat). Lihat `supabase/README.md`. | Rantai migrasi lolos di Postgres lokal |
 | `db/` | Pengujian database dan kueri `export_schema.sql` untuk memperbarui catatan | 25 dari 25 lolos (termasuk putaran-balik terhadap struktur asli dan tahap karakter) |
-| `agent/` | Agent di laptop produksi: menarik job video **dan tugas karakter** (upload foto, video perkenalan 720p 4 detik), memanggil karakter lewat daftar `@`, membuat project baru, perekam layar berpemandu. Mode online (Supabase) dan offline (folder) | 33 dari 33 lolos (halaman Flow tiruan, kedua bahasa) |
+| `agent/` | Agent di laptop produksi: menarik job video **dan tugas karakter** (upload foto, video perkenalan 720p 4 detik), memanggil karakter lewat daftar `@`, membuat project baru, perekam layar berpemandu. Mode online (Supabase) dan offline (folder) | 20 dari 20 lolos (halaman Flow tiruan) |
 
 **Belum dibangun (tahap berikutnya):** website (wizard karakter, produk, batch), langkah AI (analisis produk, gambar storyboard, caption), dan otomasi pembuatan karakter dan suara di dalam Flow (menunggu hasil perekam layar).
 
@@ -44,12 +44,6 @@ Batch hanya bisa masuk antrean bila karakternya berstatus `ready`.
 
 ### Perekam layar
 `6-rekam-layar-flow.bat` memandu kamu membuka tiap layar Flow (project baru, halaman Karakter, form karakter, daftar suara, daftar `@`, dan lainnya). Di setiap layar tekan Enter, lalu agent memotret daftar elemennya. Tidak ada yang diklik dan tidak ada generate. Kirim folder `agent/recon/<waktu>` ke Claude.
-
-## Dua bahasa (Inggris dan Indonesia)
-
-Nama tombol Flow mengikuti bahasa **akun Google** yang login (akun berbeda bisa menampilkan bahasa berbeda). Agent mengenali keduanya sekaligus lewat `agent/config/flow.labels.json` (bagian `languages`, `en` dan `id`). `1-doctor.bat` menyebut bahasa yang terdeteksi, alamat tab yang diperiksa, dan bila tombol tidak ketemu mencetak daftar nama tombol yang terlihat. Doctor juga memeriksa login Supabase dan satu detak agent (tanpa mengambil tugas apa pun).
-
-Label yang belum terverifikasi (Inggris): `clearPrompt`, `agentToggle`, dan kata pada kartu gagal. Ketiganya punya cadangan: hapus prompt lewat keyboard, dan kegagalan tak dikenal berhenti dengan snapshot.
 
 ## Memasang agent di laptop (Windows)
 

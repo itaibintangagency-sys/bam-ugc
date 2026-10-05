@@ -9,5 +9,8 @@ module.exports = {
   ...require('./voice'),
   ...require('./lint'),
   ...require('./neutralize'),
-  ...require('./labels')
+  ...require('./labels'),
+  ...require('./consistency'),
+  ...require('./dna'),
+  ...require('./imageRequest')
 };

@@ -26,6 +26,19 @@ const COMPACT_NEGATIVES = [
   'no excessive camera movement', 'no dramatic lighting', 'no runway movement'
 ];
 
+// Identitas karakter dalam kalimat JSON. TANPA profil jenis kelamin hasilnya sama persis dengan versi v2.3 (perempuan muda),
+// sehingga prompt yang sudah teruji di Flow tidak berubah.
+const AGE_VOICE = { dewasa_muda: 'young', muda: 'young', dewasa: 'adult', matang: 'mature' };
+function who(cp, voiceProfile) {
+  const g = (cp && cp.gender) || (voiceProfile && voiceProfile.gender) || null;
+  const age = (cp && cp.age_group) || null;
+  const hijab = !!(cp && cp.hijab);
+  const base = g === 'laki-laki' ? { noun: 'man', pos: 'his', obj: 'him', voiceGender: 'male' }
+    : g === 'perempuan' ? { noun: 'woman', pos: 'her', obj: 'her', voiceGender: 'female' }
+    : { noun: 'woman', pos: 'her', obj: 'her', voiceGender: 'female', legacy: true };
+  return { ...base, Pos: base.pos[0].toUpperCase() + base.pos.slice(1), hijab, voiceAge: AGE_VOICE[age] || 'young', explicit: !!g };
+}
+
 const BEAT_EN = n => (n === 1 ? 'a short natural opening that introduces the product' : n === 5 ? 'a short friendly spoken closing' : 'one short sentence about what this scene shows');
 
 function sceneFromPanel(p) {
@@ -42,10 +55,14 @@ function sceneFromPanel(p) {
 
 /**
  * plan: hasil buildPanelPlan
- * ctx: { characterCode, jobTag, productProfile, compactNegatives?, flowCharacterName?, voiceProfile?, characterProfile?: { appearance_en }, characterPhotoAttached?: boolean }
+ * ctx: { characterCode, jobTag, productProfile, compactNegatives?, flowCharacterName?, voiceProfile?, characterProfile?: { appearance_en, gender?: 'perempuan'|'laki-laki', age_group?: 'remaja_akhir'|'muda'|'dewasa'|'matang', hijab?: boolean }, characterPhotoAttached?: boolean, storyboardVariant?: 'documented'|'clean' }
  */
 function buildVideoJson(plan, ctx) {
-  const { characterCode = '', jobTag = '', productProfile, flowCharacterName, voiceProfile, characterProfile, characterPhotoAttached = false } = ctx;
+  const { characterCode = '', jobTag = '', productProfile, flowCharacterName, voiceProfile, characterProfile, characterPhotoAttached = false, storyboardVariant = 'documented' } = ctx;
+  const W = who(characterProfile, voiceProfile);
+  const clean = storyboardVariant === 'clean';
+  const hairWord = W.hijab ? 'hijab (color and style)' : 'hair (color and style)';
+  const hijabNote = W.hijab ? ' The hijab is part of the identity: keep exactly the hijab shown in the reference, unless the product itself is a hijab.' : '';
   const facts = productProfile.facts_en || productProfile.facts || [];
   const obj = {
     project: {
@@ -62,11 +79,17 @@ function buildVideoJson(plan, ctx) {
     },
     references: {
       character: flowCharacterName
-        ? `Use @[${flowCharacterName}] as the ONLY source of the talent's face, complexion, hair and voice identity. Her outfit is NEVER taken from the character: it is only the product from the product references.`
+        ? `Use @[${flowCharacterName}] as the ONLY source of the talent's face, complexion, ${W.hijab ? 'hijab' : 'hair'} and voice identity. ${W.Pos} outfit is NEVER taken from the character: it is only the product from the product references.${hijabNote}`
         : characterPhotoAttached
-          ? 'A separate close-up portrait photo of the woman is attached. It is the ONLY source of her face, complexion, and hair (color and style). The storyboard document also shows her; if the two differ, the portrait photo wins. Never replace her with a different person. Her outfit is only the product from the product references.'
-          : 'The woman shown in the character reference portrait inside the attached storyboard is the ONLY source of the talent identity: face, complexion, hair color, and hairstyle. Never replace her with a different person. Her outfit is only the product from the product references.',
-      storyboard: 'The attached storyboard defines the order and timing of the five scenes. If it and the timeline below disagree, the timeline wins.',
+          ? (clean
+            ? `A separate close-up portrait photo of the ${W.noun} is attached. It is the ONLY source of ${W.pos} face, complexion, and ${hairWord}. The attached storyboard image is a strip of five photo panels that also shows ${W.obj}; if the two differ, the portrait photo wins. Never replace ${W.obj} with a different person. ${W.Pos} outfit is only the product from the product references.${hijabNote}`
+            : `A separate close-up portrait photo of the ${W.noun} is attached. It is the ONLY source of ${W.pos} face, complexion, and ${hairWord}. The storyboard document also shows ${W.obj}; if the two differ, the portrait photo wins. Never replace ${W.obj} with a different person. ${W.Pos} outfit is only the product from the product references.${hijabNote}`)
+          : (clean
+            ? `The ${W.noun} shown in the five photo panels of the attached storyboard image is the ONLY source of the talent identity: face, complexion, ${W.hijab ? 'hijab color, and hijab style' : 'hair color, and hairstyle'}. Never replace ${W.obj} with a different person. ${W.Pos} outfit is only the product from the product references.${hijabNote}`
+            : `The ${W.noun} shown in the character reference portrait inside the attached storyboard is the ONLY source of the talent identity: face, complexion, ${W.hijab ? 'hijab color, and hijab style' : 'hair color, and hairstyle'}. Never replace ${W.obj} with a different person. ${W.Pos} outfit is only the product from the product references.${hijabNote}`),
+      storyboard: clean
+        ? 'The attached storyboard image is a strip of five photo panels, left to right, one per scene. It contains no text. It defines the order and timing of the five scenes. If it and the timeline below disagree, the timeline wins.'
+        : 'The attached storyboard defines the order and timing of the five scenes. If it and the timeline below disagree, the timeline wins.',
       product: 'All product references represent ONE SAME PHYSICAL PRODUCT and are the source of truth, not inspiration.'
     },
     locked_product_facts: facts,
@@ -80,7 +103,9 @@ function buildVideoJson(plan, ctx) {
       ...(characterProfile && characterProfile.appearance_en ? { appearance: characterProfile.appearance_en } : {}),
       identity_lock: {
         priority: 'ABSOLUTE',
-        preserve: ['same face identity', 'same facial proportions', 'same complexion', 'same hairstyle', 'same hair color', 'same apparent age', 'same overall proportions'],
+        preserve: W.hijab
+          ? ['same face identity', 'same facial proportions', 'same complexion', 'same hijab style', 'same hijab color', 'same apparent age', 'same overall proportions']
+          : ['same face identity', 'same facial proportions', 'same complexion', 'same hairstyle', 'same hair color', 'same apparent age', 'same overall proportions'],
         restriction: 'Do not copy the face, hair, or appearance of any person shown in the product reference images.'
       },
       expression: 'friendly, cheerful, natural and relatable',
@@ -103,7 +128,7 @@ function buildVideoJson(plan, ctx) {
     timeline: plan.panels.map(sceneFromPanel),
     dialogue: {
       language: 'Bahasa Indonesia',
-      voice: 'young Indonesian female voice',
+      voice: `${W.voiceAge} Indonesian ${W.voiceGender} voice`,
       tone: 'natural, friendly, conversational',
       lip_sync: 'precise synchronization between mouth movement and dialogue',
       script_generation: {

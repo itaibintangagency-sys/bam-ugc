@@ -100,6 +100,7 @@ async function runGeneration(o) {
     const nb = await flow.retryFailed(before);
     if (!nb) throw new FlowError('Tombol ulang pada kartu gagal tidak ditemukan', 'policy');
     log.info(`  ↻ Ulang otomatis ${retries}/${policyRetries}`);
+    await ev('generate', `Generate ulang otomatis ditekan (${retries}/${policyRetries})`);   // tercatat: bila agent mati sesudah ini, video dicari lewat kode job, bukan dibuat ulang
     result = await flow.waitResult(nb, { assumeStarted: true, onPoll: s => log.info(`  … memproses ulang (reuse=${s.reuse}, gagal=${s.fails.length})`) });
     before = nb;
   }

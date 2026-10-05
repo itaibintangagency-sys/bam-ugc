@@ -25,7 +25,9 @@ function photoRoles(images) {
  */
 function buildStoryboardPrompt(plan, ctx) {
   const { variant = 'documented', characterCode = '', productProfile, images = [], layoutExample = false } = ctx;
-  const facts = (productProfile.facts || []).map(f => `- ${f}`).join('\n') || '- (none verified)';
+  // Varian bersih: gambar tanpa tulisan, jadi fakta memakai bahasa Inggris (facts_en). Varian bertulis: fakta Indonesia ditulis di gambar.
+  const factList = variant === 'clean' ? (productProfile.facts_en || productProfile.facts || []) : (productProfile.facts || []);
+  const facts = factList.map(f => `- ${f}`).join('\n') || '- (none verified)';
   const hex = (productProfile.colors || []).join(', ') || 'derive from the product references';
   const first = layoutExample ? 2 : 1;
   const imgLines = [];
@@ -41,7 +43,7 @@ PRODUCT CONSISTENCY, HIGHEST PRIORITY: all five panels show the same physical pr
 
 LOCATION (the same in all five panels): ${plan.setting.prompt_en} Lighting: ${plan.setting.lighting}. No signage, brand names, or readable text in the background.
 
-VISUAL STYLE of the photos: highly realistic Indonesian UGC, natural everyday look, realistic fabric or material texture, natural friendly expression, small natural gestures. Avoid cinematic light, luxury campaign look, runway pose, exaggerated movement, doll-like faces, and heavy retouching. No 360-degree spin.`;
+VISUAL STYLE of the photos: highly realistic UGC, natural everyday look, realistic fabric or material texture, natural friendly expression, small natural gestures. Avoid cinematic light, luxury campaign look, runway pose, exaggerated movement, doll-like faces, and heavy retouching. No 360-degree spin.`;
 
   if (variant === 'clean') {
     return `Create ONE image: a clean horizontal strip of five vertical 9:16 photo panels side by side, for an EXACTLY 10-second UGC product review video. The image contains photographs only. No words, no letters, no numbers, no labels, no icons, no captions anywhere in the image. Panels are separated by thin plain gaps.

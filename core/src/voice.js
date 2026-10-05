@@ -7,7 +7,7 @@ const VOICES = require('../data/flow_voices.json');
 const OPT = {
   gender: { 'perempuan': 'woman', 'laki-laki': 'man' },
   usia: {
-    remaja_akhir: 'late teens to early twenties, around 17 to 20 years old',
+    dewasa_muda: 'early twenties, around 21 to 24 years old',
     muda: 'young adult, around 23 to 29 years old',
     dewasa: 'adult, around 30 to 39 years old',
     matang: 'mature adult, around 40 to 50 years old'
@@ -42,6 +42,7 @@ function validateVoiceProfile(p, { extraVoices = [] } = {}) {
   const err = (field, msg) => issues.push({ level: 'error', field, msg });
   for (const f of REQUIRED) if (!p || p[f] == null || p[f] === '') err(f, 'wajib diisi');
   if (issues.length) return issues;
+  if (p.usia === 'remaja_akhir') { err('usia', 'remaja_akhir tidak diizinkan: karakter harus dewasa (21 tahun ke atas). Pakai dewasa_muda, muda, dewasa, atau matang'); return issues; }
   for (const f of ['gender', 'usia', 'nada', 'energi', 'tempo', 'gaya', 'aksen', 'bahasa']) if (!OPT[f][p[f]]) err(f, `nilai "${p[f]}" tidak dikenal`);
   for (const f of ['suasana', 'jeda']) if (p[f] != null && !OPT[f][p[f]]) err(f, `nilai "${p[f]}" tidak dikenal`);
   const v = catalog(extraVoices).find(x => x.name.toLowerCase() === String(p.base_voice).toLowerCase());

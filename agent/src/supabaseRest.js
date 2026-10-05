@@ -24,6 +24,7 @@ class Supa {
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(`Login Supabase gagal: ${j.error_description || j.msg || j.message || res.status}`);
     this.access = j.access_token; this.refresh = j.refresh_token; this.expiresAt = Date.now() + (j.expires_in || 3600) * 1000;
+    if (j.user && j.user.id) this.userId = j.user.id;
   }
   async signIn() { await this._tokenCall('grant_type=password', { email: this.email, password: this.password }); }
   async token() {
@@ -44,6 +45,18 @@ class Supa {
     if (!res.ok) throw new Error(`RPC ${fn} gagal (${res.status}): ${(j && (j.message || j.hint)) || text}`);
     return j;
   }
+  // Operasi tabel (PostgREST). RLS di database tetap berlaku untuk pengguna yang login.
+  async _table(method, table, { query = '', body, prefer } = {}) {
+    const res = await this._fetch(`${this.url}/rest/v1/${table}${query ? '?' + query : ''}`, {
+      method, headers: await this._headers({ 'Content-Type': 'application/json', ...(prefer ? { Prefer: prefer } : {}) }), body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    const text = await res.text(); let j = null; try { j = text ? JSON.parse(text) : null; } catch { j = text; }
+    if (!res.ok) { const e = new Error(`${method} ${table} gagal (${res.status}): ${(j && (j.message || j.hint)) || text}`); e.status = res.status; e.code = j && j.code; throw e; }
+    return j;
+  }
+  select(table, query = 'select=*') { return this._table('GET', table, { query }); }
+  async insert(table, row) { const r = await this._table('POST', table, { body: row, prefer: 'return=representation' }); return Array.isArray(r) ? r[0] : r; }
+  async update(table, query, patch) { return this._table('PATCH', table, { query, body: patch, prefer: 'return=representation' }); }
   async download(bucket, objectPath, dest) {
     const res = await this._fetch(`${this.url}/storage/v1/object/authenticated/${bucket}/${objectPath.split('/').map(encodeURIComponent).join('/')}`, { headers: await this._headers() });
     if (!res.ok) throw new Error(`Unduh ${bucket}/${objectPath} gagal (${res.status})`);

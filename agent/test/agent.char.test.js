@@ -20,7 +20,7 @@ baseCfg.timeouts = { generate_sec: 40, upload_sec: 20, poll_ms: 150, start_sec: 
 const cfgFile = path.join(TMP, 'flow.fast.json');
 fs.writeFileSync(cfgFile, JSON.stringify(baseCfg));
 Object.assign(process.env, {
-  PAGE_MATCH: 'mockflow', CDP_URL: `http://127.0.0.1:${PORT}`, FLOW_CONFIG: cfgFile, ALLOW_ANY_PROJECT_URL: '1', FLOW_HOME_URL: MOCK + '#/home',
+  PAGE_MATCH: 'mockflow', CDP_URL: `http://127.0.0.1:${PORT}`, FLOW_CONFIG: cfgFile, FLOW_HOME_URL: MOCK + '#/home',
   HUMAN_POLL_MS: '300', HUMAN_WAIT_MS: '2500', IDLE_MS: '100',
   MIN_VIDEO_BYTES: '1000', DOWNLOAD_DIR: path.join(TMP, 'downloads'), WORK_DIR: path.join(TMP, 'work'), POLICY_RETRIES: '2'
 });

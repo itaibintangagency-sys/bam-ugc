@@ -13,6 +13,7 @@ const { processCharTask } = require('./charTaskRunner');
 const { runRecon } = require('./recon');
 const { NeedsHuman } = require('./errors');
 const inventory = require('./inventory');
+const roomLib = require('./room');
 
 const ROOT = path.join(__dirname, '..');
 const VERSION = require('../package.json').version;
@@ -39,8 +40,13 @@ function parseArgs(argv) {
   return { pos, opts };
 }
 
+// Nilai SOURCE dibersihkan dari spasi: di cmd, `set SOURCE=local & perintah` menyimpan spasi di ujung nilai.
+function sourceMode() { return String(process.env.SOURCE || 'supabase').trim().toLowerCase(); }
+
+function localRoot() { return process.env.LOCAL_DIR || path.join(ROOT, 'local'); }
+
 function makeSource(log) {
-  if ((process.env.SOURCE || 'supabase') === 'local') {
+  if (sourceMode() === 'local') {
     const root = process.env.LOCAL_DIR || path.join(ROOT, 'local');
     log.info(`Mode OFFLINE (folder: ${root})`);
     return new LocalSource(root, { backoffMinutes: Number(process.env.LOCAL_BACKOFF_MIN ?? 2) });
@@ -143,7 +149,7 @@ async function runLoopInner(opts = {}) {
 }
 
 async function supabaseCheck(ok) {
-  if ((process.env.SOURCE || 'supabase') === 'local') { ok('Supabase dilewati (mode offline: SOURCE=local)', true); return; }
+  if (sourceMode() === 'local') { ok('Supabase dilewati (mode offline: SOURCE=local)', true); return; }
   const missing = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'AGENT_EMAIL', 'AGENT_PASSWORD'].filter(k => !process.env[k]);
   if (missing.length) { ok('Berkas .env lengkap', false, `belum diisi: ${missing.join(', ')} (salin .env.example menjadi .env di folder agent)`); return; }
   ok('Berkas .env lengkap', true);
@@ -153,7 +159,9 @@ async function supabaseCheck(ok) {
   try {
     const r = await supa.rpc('ugc_agent_heartbeat', { p_agent: process.env.AGENT_NAME || os.hostname(), p_info: { version: VERSION, status: 'online', check: 'doctor' } });
     ok('Detak agent diterima database', true, `jeda antrean: ${r && r.paused ? 'ya' : 'tidak'}`);
-  } catch (e) { ok('Detak agent diterima database', false, `${e.message} (akun login harus berole agent)`); }
+  } catch (e) { ok('Detak agent diterima database', false, `${e.message} (akun login harus berole agent)`); return; }
+  try { await supa.rpc('ugc_requeue_own', { p_agent: '__doctor__' }); ok('Migrasi 20261005000500 terpasang di database', true); }
+  catch (e) { ok('Migrasi 20261005000500 terpasang di database', false, /Could not find|PGRST202|404/i.test(e.message) ? 'fungsi ugc_requeue_own tidak ada. Jalankan berkas JALANKAN-0500.sql di Supabase (SQL Editor)' : e.message); }
 }
 
 // Pemeriksaan sebelum produksi. Hanya membaca, tidak menekan generate atau unduh dan tidak mengambil tugas.
@@ -171,6 +179,10 @@ async function doctor() {
     await flow.captchaCheck(); ok('Tanpa captcha/login habis', true);
     await flow.assertLayout(); ok('Tata letak dikenali (kapsul pengaturan terlihat)', true);
     const acct = await flow.accountName(); ok('Akun Google yang dipakai Flow', !!acct, acct || 'tidak terbaca (periksa manual di pojok kanan atas)');
+    for (const r of roomLib.listRooms(localRoot())) {
+      if (!r.flow_account_name) log.info(`ℹ Ruang ${r.code} belum mencatat nama akun Google${acct ? ` (akun saat ini: ${acct})` : ''}. Isi lewat mulai.bat menu 2.`);
+      else if (acct) ok(`Ruang ${r.code}: akun Google cocok`, roomLib.norm(acct) === roomLib.norm(r.flow_account_name), roomLib.norm(acct) === roomLib.norm(r.flow_account_name) ? '' : `Flow memakai "${acct}", ruang mencatat "${r.flow_account_name}". Ganti akun atau perbarui ruang lewat mulai.bat menu 2.`);
+    }
     ok('Bahasa antarmuka Flow terdeteksi', !!flow.lang, flow.lang ? cfg.languages[flow.lang].nama : 'tidak diketahui');
     const unv = lg.unverified().filter(x => x.startsWith(flow.lang + ':'));
     if (unv.length) log.info(`ℹ Label belum terverifikasi untuk bahasa ini: ${unv.map(x => x.split(':')[1]).join(', ')}`);
@@ -236,6 +248,18 @@ async function reconCmd(opts) {
 }
 
 function enqueueLocal(opts) {
+  let roomCode = '';
+  if (opts.room) {
+    const r = roomLib.loadRoom(localRoot(), opts.room);
+    if (!r) throw new Error(`Ruang karakter "${opts.room}" tidak ditemukan. Buat dulu lewat mulai.bat menu 1.`);
+    if (r.status !== 'project_ready') throw new Error(`Ruang ${r.code} belum siap (tahap: ${r.status}). Lengkapi foto wajah, deskripsi penampilan, suara, dan alamat project lewat mulai.bat menu 1.`);
+    if (opts.project && roomLib.projectKey(opts.project).id !== roomLib.projectKey(r.flow_project_url).id) {
+      throw new Error('Alamat project yang diberikan berbeda dari project ruang ini. Untuk berganti project atau akun, pakai mulai.bat menu 2 (ganti project atau akun), bukan job baru.');
+    }
+    opts = { ...opts, project: r.flow_project_url, extra: roomLib.facePath(localRoot(), r), character: r.code };
+    roomCode = r.code;
+  }
+  if (opts.archetype && !/^A-(0[1-9]|1[0-5])$/.test(String(opts.archetype).trim())) throw new Error(`Arketipe "${opts.archetype}" tidak dikenal. Pakai A-01 sampai A-15.`);
   const need = ['project', 'storyboard', 'json'];
   for (const k of need) if (!opts[k]) throw new Error(`Wajib: --${k}`);
   if (!/^https:\/\/flow\.google\.com\/(?:u\/\d+\/)?project\/[^/\s?#]+/.test(opts.project) && process.env.ALLOW_ANY_PROJECT_URL !== '1') {
@@ -246,21 +270,57 @@ function enqueueLocal(opts) {
     if (!fs.existsSync(opts[k])) throw new Error(`${label} tidak ditemukan: "${opts[k]}". Ketik alamat lengkap berkas, mulai dari C:\\ dan tanpa tanda kutip.`);
   }
   const rawJson = fs.readFileSync(opts.json, 'utf8');
+  if (roomCode) { const am = roomLib.appearanceMismatch(roomLib.loadRoom(localRoot(), roomCode), rawJson); if (am) console.log('PERINGATAN: ' + am + ' Disarankan memakai JSON dari paket uji yang sama dengan ruang.'); }
   try { JSON.parse(rawJson); } catch (e) { throw new Error(`Berkas JSON prompt bukan JSON yang valid (${e.message}).`); }
   if (/\{\{[^}]+\}\}/.test(rawJson)) throw new Error('JSON prompt masih memuat penanda {{...}}. Isi dulu lokasi dan nilai lainnya, lalu simpan ulang.');
-  const root = process.env.LOCAL_DIR || path.join(ROOT, 'local');
-  const id = 'job-' + new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+  const root = localRoot();
+  const base = 'job-' + new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14);
+  let id = base; for (let n = 2; fs.existsSync(path.join(root, 'inbox', id)); n++) id = `${base}-${n}`;   // dua job dalam detik yang sama tidak boleh saling menimpa
   const dir = path.join(root, 'inbox', id); fs.mkdirSync(dir, { recursive: true });
   fs.copyFileSync(opts.storyboard, path.join(dir, 'storyboard' + (path.extname(opts.storyboard) || '.png')));
   const extraName = opts.extra ? 'extra1' + (path.extname(opts.extra) || '.png') : null;
   if (extraName) fs.copyFileSync(opts.extra, path.join(dir, extraName));
   fs.copyFileSync(opts.json, path.join(dir, 'prompt.json'));
   fs.writeFileSync(path.join(dir, 'job.json'), JSON.stringify({
-    project_url: opts.project, resolution: opts.res || '720p', duration_sec: 10, character_code: opts.character || '',
+    project_url: opts.project, resolution: opts.res || '720p', duration_sec: 10, character_code: opts.character || '', product_name: String(opts.name || path.basename(path.dirname(path.resolve(opts.storyboard)))).slice(0, 80), ...(opts.archetype ? { archetype_id: String(opts.archetype).trim() } : {}), ...(opts.category ? { category_key: String(opts.category).trim() } : {}), ...(roomCode ? { room_code: roomCode } : {}),
     storyboard_file: 'storyboard' + (path.extname(opts.storyboard) || '.png'), ...(extraName ? { extra_files: [extraName] } : {}), video_json_file: 'prompt.json'
   }, null, 1));
   console.log('Job lokal dibuat: ' + dir);
   return id;
+}
+
+function roomsCmd() {
+  const rooms = roomLib.listRooms(localRoot());
+  if (!rooms.length) { console.log('Belum ada ruang karakter. Buat lewat mulai.bat menu 1.'); return rooms; }
+  for (const r of rooms) { const s = roomLib.summarize(r); console.log(`${s.code} — ${s.name}\n  tahap ${s.status} · foto ${s.foto} · penampilan ${s.penampilan} · suara ${s.suara} · project ${s.project} · akun ${s.akun}`); }
+  return rooms;
+}
+function queueCmd() {
+  const src = new LocalSource(localRoot(), {});
+  const rows = src.summary();
+  if (!rows.length) { console.log('Antrean kosong.'); return rows; }
+  const ico = { downloaded: '✔', failed: '✖', queued: '…', running: '…', needs_human: '!', pushed: '↑' };
+  for (const r of rows) console.log(`${ico[r.status] || '?'} ${r.id} — ${r.status}${r.error ? ' — ' + String(r.error).slice(0, 110) : ''}`);
+  return rows;
+}
+
+// Alat staf sementara: kirim ruang dan job lokal ke database, lihat antrean online, unduh video.
+async function staffCmd(sub, opts, io = null) {
+  const st = require('./staffTool'); const own = !io; io = io || require('./wizard').makeAsker();
+  try {
+    const supa = await st.login(process.env, io);
+    const rooms = roomLib.listRooms(localRoot());
+    const codeOf = async () => opts.room || (rooms.length === 1 ? rooms[0].code : await io.ask('Kode ruang karakter' + (rooms.length ? ` (${rooms.map(r => r.code).join(', ')})` : '')));
+    if (sub === 'push-char') {
+      const code = await codeOf(); let ready = opts.ready;
+      if (ready === undefined) ready = await io.ask('Alasan menandai karakter SIAP (minimal 10 huruf, khusus admin; Enter = jangan tandai)');
+      return await st.pushChar(supa, localRoot(), { room: code, ready: ready || undefined });
+    }
+    if (sub === 'push-batch') return await st.pushBatch(supa, localRoot(), { room: await codeOf() });
+    if (sub === 'queue') return await st.queue(supa);
+    if (sub === 'videos') return await st.videos(supa, localRoot());
+    throw new Error('Perintah staff: push-char | push-batch | queue | videos');
+  } finally { if (own) io.close(); }
 }
 
 async function allCmd() {
@@ -289,9 +349,16 @@ async function main() {
     else if (cmd === 'analyze') await analyze(!!opts['save-baseline']);
     else if (cmd === 'recon') await reconCmd(opts);
     else if (cmd === 'enqueue-local') enqueueLocal(opts);
-    else console.log('Perintah: start | once | all | doctor | analyze [--save-baseline] | enqueue-local --project URL --storyboard FILE --json FILE [--res 720p] [--extra FOTO]');
+    else if (cmd === 'room-save') { const r = roomLib.upsertRoom(localRoot(), { code: opts.code, name: opts.name, gender: opts.gender, face: opts.face, appearance: opts.appearance, appearanceFromJson: opts['appearance-json'], voiceFile: opts.voice, project: opts.project, account: opts.account, flowVoiceName: opts['flow-voice'] }); r.notes.forEach(n => console.log(n)); console.log(`Ruang ${r.room.code} tersimpan (tahap: ${r.room.status}).`); }
+    else if (cmd === 'rooms') roomsCmd();
+    else if (cmd === 'staff') await staffCmd(pos[0], opts);
+    else if (cmd === 'queue') queueCmd();
+    else if (cmd === 'wizard-room') await require('./wizard').wizardRoom(localRoot());
+    else if (cmd === 'wizard-set') await require('./wizard').wizardSet(localRoot());
+    else if (cmd === 'wizard-add') await require('./wizard').wizardAdd(localRoot(), o => enqueueLocal(o));
+    else console.log('Perintah: start | once | all | doctor | analyze [--save-baseline] | enqueue-local (--room KODE | --project URL) --storyboard FILE --json FILE [--res 720p] [--extra FOTO] [--archetype A-01..A-15] [--category KUNCI] | room-save --code KODE ... | rooms | queue | wizard-room | wizard-set | wizard-add | staff push-char|push-batch|queue|videos');
   } catch (e) { console.error('GAGAL: ' + e.message); process.exit(1); }
 }
 
 if (require.main === module) main();
-module.exports = { runLoop, doctor, supabaseCheck, analyze, enqueueLocal, loadCfg, parseArgs, makeSource, reconCmd };
+module.exports = { runLoop, doctor, supabaseCheck, analyze, enqueueLocal, loadCfg, parseArgs, makeSource, reconCmd, roomsCmd, queueCmd, staffCmd };

@@ -126,7 +126,7 @@ test('0700: berjalan ulang tanpa galat; ditolak dengan pesan jelas tanpa 0600', 
 
 // ───────────── 0710: risiko tingkat kategori ─────────────
 test('0710: tepat 5 kategori bayi dinaikkan; produknya berisiko tinggi, staf tidak bisa menurunkannya, kategori lain tetap sedang', async () => {
-  const db = await makeDb(); const cid = await ready(db); const b = await batch(db, cid);
+  const db = await makeDb({ upTo: '20261005000710' }); const cid = await ready(db); const b = await batch(db, cid);
   const ov = (await db.query(`select category_key from ugc_category_map where risiko_override = 'tinggi' order by 1`)).rows.map(r => r.category_key);
   assert.equal(ov.length, 5); assert.ok(ov.includes(BAYI_TINGGI)); assert.ok(!ov.includes(BAYI_BIASA)); assert.ok(ov.every(k => k.startsWith('Ibu & Bayi >')));
   const a = await job(db, b, { arch: null, category: BAYI_TINGGI });
@@ -142,7 +142,7 @@ test('0710: tepat 5 kategori bayi dinaikkan; produknya berisiko tinggi, staf tid
 });
 
 test('0710: gerbang mewajibkan persetujuan admin untuk kategori yang dinaikkan, tidak untuk kategori lain', async () => {
-  const db = await makeDb(); const cid = await ready(db);
+  const db = await makeDb({ upTo: '20261005000710' }); const cid = await ready(db);
   const b1 = await batch(db, cid); const j1 = await job(db, b1, { arch: null, category: BAYI_TINGGI });
   await rejects(enqueue(db, b1), 'berisiko tinggi menunggu persetujuan admin');
   await as(db, U.admin, async () => { await db.query(`select ugc_approve_risk($1, 'diperiksa')`, [j1.id]); });
@@ -161,7 +161,7 @@ test('0710: tanpa 0710 kategori yang sama hanya berisiko sedang (kebijakan ini o
 });
 
 test('0710: berjalan ulang tanpa galat; ditolak dengan pesan jelas tanpa 0700; gagal bila pemetaan kategori berbeda dari perkiraan', async () => {
-  const db = await makeDb(); await db.exec(SQL_0710); await db.exec(SQL_0710);
+  const db = await makeDb({ upTo: '20261005000710' }); await db.exec(SQL_0710); await db.exec(SQL_0710);
   assert.equal((await db.query(`select count(*)::int as n from ugc_category_map where risiko_override = 'tinggi'`)).rows[0].n, 5);
   const tanpa0700 = await makeDb({ upTo: '20261005000600' });
   await rejects(tanpa0700.exec(SQL_0710), 'URUTAN SALAH');

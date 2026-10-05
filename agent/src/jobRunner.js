@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { NeedsHuman, FlowError } = require('./errors');
 const { runGeneration, makeJobToken } = require('./generation');
+const { checkJobAgainstRoom, appearanceMismatch } = require('./room');
 
 // Menjalankan satu job video sampai terunduh dan terunggah. Mengembalikan status akhir.
 async function processJob({ job, source, flow, cfg, log, workDir, meta = {} }) {
@@ -11,6 +12,19 @@ async function processJob({ job, source, flow, cfg, log, workDir, meta = {} }) {
   const ev = (step, message, extra = {}) => { if (step === 'generate' || step === 'generate_start') meta.generated = true; return source.log(job.job_id, { kind: 'info', step, message, ...extra }).catch(() => {}); };
   try {
     log.info(`▶ Job ${job.job_id} (percobaan ${job.attempt}/${job.max_attempts})`);
+    if (job.schema_outdated) {
+      const m = 'Database belum menjalankan migrasi 20261005000500: penanda generate dan data ruang karakter tidak tersedia. Bila agent berhenti di tengah job, video bisa dibuat ulang (kredit terbuang). Jalankan berkas SQL 0500 di Supabase.';
+      log.warn(m); await source.log(job.job_id, { kind: 'warn', step: 'schema_outdated', message: m }).catch(() => {});
+    }
+    // Job yang berasal dari ruang karakter: pastikan project dan akun Google cocok SEBELUM menyentuh Flow.
+    if (job.room_code) {
+      const acct = job.room && job.room.flow_account_name ? await flow.accountName().catch(() => '') : '';
+      const chk = checkJobAgainstRoom(job, acct);
+      for (const w of chk.warnings) { log.warn(w); await source.log(job.job_id, { kind: 'warn', step: 'room_check', message: w }).catch(() => {}); }
+      if (job.room && !job.room.missing) { const am = appearanceMismatch(job.room, job.video_json); if (am) { log.warn(am); await source.log(job.job_id, { kind: 'warn', step: 'room_check', message: am }).catch(() => {}); } }
+      if (chk.problems.length) throw new FlowError(chk.problems.join(' '), 'fatal');
+      await ev('room_check', `Ruang ${job.room_code} cocok (project${job.room && job.room.flow_account_name ? ' dan akun' : ''})`);
+    }
     await ev('prepare', 'Mengunduh storyboard');
     const sb = await source.fetchStoryboard(job, dir);
     const extras = typeof source.fetchExtras === 'function' ? await source.fetchExtras(job, dir) : [];

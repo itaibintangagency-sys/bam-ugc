@@ -1,0 +1,44 @@
+{
+ "_catatan": "Fakta dan detail dibaca dari gambar storyboard lama; mohon diperiksa pemilik. Ubah foto_folder ke folder foto produk (png, jpg, webp; maksimal 6). Nama berkas boleh memuat 'depan', 'close', 'tekstur' agar peran foto tepat.",
+ "nama": "Daster geometris hitam putih",
+ "arketipe": "A-01",
+ "lokasi": "S-01",
+ "seed": 9,
+ "gestur": "open_palm",
+ "foto_folder": "C:\\aset\\foto\\02_daster-hitam-putih",
+ "fakta_id": [
+  "Warna dasar putih dengan motif geometris hitam",
+  "Kerah bulat dengan resleting depan",
+  "Lengan pendek bermotif garis",
+  "Panjang hingga mata kaki"
+ ],
+ "fakta_en": [
+  "White base with a black geometric print",
+  "Round neckline with a front zipper",
+  "Short sleeves with a striped print",
+  "Ankle-length"
+ ],
+ "warna": [],
+ "detail": [
+  {
+   "slot": "detail_utama",
+   "teks_en": "round neckline with a front zipper",
+   "label": "kerah"
+  },
+  {
+   "slot": "motif_kain",
+   "teks_en": "black and white geometric print: vertical lines, triangles, dots",
+   "label": "motif"
+  },
+  {
+   "slot": "lengan_bawahan_hem",
+   "teks_en": "short sleeves with a striped print",
+   "label": "lengan"
+  },
+  {
+   "slot": "siluet_panjang",
+   "teks_en": "short sleeves and a relaxed ankle-length silhouette",
+   "label": "siluet & panjang"
+  }
+ ]
+}

@@ -1,12 +1,12 @@
 {
   "name": "bam-ugc-agent",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Agent laptop produksi BA UGC: menjalankan Google Flow lewat Chrome yang sudah login",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js start",
     "doctor": "node src/index.js doctor",
-    "test": "node --test test/agent.test.js test/agent.char.test.js test/agent.lang.test.js test/agent.attach.test.js test/agent.popup.test.js test/agent.download.test.js test/agent.reliability.test.js test/agent.ops.test.js"
+    "test": "node --test test/agent.test.js test/agent.char.test.js test/agent.lang.test.js test/agent.attach.test.js test/agent.popup.test.js test/agent.download.test.js test/agent.reliability.test.js test/agent.ops.test.js test/agent.room.test.js test/agent.online.test.js"
   },
   "dependencies": {
     "playwright-core": "1.48"

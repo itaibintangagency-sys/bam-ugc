@@ -1,0 +1,50 @@
+{
+ "_catatan": "Fakta dan detail dibaca dari gambar storyboard lama; mohon diperiksa pemilik. Ubah foto_folder ke folder foto produk (png, jpg, webp; maksimal 6). Nama berkas boleh memuat 'depan', 'close', 'tekstur' agar peran foto tepat.",
+ "nama": "Daster terracotta",
+ "arketipe": "A-01",
+ "lokasi": "S-01",
+ "seed": 9,
+ "gestur": "open_palm",
+ "foto_folder": "C:\\aset\\foto\\03_daster-terracotta",
+ "fakta_id": [
+  "Warna dasar cokelat terracotta dengan motif abstrak putih: spiral, garis, segitiga, dan tanda pagar",
+  "Kerah V di bagian depan",
+  "Lengan pendek model longgar",
+  "Potongan longgar, panjang midi hingga maxi (mendekati betis)"
+ ],
+ "fakta_en": [
+  "Terracotta brown base with a white abstract print: spirals, lines, triangles, and hash marks",
+  "V-neckline at the front",
+  "Short, loose-fitting sleeves",
+  "Relaxed cut, midi to maxi length (reaching the calf)"
+ ],
+ "warna": [
+  "#b8694a",
+  "#d9c7a5",
+  "#efe6da",
+  "#6b4c3b",
+  "#7d8a5a"
+ ],
+ "detail": [
+  {
+   "slot": "detail_utama",
+   "teks_en": "V-neckline at the front",
+   "label": "kerah V"
+  },
+  {
+   "slot": "motif_kain",
+   "teks_en": "terracotta brown base with a white abstract print",
+   "label": "motif"
+  },
+  {
+   "slot": "lengan_bawahan_hem",
+   "teks_en": "short loose-fitting sleeves",
+   "label": "lengan"
+  },
+  {
+   "slot": "siluet_panjang",
+   "teks_en": "white abstract print and the length of the lower dress",
+   "label": "motif & panjang"
+  }
+ ]
+}

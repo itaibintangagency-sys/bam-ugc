@@ -1,0 +1,15 @@
+{
+ "_catatan": "CONTOH. Ganti base_voice dengan suara yang Anda pilih untuk karakter ini di Flow (nama harus sama dengan di Flow), lalu sesuaikan nada, energi, dan lainnya. Baris yang diawali garis bawah diabaikan.",
+ "base_voice": "Achernar",
+ "gender": "perempuan",
+ "usia": "muda",
+ "nada": "cerah",
+ "energi": "sedang",
+ "tempo": "normal",
+ "gaya": "ramah_teman",
+ "aksen": "indonesia_netral",
+ "bahasa": "semi_santai",
+ "suasana": "senyum_terdengar",
+ "jeda": "natural",
+ "napas_awal": true
+}

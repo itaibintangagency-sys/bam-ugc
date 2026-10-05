@@ -4,6 +4,7 @@
 //   outbox/<id>/video.mp4, result.json                  -> hasil
 const fs = require('fs');
 const path = require('path');
+const { loadRoom } = require('../room');
 
 
 // Generate dianggap "mungkin menghasilkan video" bila ditekan dan sesudahnya TIDAK ada catatan bahwa Flow menolak/menggagalkannya
@@ -41,9 +42,10 @@ class LocalSource {
       const spec = JSON.parse(fs.readFileSync(path.join(this.inbox, id, 'job.json'), 'utf8'));
       st.status = 'running'; st.attempts = (st.attempts || 0) + 1; this._write(id, st);
       const jf = spec.video_json_file ? path.join(this.inbox, id, spec.video_json_file) : null;
+      const room = spec.room_code ? (loadRoom(this.root, spec.room_code) || { missing: true, code: spec.room_code }) : null;
       return {
         job_id: id, batch_id: spec.batch_id || 'local', seq: spec.seq || 1, attempt: st.attempts, max_attempts: this.maxAttempts,
-        project_url: spec.project_url, character_code: spec.character_code || '', flow_asset_url: st.flow_asset_url || null,
+        project_url: spec.project_url, character_code: spec.character_code || '', room_code: spec.room_code || '', room, flow_asset_url: st.flow_asset_url || null,
         generated: wasGenerated(st.history),
         extra_files: (spec.extra_files || []).map(f => path.join(this.inbox, id, f)),
         resolution: spec.resolution || '720p', duration_sec: spec.duration_sec || 10,

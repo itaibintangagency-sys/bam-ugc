@@ -156,7 +156,7 @@ test('doctor: bila kapsul tidak ketemu, pesan memuat tab, nama kedua bahasa, dan
 
 // ── Supabase pada doctor ────────────────────────────────────
 function startStub({ goodPassword = 'benar', role = 'agent' } = {}) {
-  const state = { logins: 0, beats: 0 };
+  const state = { logins: 0, beats: 0, own: [] };
   const server = http.createServer((req, res) => {
     const chunks = []; req.on('data', c => chunks.push(c));
     req.on('end', () => {
@@ -171,6 +171,7 @@ function startStub({ goodPassword = 'benar', role = 'agent' } = {}) {
         state.beats++;
         return role === 'agent' ? json(200, { paused: false, reason: null }) : json(403, { message: 'khusus agent' });
       }
+      if (u.pathname === '/rest/v1/rpc/ugc_requeue_own') { state.own.push(JSON.parse(body || '{}').p_agent); return json(200, 0); }
       json(404, { message: 'tidak ada' });
     });
   });
@@ -184,8 +185,9 @@ test('doctor Supabase: login dan satu detak berhasil, tanpa mengambil tugas', as
   try {
     const rows = await withEnv({ SOURCE: 'supabase', SUPABASE_URL: `http://127.0.0.1:${port}`, SUPABASE_ANON_KEY: 'anon', AGENT_EMAIL: 'a@x', AGENT_PASSWORD: 'benar' }, () => collect(supabaseCheck));
     assert.deepEqual(rows.filter(r => !r.pass), []);
-    assert.deepEqual(rows.map(r => r.name), ['Berkas .env lengkap', 'Login Supabase sebagai akun agent', 'Detak agent diterima database']);
+    assert.deepEqual(rows.map(r => r.name), ['Berkas .env lengkap', 'Login Supabase sebagai akun agent', 'Detak agent diterima database', 'Migrasi 20261005000500 terpasang di database']);
     assert.equal(state.beats, 1);
+    assert.deepEqual(state.own, ['__doctor__'], 'pemeriksaan migrasi memakai nama khusus yang tidak memiliki job');
   } finally { server.close(); }
 });
 
@@ -199,6 +201,7 @@ test('doctor Supabase: kata sandi salah, role bukan agent, dan .env belum lengka
   try {
     const rows = await withEnv({ SOURCE: 'supabase', SUPABASE_URL: `http://127.0.0.1:${b.port}`, SUPABASE_ANON_KEY: 'anon', AGENT_EMAIL: 'a@x', AGENT_PASSWORD: 'benar' }, () => collect(supabaseCheck));
     const f = rows.find(r => !r.pass); assert.match(f.name, /Detak agent/); assert.match(f.note, /berole agent/);
+    assert.equal(rows.length, 3, 'pemeriksaan migrasi tidak dijalankan bila detak gagal'); assert.equal(b.state.own.length, 0);
   } finally { b.server.close(); }
   const rows = await withEnv({ SOURCE: 'supabase', SUPABASE_URL: undefined, SUPABASE_ANON_KEY: undefined, AGENT_EMAIL: undefined, AGENT_PASSWORD: undefined }, () => collect(supabaseCheck));
   assert.equal(rows.length, 1); assert.match(rows[0].note, /SUPABASE_URL, SUPABASE_ANON_KEY, AGENT_EMAIL, AGENT_PASSWORD/);

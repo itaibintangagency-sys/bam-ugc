@@ -17,6 +17,7 @@ Aturan kerja: **setiap perubahan database = satu berkas baru di sini**, dijalank
 | `20261005000600_selaraskan_katalog.sql` | Katalog di database: 15 arketipe, 24 lokasi, peta 226 kategori. Produk mendapat arketipe dari kategori, risiko tidak bisa diturunkan staf, DNA karakter dibekukan sejak `dna_locked`. Berhenti bila tabel sudah berisi data | Sudah dijalankan |
 | `20261005000700_gerbang_risiko.sql` | Menutup jalan pintas antrean: staf tidak bisa menyisipkan batch atau job langsung `queued`, memalsukan persetujuan admin, atau mengisi kolom sistem job. Gerbang risiko tinggi membaca risiko PRODUK. `ugc_approve_risk`. Kebijakan katalog tanpa tumpang tindih | **Belum dijalankan.** Jalankan setelah 0600 |
 | `20261005000710_risiko_kategori.sql` | OPSIONAL: 5 kategori bayi (anak + klaim kesehatan) dinaikkan ke risiko tinggi; risiko lama tidak bisa diturunkan staf dengan mengganti kategori | **Belum dijalankan.** Jalankan setelah 0700 bila kebijakan disetujui |
+| `20261005000720_risiko_klaim_kesehatan.sql` | OPSIONAL (Opsi B): 9 kategori klaim kesehatan (jerawat, sunscreen, sun care, perawatan mulut, hand sanitizer, minyak esensial, alat pijat, timbangan lemak, purifier) dinaikkan ke risiko tinggi; total override 14, berisiko tinggi efektif 24. Kategori anak saja sengaja tidak dinaikkan | **Belum dijalankan.** Jalankan setelah 0710 |
 
 ## Hasil audit ekspor 2026-10-02
 
