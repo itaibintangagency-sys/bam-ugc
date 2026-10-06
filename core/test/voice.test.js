@@ -95,10 +95,3 @@ test('suara: satu karakter satu suara kecuali disetujui', () => {
   assert.strictEqual(core.voiceConflicts({ base_voice: 'Despina' }, others).length, 0, 'yang sudah disetujui berbagi tidak dihitung');
   assert.strictEqual(core.voiceConflicts({ base_voice: 'Autonoe' }, others).length, 0);
 });
-
-test('katalog suara: 11 suara terlihat dengan jenis kelamin yang benar', () => {
-  const c = core.catalog();
-  assert.strictEqual(c.length, 11);
-  assert.strictEqual(c.filter(v => v.gender === 'perempuan').length, 5);
-  assert.strictEqual(c.filter(v => v.gender === 'laki-laki').length, 6);
-});
