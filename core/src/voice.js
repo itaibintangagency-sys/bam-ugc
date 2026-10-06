@@ -40,16 +40,17 @@ function catalog(extra = []) { return VOICES.suara.concat(extra); }
 // Aksen yang belum terbukti: peringatan, bukan galat.
 const AKSEN_EKSPERIMEN = ['sunda_ringan', 'jawa_ringan'];
 
-// Suara yang cocok dengan jenis kelamin karakter (urut abjad). Dipakai pemilih suara di website.
+// Suara yang cocok dengan jenis kelamin karakter (urut abjad), termasuk suara berlabel netral ("Ungendered" di Flow).
+// Dipakai pemilih suara di website.
 function voicesForGender(gender, { extraVoices = [] } = {}) {
-  return catalog(extraVoices).filter(v => v.gender === gender).sort((a, b) => a.name.localeCompare(b.name));
+  return catalog(extraVoices).filter(v => v.gender === gender || v.gender === 'netral').sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Pilihan awal suara dasar per jenis kelamin dan kelompok usia (urutan = prioritas). Berdasarkan ciri di layar Flow:
-// usia muda -> suara cerah/bernada tinggi atau "younger"; usia matang -> suara "mature"/lebih rendah.
+// Pilihan awal suara dasar per jenis kelamin dan kelompok usia (urutan = prioritas). Berdasarkan ciri di pemilih suara Flow:
+// usia muda -> suara "youthful", "younger", atau bernada lebih tinggi; usia matang -> "mature" atau lebih rendah.
 const DEFAULT_PICKS = {
-  perempuan: { dewasa_muda: ['Autonoe', 'Achernar', 'Aoede'], muda: ['Aoede', 'Autonoe', 'Erinome'], dewasa: ['Despina', 'Erinome', 'Callirrhoe'], matang: ['Gacrux', 'Callirrhoe', 'Despina'] },
-  'laki-laki': { dewasa_muda: ['Fenrir', 'Achird', 'Algieba'], muda: ['Achird', 'Fenrir', 'Algieba'], dewasa: ['Iapetus', 'Algieba', 'Alnilam'], matang: ['Charon', 'Alnilam', 'Algenib'] }
+  perempuan: { dewasa_muda: ['Leda', 'Zephyr', 'Autonoe'], muda: ['Autonoe', 'Laomedeia', 'Aoede'], dewasa: ['Despina', 'Sulafat', 'Vindemiatrix'], matang: ['Gacrux', 'Callirrhoe', 'Kore'] },
+  'laki-laki': { dewasa_muda: ['Fenrir', 'Puck', 'Achird'], muda: ['Achird', 'Puck', 'Algieba'], dewasa: ['Iapetus', 'Rasalgethi', 'Schedar'], matang: ['Charon', 'Alnilam', 'Algenib'] }
 };
 const DEFAULT_NADA = {
   perempuan: { dewasa_muda: 'cerah', muda: 'hangat', dewasa: 'lembut', matang: 'hangat' },
@@ -83,7 +84,7 @@ function validateVoiceProfile(p, { extraVoices = [] } = {}) {
   for (const f of ['suasana', 'jeda']) if (p[f] != null && !OPT[f][p[f]]) err(f, `nilai "${p[f]}" tidak dikenal`);
   const v = catalog(extraVoices).find(x => x.name.toLowerCase() === String(p.base_voice).toLowerCase());
   if (!v) issues.push({ level: 'warn', field: 'base_voice', msg: `suara "${p.base_voice}" tidak ada di daftar yang diketahui; pastikan namanya sama dengan di Flow` });
-  else if (OPT.gender[p.gender] && v.gender !== p.gender) err('base_voice', `suara ${v.name} berjenis ${v.gender}, sedangkan profil ${p.gender}`);
+  else if (OPT.gender[p.gender] && v.gender !== 'netral' && v.gender !== p.gender) err('base_voice', `suara ${v.name} berjenis ${v.gender}, sedangkan profil ${p.gender}`);
   if (AKSEN_EKSPERIMEN.includes(p.aksen)) issues.push({ level: 'warn', field: 'aksen', msg: `aksen ${p.aksen} belum terbukti didukung (Sunda tidak ada di daftar bahasa TTS Google, Jawa masih pratinjau); uji dengar dulu, bawaan aman: indonesia_netral atau jakarta_santai` });
   return issues;
 }
