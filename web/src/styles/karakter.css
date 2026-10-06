@@ -1,0 +1,71 @@
+/* Halaman Karakter (Fase 2). Warna dan ukuran memakai token di tokens.css; kontras teks mengikuti aturan test/contrast.test.js. */
+.nav-utama { display: flex; gap: 6px; flex: 1; margin: 0 20px; }
+.nav-utama a { padding: 8px 14px; border-radius: 999px; text-decoration: none; color: var(--text); font-weight: 600; min-height: 40px; display: inline-flex; align-items: center; }
+.nav-utama a:hover { background: var(--border-soft); }
+.nav-utama a[aria-current="page"] { background: var(--text); color: var(--bg); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hint { color: var(--muted); font-size: var(--fs-small); margin: 4px 0 0; }
+.kecil { font-size: var(--fs-small); color: var(--muted); margin: 0; }
+.kode { font-family: ui-monospace, Consolas, monospace; font-size: var(--fs-small); color: var(--muted); margin: 0 0 6px; overflow-wrap: anywhere; }
+.pecah { overflow-wrap: anywhere; }
+.badge-warn { background: var(--warn-bg); color: var(--warn-text); }
+.badge-ok { background: var(--ok-bg); color: var(--ok-text); }
+.notice-ok { background: var(--ok-bg); color: var(--ok-text); border-color: var(--ok-text); }
+h2 { font-size: 1.25rem; margin: 26px 0 10px; }
+
+/* Daftar */
+.kosong { background: var(--panel); border: 1px dashed var(--border); border-radius: var(--radius); padding: 22px; margin-top: 16px; }
+.kartu-daftar { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.kartu-karakter { display: grid; grid-template-columns: 96px 1fr; gap: 14px; background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px; }
+.kartu-isi h2 { margin: 0 0 2px; font-size: 1.15rem; } .kartu-isi h2 a { color: var(--text); } .kartu-isi p { margin: 0 0 6px; }
+.thumb { width: 96px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-soft); background: var(--bg); }
+.thumb-kosong { display: grid; place-items: center; text-align: center; font-size: var(--fs-small); color: var(--muted); padding: 6px; }
+.foto-besar { width: 100%; max-width: 280px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border-soft); background: var(--panel); display: block; margin-bottom: 14px; }
+.foto-besar.thumb-kosong { display: grid; }
+
+/* Langkah */
+.langkah { list-style: none; display: flex; gap: 6px; padding: 0; margin: 18px 0 22px; flex-wrap: wrap; }
+.langkah li { flex: 1 1 140px; border-top: 4px solid var(--border-soft); padding-top: 8px; color: var(--muted); font-weight: 600; font-size: var(--fs-label); }
+.langkah li.sekarang { border-top-color: var(--accent); color: var(--text); } .langkah li.selesai { border-top-color: var(--ok-text); color: var(--ok-text); }
+.form-karakter { max-width: 720px; }
+.form-karakter .field select, .form-karakter .field textarea, .field select, .field textarea {
+  width: 100%; min-height: var(--tap); padding: 12px 14px; font-size: var(--fs-base); font-family: inherit; color: var(--text); background: var(--bg); border: 2px solid var(--border); border-radius: 10px;
+}
+.field input[type="file"] { padding: 10px; background: var(--panel); }
+
+/* Pilihan chip */
+.pilihan { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
+.pilihan legend { font-size: var(--fs-label); font-weight: 600; color: var(--muted); margin-bottom: 6px; padding: 0; }
+.opsional { font-weight: 400; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { position: relative; display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 16px; border: 2px solid var(--border); border-radius: 999px; background: var(--panel); cursor: pointer; font-size: var(--fs-base); }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip.on { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
+.chip:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cek { display: inline-flex; align-items: center; gap: 10px; min-height: var(--tap); } .cek input { width: 22px; height: 22px; }
+
+.pratinjau { background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px 18px; margin: 16px 0; }
+.pratinjau p { margin: 6px 0 10px; overflow-wrap: anywhere; }
+.pratinjau-foto { max-width: 260px; width: 100%; border-radius: var(--radius); border: 1px solid var(--border-soft); margin-top: 8px; }
+.saran { margin: 0 0 14px; padding-left: 20px; color: var(--muted); } .saran li { margin-bottom: 4px; }
+.rinci { margin: 0 0 18px; } .rinci summary { cursor: pointer; font-weight: 600; min-height: var(--tap); display: flex; align-items: center; }
+.aksi { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+
+/* Rincian */
+.rinci-grid { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 28px; margin-top: 8px; }
+.kalimat { background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px 18px; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 20px; margin: 14px 0; }
+.kv div { border-top: 1px solid var(--border-soft); padding-top: 6px; } .kv dt { font-size: var(--fs-small); color: var(--muted); } .kv dd { margin: 0; font-weight: 600; }
+.daftar-syarat { list-style: none; padding: 0; margin: 0; } .daftar-syarat li { padding: 5px 0; } .daftar-syarat .ok { color: var(--ok-text); } .daftar-syarat span[aria-hidden] { display: inline-block; width: 1.4em; font-weight: 700; }
+.panel-admin { background: var(--panel); border: 2px solid var(--text); border-radius: var(--radius); padding: 6px 20px 20px; margin-top: 30px; max-width: 720px; } .panel-admin h2 { margin-top: 14px; }
+
+@media (max-width: 720px) {
+  .rinci-grid { grid-template-columns: 1fr; } .nav-utama { margin: 0 8px; } .app-header { flex-wrap: wrap; gap: 8px; }
+  .kartu-daftar { grid-template-columns: 1fr; }
+}
+
+/* Tautan bergaya tombol tidak bergaris bawah; tombol teks (.link) tampil sebagai tautan, bukan tombol bawaan browser */
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.link { font: inherit; background: none; border: 0; padding: 6px 4px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 36px; }
+.link:hover { color: var(--accent); }

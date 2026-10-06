@@ -54,3 +54,18 @@ Prototipe itu memakai jalur lama (Magnific, OmniHuman, n8n) dan tabel lama (`cha
 ## Fase berikutnya
 
 2 Karakter (unggah foto wajah dulu) · 3 Produk (kategori dari 226, lencana risiko) · pekerja gambar · 4 Batch · 5 Antrean dan QA · 6 Pembuatan wajah dan sudut.
+
+## Fase 2: halaman Karakter
+
+Menu **Karakter** membuat dan mengelola karakter dari website:
+
+| Layar | Fungsi |
+|---|---|
+| `/karakter` | Daftar karakter dengan foto, status, dan suara |
+| `/karakter/baru` | Wizard 4 langkah: identitas, DNA (hanya dewasa), foto wajah, suara dan project Flow |
+| `/karakter/:id` | Rincian, daftar syarat, ubah project dan akun, unggah foto bila belum ada, dan **Tandai siap** khusus admin |
+
+- Staf membuat karakter sampai lengkap (status `voice_defined`). Admin menandai siap dengan alasan tertulis (`ugc_admin_mark_ready`).
+- Tidak ada migrasi database baru: semua aturan (RLS, keunikan kode dan suara, DNA terkunci) sudah ada.
+- Kode DNA dan suara disalin dari `core/` ke `src/core/` oleh `npm run sync-core`. **Jangan edit `src/core/` langsung.** `test/core-sync.test.js` gagal bila `core/` berubah tetapi salinannya belum diperbarui.
+- Uji browser sungguhan: `db/test/web.e2e.test.mjs` (membangun website, menjalankannya di Chrome terhadap Postgres lokal dengan semua migrasi dan RLS lewat Supabase tiruan). Perlu `npm install` di `web/`, `db/`, dan `agent/`.

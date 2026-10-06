@@ -1,0 +1,190 @@
+{
+  "catatan": "30 suara persis seperti tertulis di pemilih suara Flow (dibaca langsung 6 Okt 2026; daftar berakhir di Zubenelgenubi). Pulcherrima berlabel \"Ungendered\" di Flow (tabel TTS Google menyebutnya perempuan); dipakai gender \"netral\" yang boleh dipasangkan dengan profil mana pun. Nama dan jenis suara lain cocok dengan tabel Gemini-TTS. Admin dapat menambah suara lewat pengaturan.",
+  "lengkap": true,
+  "sumber": [
+    "Pemilih suara Flow (Suara > daftar), dibaca 6 Okt 2026",
+    "Tabel suara Gemini-TTS (Google Cloud), sebagai pembanding"
+  ],
+  "suara": [
+    {
+      "name": "Achernar",
+      "gender": "perempuan",
+      "desc": "Female, soft, high pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Achird",
+      "gender": "laki-laki",
+      "desc": "Male, friendly, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Algenib",
+      "gender": "laki-laki",
+      "desc": "Male, gravelly, low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Algieba",
+      "gender": "laki-laki",
+      "desc": "Male, easy-going, mid-low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Alnilam",
+      "gender": "laki-laki",
+      "desc": "Male, firm, mid-low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Aoede",
+      "gender": "perempuan",
+      "desc": "Female, breezy, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Autonoe",
+      "gender": "perempuan",
+      "desc": "Female, bright, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Callirrhoe",
+      "gender": "perempuan",
+      "desc": "Female, easy-going, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Charon",
+      "gender": "laki-laki",
+      "desc": "Male, informative, lower pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Despina",
+      "gender": "perempuan",
+      "desc": "Female, smooth, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Enceladus",
+      "gender": "laki-laki",
+      "desc": "Male, breathy, lower pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Erinome",
+      "gender": "perempuan",
+      "desc": "Female, clear, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Fenrir",
+      "gender": "laki-laki",
+      "desc": "Male, excitable, younger pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Gacrux",
+      "gender": "perempuan",
+      "desc": "Female, mature, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Iapetus",
+      "gender": "laki-laki",
+      "desc": "Male, clear, mid-low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Kore",
+      "gender": "perempuan",
+      "desc": "Female, firm, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Laomedeia",
+      "gender": "perempuan",
+      "desc": "Female, upbeat, mid-high pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Leda",
+      "gender": "perempuan",
+      "desc": "Female, youthful, mid-high pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Orus",
+      "gender": "laki-laki",
+      "desc": "Male, firm, mid-low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Puck",
+      "gender": "laki-laki",
+      "desc": "Male, upbeat, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Pulcherrima",
+      "gender": "netral",
+      "desc": "Ungendered, forward, mid-high pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Rasalgethi",
+      "gender": "laki-laki",
+      "desc": "Male, informative, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Sadachbia",
+      "gender": "laki-laki",
+      "desc": "Male, lively, low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Sadaltager",
+      "gender": "laki-laki",
+      "desc": "Male, knowledgeable, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Schedar",
+      "gender": "laki-laki",
+      "desc": "Male, even, mid-low pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Sulafat",
+      "gender": "perempuan",
+      "desc": "Female, warm, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Umbriel",
+      "gender": "laki-laki",
+      "desc": "Male, smooth, lower pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Vindemiatrix",
+      "gender": "perempuan",
+      "desc": "Female, gentle, mid pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Zephyr",
+      "gender": "perempuan",
+      "desc": "Female, bright, mid-high pitch",
+      "ciri_terlihat": true
+    },
+    {
+      "name": "Zubenelgenubi",
+      "gender": "laki-laki",
+      "desc": "Male, casual, mid-low pitch",
+      "ciri_terlihat": true
+    }
+  ]
+}

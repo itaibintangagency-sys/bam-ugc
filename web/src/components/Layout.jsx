@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { labelRole } from '../lib/roles.js';
 
@@ -10,6 +10,10 @@ export default function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <div className="brand">BA<span>UGC</span></div>
+        <nav className="nav-utama" aria-label="Menu utama">
+          <NavLink to="/" end>Dasbor</NavLink>
+          <NavLink to="/karakter">Karakter</NavLink>
+        </nav>
         <div className="account">
           <div className="account-text">
             <strong>{profile ? profile.name : '…'}</strong>

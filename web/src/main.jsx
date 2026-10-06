@@ -7,6 +7,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/login.css';
 import './styles/app.css';
+import './styles/karakter.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
