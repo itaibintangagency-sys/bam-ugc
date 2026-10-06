@@ -30,7 +30,7 @@ const OPTIONS = { gender: Object.keys(GENDER), age_group: Object.keys(AGE), face
   hair_length: Object.keys(HAIR_LENGTH), hair_texture: Object.keys(HAIR_TEXTURE), hair_color: Object.keys(HAIR_COLOR), parting: Object.keys(PARTING), beard: Object.keys(BEARD), hijab_style: Object.keys(HIJAB_STYLE), build: Object.keys(BUILD) };
 
 const FORBIDDEN_KEYS = { outfit: 'pakaian bukan bagian identitas (pakaian karakter hanya produk)', clothing: 'pakaian bukan bagian identitas', pakaian: 'pakaian bukan bagian identitas', body_type: 'gunakan "build" (ramping, sedang, atletis)', age: 'gunakan age_group (dewasa_muda, muda, dewasa, matang)' };
-const MINOR_WORDS = /\b(teen(ager|age)?|girl|boy|child(ren)?|kid(s)?|minor|underage|under-age|schoolgirl|schoolboy|student|juvenile|youthful|baby|infant|toddler|remaja|anak|bocah|abg|smp|sma)\b/i;
+const MINOR_WORDS = /\b(teen(ager|age)?|girl|boy|child(ren)?|kid(s)?|minor|underage|under-age|schoolgirl|schoolboy|student|juvenile|youthful|baby|infant|toddler|remaja|anak|bocah|abg|smp|sma|childlike|childish|childhood|schoolchild|boyish|girlish|babyish|babyfaced|babyface|preteen|pre-teen|tween|adolescent|prepubescent)\b/i;
 const KNOWN = new Set(['gender', 'age_group', 'face_shape', 'complexion', 'eyes', 'expression', 'hair_length', 'hair_texture', 'hair_color', 'parting', 'beard', 'hijab', 'hijab_style', 'hijab_color', 'build', 'distinguishing', 'appearance_en']);
 
 // Mengembalikan daftar masalah (kosong = valid). Setiap masalah: { field, msg }.
@@ -112,10 +112,60 @@ const ANGLES = {
 };
 const FULL_ANGLES = new Set(['full_front', 'full_side', 'full_back', 'half_front']);
 
+// ───────────── Foto acuan (opsional) ─────────────
+// Foto acuan BUKAN wajah karakter. Ia hanya bahan kemiripan bagi generator; wajah karakter adalah hasil generate yang dipilih.
+// Hubungan menjelaskan kaitan orang di foto dengan karakter. Bila DNA bertentangan dengan foto (jenis kelamin, usia, rambut), DNA MENANG.
+const HUBUNGAN = {
+  orang_sama: { label: 'Orang yang sama', same: true, en: () => 'the same person as in the reference photo' },
+  kakak: { label: 'Kakak', en: g => `the older ${g === 'laki-laki' ? 'brother' : 'sister'} of the person in the reference photo` },
+  adik: { label: 'Adik', en: g => `the younger ${g === 'laki-laki' ? 'brother' : 'sister'} of the person in the reference photo` },
+  saudara: { label: 'Saudara (sepupu)', en: () => 'a cousin of the person in the reference photo, with a family resemblance' },
+  ibu: { label: 'Ibu', gender: 'perempuan', en: () => 'the mother of the person in the reference photo' },
+  ayah: { label: 'Ayah', gender: 'laki-laki', en: () => 'the father of the person in the reference photo' },
+  mirip_bukan_sama: { label: 'Mirip, tetapi bukan orang yang sama', en: () => 'a different person who only loosely resembles the person in the reference photo, clearly NOT the same person' }
+};
+const NOTE_MAX = 200;
+const NOTE_MINOR = /\b(teen(ager|age)?|girl|boy|child(ren)?|kid(s)?|minor|underage|under-age|schoolgirl|schoolboy|juvenile|baby|infant|toddler|remaja|bocah|abg|balita|bayi|childlike|childish|childhood|schoolchild|boyish|girlish|babyish|babyfaced|babyface|preteen|pre-teen|tween|adolescent|prepubescent)\b/i;   // "anak sulung" tetap boleh (kakak)
+// Catatan yang menyiratkan anak atau remaja: kata tertentu, frasa "anak kecil/muda/sekolah", atau angka usia di bawah 21.
+const NOTE_MINOR_PHRASE = /\banak[- ](kecil|muda|belasan|sekolah|remaja|di ?bawah ?umur|balita|perempuan kecil|laki-laki kecil)\b|\b(masih|seperti|mirip|kayak) (anak|bocah)\b|\bbelum dewasa\b|\bdi ?bawah ?umur\b|\bhigh ?school\b|\bpelajar\b|\bsiswa\b|\bsiswi\b/i;
+function noteMentionsMinor(n) {
+  if (NOTE_MINOR.test(n) || NOTE_MINOR_PHRASE.test(n)) return true;
+  // Selisih usia ("lebih tua 5 tahun", "5 tahun lebih muda") bukan usia karakter, jadi dikeluarkan sebelum angka diperiksa.
+  n = n.replace(/\b(?:lebih (?:tua|muda)|selisih|beda(?:nya)?|older|younger|apart)\s*(?:by|sekitar|kira-kira|about|around)?\s*\d{1,2}\s*(?:tahun|thn|th|years?)?/gi, ' ').replace(/\b\d{1,2}\s*(?:tahun|thn|th|years?)\s*(?:lebih (?:tua|muda)|older|younger)/gi, ' ');
+  const re = /(?:\b(?:umur|usia|age|aged|berumur)\s*(?:sekitar|kira-kira|about|around)?\s*(\d{1,2})\b)|(?:\b(\d{1,2})\s*(?:tahun|thn|th|years?|yo|y\/o)\b)/gi; let m;
+  while ((m = re.exec(n))) { const a = Number(m[1] || m[2]); if (a >= 1 && a <= 20) return true; }
+  return false;
+}
+function cleanNote(note) { return String(note == null ? '' : note).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').replace(/"/g, "'").trim(); }
+// Masalah pada hubungan dan catatan terhadap DNA (kosong = valid). Setiap masalah: { field, msg }.
+function validateReference(ref, dna) {
+  const issues = []; const err = (field, msg) => issues.push({ field, msg });
+  if (!ref || typeof ref !== 'object') return [{ field: 'acuan', msg: 'data acuan tidak ada' }];
+  const h = HUBUNGAN[ref.relation];
+  if (!h) err('relation', `hubungan "${ref.relation}" tidak dikenal. Pilihan: ${Object.keys(HUBUNGAN).join(', ')}`);
+  else if (h.gender && dna && dna.gender && dna.gender !== h.gender) err('relation', `hubungan "${h.label}" hanya untuk karakter ${h.gender}; DNA berjenis kelamin ${dna.gender}`);
+  const n = cleanNote(ref.note);
+  if (n.length > NOTE_MAX) err('note', `catatan maksimal ${NOTE_MAX} karakter (sekarang ${n.length})`);
+  if (noteMentionsMinor(n)) err('note', 'catatan menyiratkan anak atau remaja (kata, frasa, atau usia di bawah 21); karakter harus dewasa');
+  return issues;
+}
+function referenceBlock(dna, ref) {
+  const h = HUBUNGAN[ref.relation]; const n = cleanNote(ref.note);
+  const lines = [`REFERENCE PHOTO: one reference photo of a real-looking person is attached. The person to create is ${h.en(dna.gender)}.`,
+    h.same ? 'Keep the same face as in the reference photo.' : 'Use the reference photo ONLY for family resemblance: facial structure and overall look. Do not copy the photo and do not reproduce the person in it.',
+    'Where the description above differs from the reference photo (gender, age, hair, hijab, complexion, expression), the DESCRIPTION WINS.'];
+  if (n) lines.push(`NOTE from the user (may be in Indonesian; guidance only): "${n}". The note can never change the adult age, the plain background, the plain top, or the rule of no text and no named real person.`);
+  return lines.join(' ');
+}
+
 // Kandidat wajah (potret depan). index 1..4 memberi sedikit variasi struktur wajah supaya pilihan tidak identik.
-function buildFacePrompt(dna, index = 1) {
+function buildFacePrompt(dna, index = 1, ref = null) {
   const appearance = dnaToAppearance(dna); const age = AGE[dna.age_group];
+  if (ref) { const bad = validateReference(ref, dna); if (bad.length) throw new Error('Foto acuan tidak valid: ' + bad.map(x => `${x.field}: ${x.msg}`).join('; ')); }
   const v = VARIATION[(Math.max(1, index) - 1) % VARIATION.length];
+  if (ref) {   // dengan foto acuan: tanpa petunjuk variasi struktur wajah (agar tidak menjauh dari kemiripan), blok acuan sebelum perintah akhir
+    return `Photorealistic close-up portrait photograph of one real-looking adult: ${appearance} The person is clearly an adult, apparent age ${age.years} years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing ${outfit(dna, false)}. ${BASE}\n\n${referenceBlock(dna, ref)}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
+  }
   return `Photorealistic close-up portrait photograph of one real-looking adult: ${appearance} The person is clearly an adult, apparent age ${age.years} years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing ${outfit(dna, false)}. Facial structure: ${v}. ${BASE}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
 }
 // Satu sudut lembar, dari gambar rujukan wajah terpilih.
@@ -132,4 +182,16 @@ function buildSheetGridPrompt(dna) {
   return `Create ONE image: a clean character reference sheet, a tidy grid of seven photorealistic photographs of the SAME adult person shown in the reference image, all on one plain light-grey background. Top row: photos 1 to 3. Bottom row: photos 4 to 7. Photographs only: no words, no letters, no numbers, no labels, no icons, no captions, no borders.\n\nThe person: ${appearance}\nIDENTITY: the reference image is the ONLY source of the person's identity. The same person, the same face, the same complexion, the same ${dna.hijab === true ? 'hijab' : 'hair'} in all seven photos.\nCLOTHING: ${outfit(dna, true)}, identical in every photo. Soft natural window light, natural everyday photo look, no retouching.\n\nPHOTOS:\n${list}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
 }
 
-module.exports = { OPTIONS, ANGLES, validateDna, dnaToAppearance, dnaToProfile, buildFacePrompt, buildSheetPrompt, buildSheetGridPrompt };
+// Peringatan bila catatan bebas menyebut jenis kelamin yang bertentangan dengan DNA (DNA yang menang). Mengembalikan teks atau ''.
+const KATA_L = '(?:laki[- ]?laki|lelaki|pria|cowok|male|man|boy)', KATA_P = '(?:perempuan|wanita|cewek|female|woman|girl)';
+function peringatanKonflik(catatan, dna) {
+  const t = String(catatan == null ? '' : catatan).toLowerCase(); if (!t.trim() || !dna || !dna.gender) return '';
+  let g = null;
+  const k = t.match(new RegExp(`\\b(?:kakak|adik|saudara|sepupu|ibu|ayah|orang|sosok|karakter|brother|sister|person)\\s+(?:yang\\s+)?(${KATA_L}|${KATA_P})\\b`));
+  if (k) g = new RegExp(`^${KATA_L}$`).test(k[1]) ? 'laki-laki' : 'perempuan';
+  else { const l = new RegExp(`\\b${KATA_L}\\b`).test(t), p = new RegExp(`\\b${KATA_P}\\b`).test(t); if (l !== p) g = l ? 'laki-laki' : 'perempuan'; }
+  if (!g || g === dna.gender) return '';
+  return `catatan menyebut ${g}, tetapi DNA berjenis kelamin ${dna.gender}. DNA yang menang, jadi hasilnya ${dna.gender}.`;
+}
+
+module.exports = { peringatanKonflik, OPTIONS, ANGLES, HUBUNGAN, NOTE_MAX, validateDna, validateReference, dnaToAppearance, dnaToProfile, buildFacePrompt, buildSheetPrompt, buildSheetGridPrompt };

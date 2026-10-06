@@ -25,7 +25,7 @@ export async function makeDb({ upTo = '99999999999999' } = {}) {
     create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
     create function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name, '/') $$;
     alter table storage.objects enable row level security;
-    create role authenticated nologin; create role anon nologin;
+    create role authenticated nologin; create role anon nologin; create role service_role nologin bypassrls;
     alter default privileges in schema public grant all on tables to anon, authenticated;
   `);
   for (const id of Object.values(U)) await db.query('insert into auth.users (id) values ($1)', [id]);
@@ -33,7 +33,7 @@ export async function makeDb({ upTo = '99999999999999' } = {}) {
   await db.exec(base); await db.exec(`grant all on all tables in schema public to authenticated;`);
   const files = readdirSync(DIR).filter(f => f.endsWith('.sql')).sort().filter(f => f.slice(0, 14) <= upTo);
   for (const f of files) await db.exec(readFileSync(DIR + f, 'utf8').replace(/^create extension.*$/gm, ''));
-  await db.exec(`grant usage on schema public, auth, storage to authenticated, anon; grant select on storage.buckets to authenticated;
+  await db.exec(`grant usage on schema public, auth, storage to authenticated, anon; grant usage on schema public to service_role; grant select on storage.buckets to authenticated;
                  grant select, insert, update, delete on storage.objects to authenticated;`);
   for (const [id, role] of [[U.admin, 'admin'], [U.staffA, 'staff'], [U.staffB, 'staff'], [U.agent, 'agent']]) {
     await db.query('insert into user_profiles (id, email, name, role) values ($1, $2, $2, $3)', [id, role + '@x', role]);

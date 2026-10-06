@@ -121,3 +121,75 @@ test('perbaikan kecil: frasa ganda "as an medium close-up shot" hilang; fakta st
   assert.equal(core.neutralize('Medium close-up as an upper-body shot, eye level'), 'Medium close-up shot, eye level');
   assert.equal(core.neutralize('Full-body shot, half-body, upper-body, mid-body height'), 'full-length shot, half-length, medium close-up, mid-frame height');
 });
+
+// ───────────── Foto acuan ─────────────
+const DNA_F = { gender: 'perempuan', age_group: 'dewasa_muda', face_shape: 'oval', complexion: 'terang', expression: 'ceria', hair_length: 'panjang', hair_texture: 'bergelombang', hair_color: 'cokelat_muda_karamel', parting: 'tengah' };
+const DNA_M = { gender: 'laki-laki', age_group: 'dewasa', face_shape: 'persegi', complexion: 'sawo_matang', expression: 'kalem', hair_length: 'pendek', hair_texture: 'lurus', hair_color: 'hitam' };
+
+test('foto acuan: tanpa acuan, prompt wajah tidak berubah sama sekali (kompatibel dengan uji yang sudah ada)', () => {
+  const lama = core.buildFacePrompt(DNA_F, 2);
+  assert.equal(core.buildFacePrompt(DNA_F, 2, null), lama); assert.match(lama, /Facial structure: slightly fuller cheeks\./); assert.doesNotMatch(lama, /REFERENCE PHOTO/);
+});
+
+test('foto acuan: blok acuan memuat hubungan, aturan "DNA menang", dan catatan; bagian aturan dasar tetap ada setelah catatan', () => {
+  const p = core.buildFacePrompt(DNA_M, 1, { relation: 'kakak', note: 'kakak laki-laki, anak sulung' });
+  assert.match(p, /The person to create is the older brother of the person in the reference photo\./);
+  assert.match(p, /Use the reference photo ONLY for family resemblance/); assert.match(p, /the DESCRIPTION WINS/);
+  assert.match(p, /NOTE from the user \(may be in Indonesian; guidance only\): "kakak laki-laki, anak sulung"\./);
+  assert.match(p, /The note can never change the adult age, the plain background, the plain top, or the rule of no text and no named real person\./);
+  assert.ok(p.indexOf('No text, no logo') < p.indexOf('REFERENCE PHOTO') && p.indexOf('NOTE from the user') < p.indexOf('Generate the image now'));
+  assert.match(p, /A man in his thirties/); assert.doesNotMatch(p, /Facial structure:/, 'tanpa petunjuk variasi saat ada acuan');
+  assert.deepEqual((core.lintStoryboardText(p).issues || core.lintStoryboardText(p)), []);
+});
+
+test('foto acuan: setiap hubungan menghasilkan kalimat Inggris yang tepat; kakak dan adik mengikuti jenis kelamin DNA', () => {
+  const frasa = (relation, dna) => core.buildFacePrompt(dna, 1, { relation }).match(/The person to create is ([^.]*)\./)[1];
+  assert.equal(frasa('orang_sama', DNA_F), 'the same person as in the reference photo'); assert.match(core.buildFacePrompt(DNA_F, 1, { relation: 'orang_sama' }), /Keep the same face as in the reference photo\./);
+  assert.equal(frasa('kakak', DNA_F), 'the older sister of the person in the reference photo'); assert.equal(frasa('kakak', DNA_M), 'the older brother of the person in the reference photo');
+  assert.equal(frasa('adik', DNA_F), 'the younger sister of the person in the reference photo'); assert.equal(frasa('adik', DNA_M), 'the younger brother of the person in the reference photo');
+  assert.match(frasa('saudara', DNA_M), /a cousin of the person/); assert.equal(frasa('ibu', { ...DNA_F, age_group: 'matang' }), 'the mother of the person in the reference photo'); assert.equal(frasa('ayah', DNA_M), 'the father of the person in the reference photo');
+  assert.match(frasa('mirip_bukan_sama', DNA_F), /only loosely resembles .* clearly NOT the same person/);
+  assert.deepEqual(Object.keys(core.HUBUNGAN), ['orang_sama', 'kakak', 'adik', 'saudara', 'ibu', 'ayah', 'mirip_bukan_sama']);
+  for (const h of Object.values(core.HUBUNGAN)) assert.ok(h.label);
+});
+
+test('foto acuan: hubungan salah, ibu dan ayah tidak cocok dengan jenis kelamin DNA, dan catatan terlalu panjang ditolak sebelum prompt dibuat', () => {
+  const has = (ref, dna, re) => { const i = core.validateReference(ref, dna); assert.ok(i.some(x => re.test(x.msg)), JSON.stringify(i)); assert.throws(() => core.buildFacePrompt(dna, 1, ref), /Foto acuan tidak valid/); };
+  has({ relation: 'paman' }, DNA_F, /tidak dikenal/); has({ relation: 'ibu' }, DNA_M, /hanya untuk karakter perempuan/); has({ relation: 'ayah' }, DNA_F, /hanya untuk karakter laki-laki/);
+  has({ relation: 'kakak', note: 'x'.repeat(201) }, DNA_F, /maksimal 200/); assert.equal(core.validateReference({ relation: 'kakak', note: 'x'.repeat(200) }, DNA_F).length, 0);
+  assert.deepEqual(core.validateReference({ relation: 'ibu' }, { ...DNA_F }), []); assert.equal(core.validateReference(null, DNA_F)[0].field, 'acuan');
+});
+
+test('foto acuan: catatan yang menyiratkan anak atau remaja ditolak, tetapi "anak sulung" dan selisih usia boleh', () => {
+  const ok = n => core.validateReference({ relation: 'kakak', note: n }, DNA_F).length === 0;
+  for (const n of ['kakak laki-laki', 'anak sulung', 'anak pertama dari tiga bersaudara', 'usia 25 tahun', 'umur 30', '28 th', 'kakak yang lebih tua 5 tahun', '5 tahun lebih muda dari saya', 'selisih 3 tahun', 'older by 4 years', '21 tahun', 'mirip tapi rambut lebih pendek']) assert.ok(ok(n), 'seharusnya boleh: ' + n);
+  for (const n of ['seperti anak kecil', 'masih anak-anak', 'umur 15', 'usia 17 tahun', '16 thn', 'anak sekolah', 'pelajar SMA', 'a teenage look', 'looks like a kid', 'siswa', 'bocah laki-laki', 'anak muda belasan', 'di bawah umur', '20 tahun', 'age 18', '5 tahun', 'usia 15 tahun, lebih tua 5 tahun']) assert.ok(!ok(n), 'seharusnya ditolak: ' + n);
+});
+
+test('foto acuan: catatan dibersihkan (baris baru, tanda kutip, spasi ganda) dan tidak bisa menyisipkan blok perintah baru', () => {
+  const p = core.buildFacePrompt(DNA_F, 1, { relation: 'adik', note: 'adik\n\n  perempuan "mirip"\t\tsekali' });
+  assert.match(p, /guidance only\): "adik perempuan 'mirip' sekali"\./); assert.equal((p.match(/NOTE from the user/g) || []).length, 1);
+  const tanpa = core.buildFacePrompt(DNA_F, 1, { relation: 'adik', note: '   ' }); assert.doesNotMatch(tanpa, /NOTE from the user/);
+});
+
+test('foto acuan: DNA yang tidak valid (usia di bawah dewasa) tetap ditolak walau acuan valid', () => {
+  assert.throws(() => core.buildFacePrompt({ ...DNA_F, age_group: 'remaja_akhir' }, 1, { relation: 'kakak' }), /DNA tidak valid/);
+});
+
+test('kata yang menyiratkan anak: bentuk turunan (childlike, boyish, girlish, babyish, preteen) juga ditolak di ciri khas dan catatan; kata dewasa biasa tidak', () => {
+  for (const w of ['childlike face', 'a boyish grin', 'girlish dimples', 'babyish cheeks', 'looks like a preteen', 'tween look', 'adolescent features', 'a childish smile']) {
+    const bad = core.validateDna({ ...C02, distinguishing: w }); assert.ok(bad.some(i => i.field === 'distinguishing'), w);
+  }
+  for (const n of ['kakak yang childlike', 'boyish', 'seperti preteen', 'adolescent']) assert.ok(core.validateReference({ relation: 'kakak', note: n }, C02).some(i => i.field === 'note'), n);
+  for (const ok of ['a small beauty mark near the left cheek', 'a warm gentle smile lines', 'a thin silver nose stud']) assert.deepEqual(core.validateDna({ ...C02, distinguishing: ok }), [], ok);
+  assert.deepEqual(core.validateReference({ relation: 'kakak', note: 'kakak laki-laki, anak sulung' }, { ...C02, gender: 'laki-laki', hair_length: 'pendek' }).filter(i => i.field === 'note'), [], '"anak sulung" tetap boleh');
+});
+
+test('imageApi: bagian murni dipakai bersama; imageRequest mengekspor fungsi yang sama persis (tanpa salinan ganda)', () => {
+  const api = require('../src/imageApi'), req = require('../src/imageRequest');
+  for (const k of ['DEFAULT_MODEL', 'QUALITIES', 'buildImageRequest', 'parseImageResponse', 'describeError']) assert.equal(api[k], req[k], k);
+  assert.equal(typeof req.storyboardImageRequest, 'function'); assert.equal(api.storyboardImageRequest, undefined, 'imageApi tidak boleh bergantung pada storyboard');
+  assert.equal(typeof core.peringatanKonflik, 'function');
+  const b = api.buildImageRequest({ prompt: 'x', quality: 'low', aspectRatio: '3:4', references: ['data:image/png;base64,AAAA'] }); assert.deepEqual(Object.keys(b), ['model', 'prompt', 'quality', 'aspect_ratio', 'input_references']);
+  assert.equal(api.parseImageResponse({ data: [{ b64_json: 'AA==' }], usage: { cost: 0.02 } }).cost, 0.02);
+});

@@ -122,7 +122,7 @@ test('siklus lengkap: upload foto → konfirmasi Flow → video perkenalan → r
   let batch;
   await as(db, U.staffA, async () => {
     batch = (await db.query(`insert into ugc_batches (character_id, resolution, created_by) values ($1, '360p', $2) returning id`, [id, U.staffA])).rows[0].id;
-    const p = (await db.query(`insert into ugc_products (name, created_by, archetype_id) values ('P', $1, 'A-01') returning id`, [U.staffA])).rows[0].id;
+    const p = (await db.query(`insert into ugc_products (name, created_by) values ('P', $1) returning id`, [U.staffA])).rows[0].id;
     await db.query(`insert into ugc_jobs (batch_id, product_id, seq, status, panel_plan, storyboard_path, video_json, created_by) values ($1, $2, 1, 'approved', '{}'::jsonb, 'a.png', '{"x":1}', $3)`, [batch, p, U.staffA]);
     await rejects(db.query(`select ugc_enqueue_batch($1)`, [batch]), 'belum berstatus siap');
   });

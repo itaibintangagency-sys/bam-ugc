@@ -66,7 +66,7 @@ async function seed(db, { n = 3, risky = false, projectUrl = 'https://flow.googl
     const b = await db.query(`insert into ugc_batches (character_id, resolution, created_by) values ($1, '360p', $2) returning id`, [ids.char, U.staffA]);
     ids.batch = b.rows[0].id;
     for (let i = 1; i <= n; i++) {
-      const p = await db.query(`insert into ugc_products (name, created_by, archetype_id) values ($1, $2, 'A-01') returning id`, ['Produk ' + i, U.staffA]);
+      const p = await db.query(`insert into ugc_products (name, created_by) values ($1, $2) returning id`, ['Produk ' + i, U.staffA]);
       ids.products.push(p.rows[0].id);
       const plan = JSON.stringify({ archetype_id: 'A-01', needs_human_approval: risky && i === 1 });
       const j = await db.query(
@@ -92,7 +92,7 @@ test('batas: maksimal 10 video per batch dan 10 batch per hari', async () => {
   const db = await makeDb();
   const ids = await seed(db, { n: 10 });
   await as(db, U.staffA, async () => {
-    const p = await db.query(`insert into ugc_products (name, created_by, archetype_id) values ('Lebih', $1, 'A-01') returning id`, [U.staffA]);
+    const p = await db.query(`insert into ugc_products (name, created_by) values ('Lebih', $1) returning id`, [U.staffA]);
     await rejects(db.query(`insert into ugc_jobs (batch_id, product_id, seq, created_by) values ($1, $2, 9, $3)`, [ids.batch, p.rows[0].id, U.staffA]), 'job_limit_per_batch');
   });
   await db.query(`update ugc_settings set value = '2'::jsonb where key = 'max_batches_per_day'`);
