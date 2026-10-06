@@ -1,5 +1,0 @@
-﻿no,nama,jenis,model,kualitas,rasio,rujukan,status,detik,biaya_usd,ukuran_px,berkas,catatan
-1,wajah-1,wajah,openai/gpt-image-2,medium,3:4,0,ok,29.9,0.049735,1152x1536,01-wajah-1.png,
-2,wajah-2,wajah,openai/gpt-image-2,medium,3:4,0,ok,30,0.04972,1152x1536,02-wajah-2.png,
-3,wajah-3,wajah,openai/gpt-image-2,medium,3:4,0,ok,31.2,0.04973,1152x1536,03-wajah-3.png,
-4,wajah-4,wajah,openai/gpt-image-2,medium,3:4,0,ok,29.6,0.049725,1152x1536,04-wajah-4.png,
