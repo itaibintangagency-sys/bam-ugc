@@ -10,7 +10,7 @@ function summarize(rows) {
     detik_rata2: ok.length ? Number((ok.reduce((a, r) => a + r.detik, 0) / ok.length).toFixed(1)) : null, detik_maks: ok.length ? Math.max(...ok.map(r => r.detik)) : null };
 }
 function write(dir, command, rows, extra = []) {
-  const cols = ['no', 'nama', 'jenis', 'model', 'kualitas', 'rasio', 'rujukan', 'status', 'detik', 'biaya_usd', 'ukuran_px', 'berkas', 'catatan'];
+  const cols = ['no', 'nama', 'jenis', 'model', 'kualitas', 'rasio', 'rujukan', 'status', 'detik', 'biaya_usd', 'ukuran_px', 'berkas', 'catatan', 'skenario'];
   fs.writeFileSync(path.join(dir, 'laporan.csv'), '\ufeff' + [cols.join(','), ...rows.map(r => cols.map(c => csvq(r[c])).join(','))].join('\r\n') + '\r\n');
   const s = summarize(rows);
   const md = [`# Laporan uji gambar — ${command}`, '', `Dibuat: ${new Date().toISOString()}`, '',

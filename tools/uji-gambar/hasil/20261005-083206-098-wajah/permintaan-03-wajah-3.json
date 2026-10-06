@@ -1,0 +1,6 @@
+{
+ "model": "openai/gpt-image-2",
+ "prompt": "Photorealistic close-up portrait photograph of one real-looking adult: A young woman in her early twenties with long, wavy, light-brown hair with soft caramel highlights, parted in the middle, a soft oval face, a fair to light complexion, and a bright cheerful smile. The person is clearly an adult, apparent age 21 to 24 years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing a plain white crew-neck top. Facial structure: slightly more defined cheekbones. Plain light-grey seamless background. Soft natural window light, natural everyday photo look, realistic complexion texture, no retouching. No text, no logo, no watermark, no border.\n\nGenerate the image now. Do not answer with text only and do not ask questions.",
+ "quality": "medium",
+ "aspect_ratio": "3:4"
+}

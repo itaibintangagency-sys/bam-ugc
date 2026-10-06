@@ -6,6 +6,9 @@
 //   node uji-gambar.js wajah      [--dna FILE] [--jumlah 4]
 //   node uji-gambar.js lembar     --wajah FILE [--dna FILE] [--cara per-sudut|satu-gambar|keduanya]
 //   node uji-gambar.js storyboard --wajah FILE [--dna FILE] [--produk FILE ...] [--rasio 21:9,4:1]
+//   node uji-gambar.js wajah      --acuan FOTO --hubungan KUNCI [--catatan "teks"]     (wajah dibuat dari foto acuan)
+//   node uji-gambar.js acuan      --acuan FOTO [--gender-acuan perempuan|laki-laki] [--jumlah 2]   (4 skenario siap pakai + lembar penilaian)
+//   node uji-gambar.js acuan      --tanya   (layar pilihan: foto, hubungan, jenis kelamin hasil, jumlah, kualitas, lalu Y/N/U)
 // Opsi umum: --kualitas low|medium|high  --model SLUG  --maks-gambar N  --kering  --ya  --keluar FOLDER
 const fs = require('fs');
 const path = require('path');
@@ -14,12 +17,16 @@ const core = require('../../core/src');
 const { OpenRouter, ApiError } = require('./lib/openrouter');
 const B = require('./lib/berkas');
 const Laporan = require('./lib/laporan');
+const Skenario = require('./lib/skenario');
+const Versi = require('./lib/versi');
+const Tanya = require('./lib/tanya');
+const { Writable } = require('stream');
 
 const HERE = __dirname;
 const DEFAULT_RATIOS = ['21:9', '4:1'];
 
 function parseArgs(argv) {
-  const pos = [], o = { produk: [] }; const flags = new Set(['kering', 'ya', 'bantuan']);
+  const pos = [], o = { produk: [] }; const flags = new Set(['kering', 'ya', 'bantuan', 'tanya']);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (!a.startsWith('--')) { pos.push(a); continue; }
@@ -36,7 +43,33 @@ function loadEnvFile(file) {
   for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) { const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/); if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, ''); }
   return out;
 }
-async function ask(rl, q) { return new Promise(res => rl.question(q, a => res(a))); }
+
+// Meminta rahasia (kunci) di terminal: tiap karakter yang diterima tampil sebagai "*", sehingga jelas bahwa ketikan atau tempelan masuk,
+// tetapi isinya tidak terbaca di layar. Tanpa readline supaya tidak bentrok dengan pertanyaan lain. Bila stdin bukan terminal
+// (mis. input dialirkan), jatuh ke pertanyaan biasa lewat `cadangan`.
+function mintaRahasia(q, cadangan, { masuk = process.stdin, keluar = process.stdout } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!masuk.isTTY || typeof masuk.setRawMode !== 'function') { cadangan(q).then(resolve, reject); return; }
+    keluar.write(q);
+    let buf = '', esc = false;
+    const selesai = (nilai, galat) => { masuk.removeListener('data', onData); try { masuk.setRawMode(false); } catch { /* abaikan */ } masuk.pause(); keluar.write('\n'); galat ? reject(galat) : resolve(nilai); };
+    const onData = chunk => {
+      for (const c of String(chunk)) {
+        if (esc) { if (/[A-Za-z~]/.test(c)) esc = false; continue; }            // urutan tombol panah dan sejenisnya diabaikan
+        if (c === '\u001b') { esc = true; continue; }
+        if (c === '\r' || c === '\n') return selesai(buf);
+        if (c === '\u0003') return selesai('', new Error('Dibatalkan (Ctrl+C).'));
+        if (c === '\u007f' || c === '\b') { if (buf.length) { buf = buf.slice(0, -1); keluar.write('\b \b'); } continue; }
+        if (c < ' ') continue;
+        buf += c; keluar.write('*');
+      }
+    };
+    masuk.setRawMode(true); masuk.resume(); masuk.setEncoding('utf8'); masuk.on('data', onData);
+  });
+}
+// Bentuk kunci OpenRouter: diawali sk-or-. Awalan "Bearer", tanda kutip, dan spasi hasil salinan dibuang.
+function rapikanKunci(teks) { let k = String(teks == null ? '' : teks); const tanpaKutip = x => x.trim().replace(/^["'`]+|["'`]+$/g, '').trim(); k = tanpaKutip(k); k = k.replace(/^bearer\s+/i, ''); return tanpaKutip(k); }
+function cekBentukKunci(k) { return /^sk-or-\S{12,}$/.test(k) ? '' : 'Kunci OpenRouter diawali "sk-or-" dan berupa satu deretan huruf, angka, dan tanda hubung. Salin ulang dari halaman Keys di OpenRouter.'; }
 
 // ───────────── Data masukan ─────────────
 function loadDna(file) {
@@ -68,7 +101,23 @@ function planTasks(cmd, o, ctx) {
   const quality = o.kualitas || 'medium'; const model = o.model || core.DEFAULT_MODEL; const tasks = [];
   if (cmd === 'wajah') {
     const n = Number(o.jumlah || 4); if (!(n >= 1 && n <= 8)) throw new Error('--jumlah harus 1 sampai 8.');
-    for (let i = 1; i <= n; i++) tasks.push({ nama: `wajah-${i}`, jenis: 'wajah', body: core.buildImageRequest({ model, quality, aspectRatio: o.rasio || '3:4', prompt: core.buildFacePrompt(ctx.dna, i) }), refs: [] });
+    let ref = null, acuan = null;
+    if (o.acuan) {
+      if (!o.hubungan) throw new Error(`Foto acuan butuh --hubungan. Pilihan: ${Object.keys(core.HUBUNGAN).join(', ')}.`);
+      ref = { relation: o.hubungan, note: o.catatan || '' };
+      const bad = core.validateReference(ref, ctx.dna); if (bad.length) throw new Error('Foto acuan tidak valid:\n' + bad.map(b => `  - ${b.field}: ${b.msg}`).join('\n'));
+      acuan = B.readImage(o.acuan);
+    } else if (o.hubungan || o.catatan) throw new Error('--hubungan dan --catatan hanya dipakai bersama --acuan FOTO.');
+    for (let i = 1; i <= n; i++) tasks.push({ nama: ref ? `wajah-acuan-${i}` : `wajah-${i}`, jenis: ref ? 'wajah-acuan' : 'wajah', body: core.buildImageRequest({ model, quality, aspectRatio: o.rasio || '3:4', prompt: core.buildFacePrompt(ctx.dna, i, ref), references: acuan ? [acuan.url] : [] }), refs: acuan ? [acuan] : [] });
+  }
+  if (cmd === 'acuan') {
+    if (!o.acuan) throw new Error('Perintah acuan butuh --acuan FOTO (foto orang dewasa yang izinnya sudah Anda urus).');
+    const acuan = B.readImage(o.acuan); const jml = Number(o.jumlah || 2); if (!(jml >= 1 && jml <= 4)) throw new Error('--jumlah harus 1 sampai 4 gambar per skenario.');
+    ctx.skenario = ctx.pilihan && ctx.pilihan.karakter ? [ctx.pilihan.karakter] : Skenario.skenarioAcuan(o['gender-acuan'] || 'perempuan'); ctx.jumlahAcuan = jml;
+    for (const sk of ctx.skenario) for (let i = 1; i <= jml; i++) {
+      tasks.push({ nama: `acuan-${sk.kode}-${slug(sk.judul)}-${i}`, jenis: 'wajah-acuan', skenario: `${sk.kode} ${sk.judul}`, harapan: sk.harapan,
+        body: core.buildImageRequest({ model, quality, aspectRatio: o.rasio || '3:4', prompt: core.buildFacePrompt(sk.dna, i, { relation: sk.relation, note: sk.note }), references: [acuan.url] }), refs: [acuan] });
+    }
   }
   if (cmd === 'lembar') {
     const face = B.readImage(o.wajah); const cara = o.cara || 'keduanya';
@@ -127,26 +176,51 @@ async function cmdModels(client, outDir, log) {
 
 async function run(argv, env = process.env, io = { out: s => console.log(s), rl: null }) {
   const { cmd, o } = parseArgs(argv); const log = io.out;
-  if (!cmd || o.bantuan || !['models', 'wajah', 'lembar', 'storyboard'].includes(cmd)) { log('Perintah: models | wajah | lembar | storyboard. Lihat BACA-DULU-UJI-GAMBAR.md'); return cmd ? 1 : 0; }
+  if (!cmd || o.bantuan || !['models', 'wajah', 'lembar', 'storyboard', 'acuan', 'periksa', 'kunci'].includes(cmd)) { log('Perintah: models | wajah | lembar | storyboard | acuan | periksa | kunci. Lihat BACA-DULU-UJI-GAMBAR.md dan BACA-DULU-UJI-ACUAN.md'); return cmd ? 1 : 0; }
   const fileEnv = loadEnvFile(path.join(HERE, '.env'));
   const base = env.OPENROUTER_BASE || fileEnv.OPENROUTER_BASE || 'https://openrouter.ai/api/v1';
   const outRoot = o.keluar || env.UJI_HASIL || path.join(HERE, 'hasil');
   let outDir = path.join(outRoot, `${B.stamp()}-${cmd}`); for (let n = 2; fs.existsSync(outDir); n++) outDir = path.join(outRoot, `${B.stamp()}-${cmd}-${n}`);
-  fs.mkdirSync(outDir, { recursive: true });
   const dry = !!o.kering;
+  const versi = Versi.cekCore(core);
 
   // Kunci: lingkungan, lalu .env di folder alat ini (tidak ikut ke GitHub), lalu ditanya. Tidak pernah disimpan.
   let key = env.OPENROUTER_API_KEY || fileEnv.OPENROUTER_API_KEY || '';
-  const rl = io.rl || readline.createInterface({ input: process.stdin, output: process.stdout });
-  const ownRl = !io.rl;
+
+  let rl = io.rl || null; const ownRl = !io.rl;
+  const getRl = () => rl || (rl = readline.createInterface({ input: process.stdin, output: process.stdout }));
+  let penanya = null; const tanya = q => (penanya || (penanya = Tanya.buatPenanya(getRl())))(q);   // satu antrean baris untuk semua pertanyaan
+  const buatFolder = () => fs.mkdirSync(outDir, { recursive: true });                                // folder hasil baru dibuat setelah pengguna setuju
   try {
-    if (!key && !dry) key = B.clean(await ask(rl, 'Tempel kunci OpenRouter (tidak disimpan; terlihat saat diketik): '));
-    if (!dry && !key) throw new Error('Kunci OpenRouter kosong.');
+  if (cmd === 'periksa') {
+    const nodeOk = Number(process.versions.node.split('.')[0]) >= 18;
+    log(`Node.js ${process.versions.node}: ${nodeOk ? 'sesuai' : 'TERLALU LAMA (butuh 18 atau lebih baru)'}`);
+    log(`Folder core: ${path.resolve(HERE, '..', '..', 'core')}`);
+    for (const [berkas, fungsi] of Object.entries(Versi.PERLU)) { const hilang = (versi.kurang.find(k => k.berkas === berkas) || { fungsi: [] }).fungsi; log(`  ${hilang.length ? 'KURANG' : 'ok    '} ${berkas}${hilang.length ? ': ' + hilang.join(', ') : ''}`); }
+    log(Versi.pesanCore(versi)); return versi.ok && nodeOk ? 0 : 1;
+  }
+  if (cmd === 'kunci') {
+    const k = rapikanKunci(await mintaRahasia('Tempel kunci OpenRouter lalu tekan Enter (tiap karakter tampil sebagai *): ', q => tanya(q)));
+    const bentuk = cekBentukKunci(k); if (bentuk) throw new Error(bentuk);
+    const f = path.join(HERE, '.env'); const lama = fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split(/\r?\n/).filter(l => l.trim() && !/^\s*OPENROUTER_API_KEY\s*=/.test(l)) : [];
+    fs.writeFileSync(f, [...lama, `OPENROUTER_API_KEY=${k}`].join('\r\n') + '\r\n', { mode: 0o600 });
+    log(`Kunci tersimpan di ${f}\nBerkas itu tidak ikut ke GitHub. Hapus berkas .env bila uji sudah selesai, dan jangan memotret atau mengirimnya.`); return 0;
+  }
+    if (!versi.ok) throw new Error(Versi.pesanCore(versi));
+    if (!key && !dry && !['periksa', 'kunci'].includes(cmd)) key = rapikanKunci(await mintaRahasia('Tempel kunci OpenRouter lalu tekan Enter (tiap karakter tampil sebagai *, isinya tidak terlihat; tidak disimpan): ', q => tanya(q)));
+    if (!dry && !['periksa', 'kunci'].includes(cmd) && !key) throw new Error('Kunci OpenRouter kosong.');
+    if (!dry && !['periksa', 'kunci'].includes(cmd)) { const bentuk = cekBentukKunci(key); if (bentuk) throw new Error(bentuk); }
     const client = new OpenRouter({ key, base, timeoutMs: Number(env.UJI_TIMEOUT_MS || 300000), retryWaitMs: Number(env.UJI_RETRY_MS || 4000) });
 
-    if (cmd === 'models') { if (dry) { log('Mode kering: perintah models tidak memanggil jaringan.'); return 0; } await cmdModels(client, outDir, log); log(`\nBerkas: ${outDir}`); return 0; }
+    if (cmd === 'models') { if (dry) { log('Mode kering: perintah models tidak memanggil jaringan.'); return 0; } buatFolder(); await cmdModels(client, outDir, log); log(`\nBerkas: ${outDir}`); return 0; }
 
-    const ctx = { dna: loadDna(o.dna), products: [], extras: [], code: o.kode || 'C02_THE_SOFT_GIRL' };
+    let pilihan = null;
+    if (cmd === 'acuan' && o.tanya) {
+      pilihan = await Tanya.wizardAcuan({ tanya, log, maks: Number(o['maks-gambar'] || 12), kering: dry, catatan: o.catatan || '' });
+      if (!pilihan) { log('Dibatalkan. Tidak ada yang dikirim.'); return 1; }
+      o.acuan = pilihan.foto; o.jumlah = String(pilihan.jumlah); o.kualitas = pilihan.kualitas; o['gender-acuan'] = pilihan.genderFoto;
+    }
+    const ctx = { dna: cmd === 'acuan' ? null : loadDna(o.dna), products: [], extras: [], code: o.kode || 'C02_THE_SOFT_GIRL', pilihan };
     if (cmd === 'storyboard') {
       const files = o.produk.length ? o.produk : fs.readdirSync(path.join(HERE, 'contoh')).filter(n => /^produk-.*\.json$/.test(n)).sort().map(n => path.join(HERE, 'contoh', n));
       ctx.products = files.map(loadProduct);
@@ -156,9 +230,13 @@ async function run(argv, env = process.env, io = { out: s => console.log(s), rl:
     log(`Perintah: ${cmd} | model ${o.model || core.DEFAULT_MODEL} | kualitas ${o.kualitas || 'medium'}${dry ? ' | MODE KERING (tidak ada yang dikirim)' : ''}`);
     log(`Akan membuat ${tasks.length} gambar (batas pengaman ${cap}).`);
     if (tasks.length > cap) throw new Error(`Rencana ${tasks.length} gambar melebihi batas pengaman ${cap}. Tambah --maks-gambar ${tasks.length} bila memang disengaja. Tidak ada yang dikirim.`);
-    tasks.forEach((t, i) => log(`  ${String(i + 1).padStart(2)}. ${t.nama}  (rasio ${t.body.aspect_ratio || '-'}, rujukan ${t.refs.length})`));
+    tasks.forEach(t => log(`   - ${t.nama}  (rasio ${t.body.aspect_ratio || '-'}, rujukan ${t.refs.length})`));   // tanpa nomor: daftar ini informasi, bukan menu
     for (const x of ctx.extras) { const e = x.chk; log(`  JSON "${x.produk.nama}": ${e.errors.length ? e.errors.length + ' GALAT kesesuaian' : 'lolos pemeriksaan kesesuaian'}${e.warnings.length ? `, ${e.warnings.length} peringatan` : ''}`); }
-    if (!dry && !o.ya) { const a = B.clean(await ask(rl, 'Setiap gambar ditagih OpenRouter. Ketik Y lalu Enter untuk mulai (selain itu dibatalkan): ')); if (!/^y(a)?$/i.test(a)) { log('Dibatalkan. Tidak ada yang dikirim.'); return 1; } }
+    if (!pilihan && o.acuan && ctx.dna) { const w = Skenario.peringatanKonflik(o.catatan, ctx.dna); if (w) log(`\nPERINGATAN: ${w}`); }
+    if (!pilihan && (cmd === 'acuan' || o.acuan)) log('\nPERHATIAN: foto acuan dikirim ke OpenRouter dan penyedia modelnya. Pakai hanya foto orang dewasa yang izinnya sudah Anda urus. Foto orang nyata dapat ditolak oleh penyaring isi model.');
+    // Layar pilihan sudah meminta Y. Selain itu: jawaban selain Y/N tidak membatalkan, ditanya ulang; N atau masukan habis membatalkan.
+    if (!dry && !o.ya && !pilihan) { if (!await Tanya.konfirmasiYN(tanya, log, 'Setiap gambar ditagih OpenRouter. Ketik Y lalu Enter untuk mulai, N untuk batal: ')) { log('Dibatalkan. Tidak ada yang dikirim.'); return 1; } }
+    buatFolder();
 
     // Simpan prompt, JSON Flow, dan hasil pemeriksaan sebelum memanggil jaringan
     for (const [i, t] of tasks.entries()) fs.writeFileSync(path.join(outDir, `permintaan-${String(i + 1).padStart(2, '0')}-${t.nama}.json`), JSON.stringify(redacted(t), null, 1));
@@ -170,7 +248,7 @@ async function run(argv, env = process.env, io = { out: s => console.log(s), rl:
 
     const rows = []; let aborted = null;
     for (const [i, t] of tasks.entries()) {
-      const row = { no: i + 1, nama: t.nama, jenis: t.jenis, model: t.body.model, kualitas: t.body.quality, rasio: t.body.aspect_ratio || '', rujukan: t.refs.length, status: 'kering', detik: null, biaya_usd: null, ukuran_px: '', berkas: '', catatan: '' };
+      const row = { no: i + 1, nama: t.nama, jenis: t.jenis, model: t.body.model, kualitas: t.body.quality, rasio: t.body.aspect_ratio || '', rujukan: t.refs.length, status: 'kering', detik: null, biaya_usd: null, ukuran_px: '', berkas: '', catatan: '', skenario: t.skenario || '', harapan: t.harapan || '' };
       if (!dry && !aborted) {
         log(`[${i + 1}/${tasks.length}] ${t.nama} ...`);
         try {
@@ -193,9 +271,10 @@ async function run(argv, env = process.env, io = { out: s => console.log(s), rl:
     }
     const extra = ctx.extras.length ? ['## Pemeriksaan kesesuaian JSON Flow (tanpa kredit)', '', ...ctx.extras.map(x => `- ${x.produk.nama}: ${x.chk.errors.length ? x.chk.errors.length + ' galat' : 'lolos'}, urutan panel ${x.chk.stats.order}, ${x.chk.stats.json_chars} karakter`)] : [];
     const s = Laporan.write(outDir, cmd, rows, extra);
+    if (cmd === 'acuan') fs.writeFileSync(path.join(outDir, 'lembar-penilaian.md'), Skenario.lembarPenilaian(rows, ctx.jumlahAcuan));
     log(`\nSelesai: ${s.sukses} sukses, ${s.gagal} gagal${s.biaya_usd != null ? `, biaya tercatat US$${s.biaya_usd}` : ''}${s.detik_rata2 != null ? `, rata-rata ${s.detik_rata2} detik` : ''}.\nHasil dan laporan: ${outDir}`);
     return aborted || s.gagal ? 2 : 0;
-  } finally { if (ownRl) rl.close(); }
+  } finally { if (ownRl && rl) rl.close(); }
 }
 
 if (require.main === module) {

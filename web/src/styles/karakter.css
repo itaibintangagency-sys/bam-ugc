@@ -69,3 +69,23 @@ h2 { font-size: 1.25rem; margin: 26px 0 10px; }
 a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .link { font: inherit; background: none; border: 0; padding: 6px 4px; color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 36px; }
 .link:hover { color: var(--accent); }
+
+/* ───────────── Generate gambar dan Riwayat generate ───────────── */
+.panel-generate { border: 1px solid var(--border-soft); border-radius: var(--radius); background: var(--panel); padding: 16px; margin: 12px 0; }
+.baris-pilihan { display: flex; flex-wrap: wrap; gap: 16px; }
+.baris-pilihan .field { min-width: 160px; }
+.sub { font-size: 1.1rem; margin: 18px 0 8px; }
+.galeri { list-style: none; margin: 8px 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.kartu-gambar { border: 1px solid var(--border-soft); border-radius: 10px; background: var(--panel); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.kartu-gambar.terpilih { border: 2px solid var(--accent); }
+.kartu-gambar img { width: 100%; height: auto; border-radius: 8px; display: block; }
+.kartu-gambar .menunggu { color: var(--muted); padding: 24px 0; text-align: center; }
+.kartu-gambar .biaya { margin: 0; font-weight: 700; }
+.filter-riwayat { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; }
+.tabel-gulir { overflow-x: auto; margin: 8px 0; border: 1px solid var(--border-soft); border-radius: 10px; }
+.tabel { border-collapse: collapse; width: 100%; font-size: var(--fs-small); background: var(--panel); }
+.tabel th, .tabel td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+.tabel thead th { background: var(--bg); color: var(--text); font-weight: 700; white-space: nowrap; }
+.tabel .angka { text-align: right; white-space: nowrap; }
+.galat-baris { color: var(--danger-text); margin-top: 4px; max-width: 28ch; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

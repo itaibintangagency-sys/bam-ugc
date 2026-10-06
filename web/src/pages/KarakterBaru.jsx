@@ -3,16 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import Pilihan from '../components/Pilihan.jsx';
 import SalinTombol from '../components/SalinTombol.jsx';
+import PanelGenerate from '../components/PanelGenerate.jsx';
+import { tautkanGambar } from '../lib/generate.js';
+import { isAdmin } from '../lib/roles.js';
 import {
   CONTOH_C02, LABEL, LABEL_SUARA, OPT, OPTIONS, appearanceOf, bacaDimensi, buatKarakter, cekFoto, cekIdentitas, cekProject, cekSuara, cleanDna,
   dnaIssues, dnaKosong, galatAwam, nilaiDimensi, pilihanSuara, suaraAwal, suaraTerpakai, teksPerforma
 } from '../lib/karakter.js';
 
 const LANGKAH = ['Identitas', 'DNA', 'Foto wajah', 'Suara dan Flow'];
+const SUMBER_FOTO = ['unggah', 'dna', 'acuan'];
+const LABEL_SUMBER = { unggah: 'Unggah foto sendiri', dna: 'Buat dengan AI dari DNA', acuan: 'Buat dengan AI dari foto acuan (eksperimen)' };
 const NAMA_KOLOM = { gender: 'Jenis kelamin', age_group: 'Kelompok usia', face_shape: 'Bentuk wajah', complexion: 'Warna kulit', expression: 'Ekspresi', hair_length: 'Panjang rambut', hair_texture: 'Tekstur rambut', hair_color: 'Warna rambut', hijab_style: 'Gaya hijab', hijab_color: 'Warna hijab', hijab: 'Hijab', beard: 'Janggut', distinguishing: 'Ciri khas', eyes: 'Mata', build: 'Postur', parting: 'Belahan rambut' };
 
 export default function KarakterBaru() {
-  const { client, session } = useAuth(); const navigate = useNavigate();
+  const { client, session, profile } = useAuth(); const navigate = useNavigate();
+  const admin = isAdmin(profile);
+  const [sumber, setSumber] = useState('unggah'); const [asal, setAsal] = useState(null);   // asal = gambar AI yang dipilih { runId, mode }
   const [langkah, setLangkah] = useState(0);
   const [form, setForm] = useState({ code: '', name: '', dna: dnaKosong(), voice: null, voiceUntuk: '', flowProjectUrl: '', flowAccountName: '' });
   const [file, setFile] = useState(null); const [fotoNilai, setFotoNilai] = useState({}); const [preview, setPreview] = useState('');
@@ -25,7 +32,15 @@ export default function KarakterBaru() {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const setDna = (k, v) => setForm(f => ({ ...f, dna: { ...f.dna, [k]: v } }));
+  // Bila DNA berubah setelah gambar AI dipilih, gambar itu tidak lagi cocok dengan DNA: dibatalkan dan pengguna diberi tahu.
+  const [infoReset, setInfoReset] = useState('');
+  function batalkanGambarAi() {
+    if (!asal) return;
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(null); setPreview(''); setAsal(null); setFotoNilai({});
+    setInfoReset('DNA diubah, jadi gambar AI yang tadi dipilih dibatalkan. Buat gambar lagi di langkah Foto wajah.');
+  }
+  const setDna = (k, v) => { batalkanGambarAi(); setForm(f => ({ ...f, dna: { ...f.dna, [k]: v } })); };
   const dnaBersih = useMemo(() => cleanDna(form.dna), [form.dna]);
   const kalimat = useMemo(() => appearanceOf(form.dna), [form.dna]);
   const masalahDna = useMemo(() => dnaIssues(form.dna), [form.dna]);
@@ -38,7 +53,7 @@ export default function KarakterBaru() {
   }, [langkah, kunciSuara, dipakai, dnaBersih.gender, dnaBersih.age_group, form.voiceUntuk]);
 
   async function pilihFoto(e) {
-    const f = e.target.files && e.target.files[0]; setGalat('');
+    const f = e.target.files && e.target.files[0]; setGalat(''); setAsal(null);
     if (preview) URL.revokeObjectURL(preview);
     setFile(null); setPreview(''); setFotoNilai({});
     if (!f) return;
@@ -46,6 +61,12 @@ export default function KarakterBaru() {
     const n = nilaiDimensi(await bacaDimensi(f)); setFotoNilai(n);
     if (n.galat) return;
     setFile(f); setPreview(URL.createObjectURL(f));
+  }
+
+  // Gambar AI yang dipilih menjadi foto wajah: sama seperti foto unggahan (File), ditambah penanda asalnya.
+  function pakaiGambarAi(f, meta) {
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(f); setPreview(URL.createObjectURL(f)); setFotoNilai({}); setGalat(''); setAsal(meta); setInfoReset('');
   }
 
   const masalahLangkah = [
@@ -59,6 +80,7 @@ export default function KarakterBaru() {
   const performa = form.voice ? teksPerforma(form.voice) : '';
 
   function isiContoh() {
+    batalkanGambarAi();
     setForm(f => ({ ...f, code: CONTOH_C02.code, name: CONTOH_C02.name, dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice: null, voiceUntuk: '' }));
   }
   async function simpan() {
@@ -66,8 +88,14 @@ export default function KarakterBaru() {
     const semua = masalahLangkah.flat(); if (semua.length) { setGalat(semua[0]); return; }
     setProses('Menyimpan data karakter…');
     try {
-      const hasil = await buatKarakter(client, session.user.id, { ...form, dna: form.dna }, file, setProses);
-      navigate(`/karakter/${hasil.id}`, { replace: true, state: { pesan: hasil.lengkap ? 'Karakter tersimpan lengkap dengan foto wajah.' : null, peringatan: hasil.lengkap ? null : `Karakter tersimpan sebagai draf, tetapi foto belum terunggah: ${hasil.galat} Unggah ulang foto dari halaman ini.` } });
+      const creationMode = asal && asal.mode === 'dna' ? 'dna_first' : 'reference';
+      const hasil = await buatKarakter(client, session.user.id, { ...form, dna: form.dna, creationMode }, file, setProses);
+      let peringatan = hasil.lengkap ? null : `Karakter tersimpan sebagai draf, tetapi foto belum terunggah: ${hasil.galat} Unggah ulang foto dari halaman ini.`;
+      if (asal) {   // menautkan riwayat generate ke karakter; kegagalan di sini tidak membatalkan karakter yang sudah tersimpan
+        try { setProses('Menautkan riwayat generate…'); await tautkanGambar(client, asal.runId, hasil.id); }
+        catch (e) { peringatan = `${peringatan ? peringatan + ' ' : ''}Riwayat generate belum tertaut ke karakter ini (${galatAwam(e)}). Karakter sendiri sudah tersimpan.`; }
+      }
+      navigate(`/karakter/${hasil.id}`, { replace: true, state: { pesan: hasil.lengkap ? 'Karakter tersimpan lengkap dengan foto wajah.' : null, peringatan } });
     } catch (e) { setGalat(galatAwam(e)); setProses(''); }
   }
 
@@ -133,16 +161,29 @@ export default function KarakterBaru() {
         {langkah === 2 && (
           <>
             <p className="lead">Foto ini menjadi satu-satunya sumber wajah: dilampirkan ke setiap video sebagai bahan kedua.</p>
+            {infoReset && <div className="notice notice-warn" role="status" data-testid="info-reset">{infoReset}</div>}
+            <Pilihan legend="Dari mana fotonya?" name="sumber-foto" options={SUMBER_FOTO} labels={LABEL_SUMBER} value={sumber} onChange={setSumber} />
             <ul className="saran">
               <li>Wajah menghadap depan, jelas, satu orang saja, tanpa kacamata gelap atau filter.</li>
               <li>Tanpa tulisan, logo, atau tanda air di foto.</li>
               <li>Karakter harus dewasa. Foto orang nyata hanya bila izinnya sudah Anda urus.</li>
               <li>Format PNG, JPG, atau WEBP, maksimal 6 MB, sisi terpendek minimal 512 piksel (disarankan 1024).</li>
             </ul>
-            <div className="field"><label htmlFor="foto">Foto wajah</label><input id="foto" type="file" accept="image/png,image/jpeg,image/webp" onChange={pilihFoto} /></div>
+            {sumber === 'unggah' && (
+              <div className="field"><label htmlFor="foto">Foto wajah</label><input id="foto" type="file" accept="image/png,image/jpeg,image/webp" onChange={pilihFoto} /></div>
+            )}
+            {sumber !== 'unggah' && (
+              <PanelGenerate key={sumber} client={client} userId={session.user.id} admin={admin} mode={sumber} dna={dnaBersih} dnaValid={masalahDna.length === 0}
+                onPilih={pakaiGambarAi} pilihanRunId={asal ? asal.runId : ''} />
+            )}
             {fotoNilai.galat && <div className="notice notice-bad" role="alert" data-testid="galat-foto">{fotoNilai.galat}</div>}
             {fotoNilai.peringatan && <div className="notice notice-warn" role="status">{fotoNilai.peringatan}</div>}
-            {preview && <img className="pratinjau-foto" src={preview} alt="Pratinjau foto wajah yang dipilih" data-testid="pratinjau-foto" />}
+            {preview && (
+              <div className="foto-dipakai">
+                <p className="hint">{asal ? 'Foto yang akan dipakai (hasil AI):' : 'Foto yang akan dipakai:'}</p>
+                <img className="pratinjau-foto" src={preview} alt="Pratinjau foto wajah yang dipilih" data-testid="pratinjau-foto" />
+              </div>
+            )}
           </>
         )}
 

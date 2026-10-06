@@ -133,10 +133,10 @@ export function langkahBerikut(c, isAdmin) {
 }
 
 // ───────────── Pembentuk baris database ─────────────
-export function barisKarakter({ code, name, dna, voice, flowProjectUrl, flowAccountName }, userId) {
+export function barisKarakter({ code, name, dna, voice, flowProjectUrl, flowAccountName, creationMode }, userId) {
   const d = cleanDna(dna);
   return {
-    code: String(code).trim(), name: String(name).trim(), gender: d.gender, creation_mode: 'reference',
+    code: String(code).trim(), name: String(name).trim(), gender: d.gender, creation_mode: ['dna_first', 'face_first', 'reference'].includes(creationMode) ? creationMode : 'reference',
     dna: { ...d, appearance_en: dnaToAppearance(d) }, identity_lock: 'locked',
     flow_project_url: String(flowProjectUrl).trim(), flow_account_name: String(flowAccountName).trim(),
     voice, voice_base: voice.base_voice, status: 'draft', created_by: userId

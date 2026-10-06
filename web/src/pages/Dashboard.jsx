@@ -5,6 +5,8 @@ import { loadDashboard } from '../lib/dashboardData.js';
 import { GROUPS } from '../lib/status.js';
 import { agentStatus, relatif } from '../lib/agent.js';
 import { isAdmin } from '../lib/roles.js';
+import { Link } from 'react-router-dom';
+import { bulanIni, galatRiwayat, jumlahkan, rentangBulan, ringkasanBiaya, rupiah } from '../lib/generate.js';
 
 const TONE = { online: 'ok', tidak_aktif: 'warn', offline: 'bad', belum: 'bad' };
 
@@ -23,6 +25,13 @@ export default function Dashboard() {
   useEffect(() => { muat(); const t = setInterval(muat, 30000); return () => clearInterval(t); }, [muat]);
 
   const admin = isAdmin(profile);
+  // Biaya generate bulan ini: hanya admin (RPC pun menolak selain admin). Gagal memuat tidak mengganggu bagian dasbor lain.
+  const [biaya, setBiaya] = useState(null); const [biayaGalat, setBiayaGalat] = useState('');
+  useEffect(() => {
+    if (!admin) return undefined; let aktif = true;
+    ringkasanBiaya(client, rentangBulan(bulanIni())).then(r => { if (aktif) { setBiaya(jumlahkan(r)); setBiayaGalat(''); } }).catch(e => { if (aktif) setBiayaGalat(galatRiwayat(e)); });
+    return () => { aktif = false; };
+  }, [admin, client]);
   return (
     <section aria-labelledby="judul-dasbor">
       <div className="page-head">
@@ -58,6 +67,17 @@ export default function Dashboard() {
           return <StatCard key={a.name} label={a.name} value={st.label} hint={`Terakhir terlihat ${relatif(a.last_seen)}${a.version ? ` · v${a.version}` : ''}`} tone={TONE[st.level]} />;
         })}
       </div>
+
+      {admin && (
+        <>
+          <h2>Generate gambar AI bulan ini</h2>
+          {biayaGalat && <div className="notice notice-warn" role="status">{biayaGalat}</div>}
+          <div className="grid">
+            <StatCard label="Biaya (Rupiah)" value={biaya ? rupiah(biaya.idr) : '–'} hint={biaya ? `${biaya.gambar} gambar berhasil` : ''} />
+          </div>
+          <p><Link to="/riwayat">Lihat siapa yang generate dan rinciannya</Link></p>
+        </>
+      )}
 
       <h2>Kredit</h2>
       <div className="grid">

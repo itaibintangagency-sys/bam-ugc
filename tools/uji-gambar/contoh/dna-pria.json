@@ -1,0 +1,5 @@
+{
+ "_catatan": "Contoh DNA karakter laki-laki dewasa. Karakter harus dewasa (21 tahun ke atas); pakaian bukan bagian DNA.",
+ "gender": "laki-laki", "age_group": "dewasa", "face_shape": "persegi", "complexion": "sawo_matang", "expression": "kalem",
+ "hair_length": "pendek", "hair_texture": "lurus", "hair_color": "hitam", "beard": "janggut_tipis"
+}

@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { labelRole } from '../lib/roles.js';
+import { isAdmin, labelRole } from '../lib/roles.js';
 
 export default function Layout() {
   const { profile, signOut } = useAuth();
@@ -13,6 +13,7 @@ export default function Layout() {
         <nav className="nav-utama" aria-label="Menu utama">
           <NavLink to="/" end>Dasbor</NavLink>
           <NavLink to="/karakter">Karakter</NavLink>
+          {isAdmin(profile) && <NavLink to="/riwayat">Riwayat generate</NavLink>}
         </nav>
         <div className="account">
           <div className="account-text">

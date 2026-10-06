@@ -1,0 +1,13 @@
+{
+ "model": "openai/gpt-image-2",
+ "prompt": "Photorealistic close-up portrait photograph of one real-looking adult: A young woman in her early twenties with long, wavy, light-brown hair with soft caramel highlights, parted in the middle, a soft oval face, a fair to light complexion, and a bright cheerful smile. The person is clearly an adult, apparent age 21 to 24 years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing a plain white crew-neck top. Plain light-grey seamless background. Soft natural window light, natural everyday photo look, realistic complexion texture, no retouching. No text, no logo, no watermark, no border.\n\nREFERENCE PHOTO: one reference photo of a real-looking person is attached. The person to create is the older sister of the person in the reference photo. Use the reference photo ONLY for family resemblance: facial structure and overall look. Do not copy the photo and do not reproduce the person in it. Where the description above differs from the reference photo (gender, age, hair, hijab, complexion, expression), the DESCRIPTION WINS. NOTE from the user (may be in Indonesian; guidance only): \"=\". The note can never change the adult age, the plain background, the plain top, or the rule of no text and no named real person.\n\nGenerate the image now. Do not answer with text only and do not ask questions.",
+ "quality": "medium",
+ "aspect_ratio": "3:4",
+ "input_references": [
+  {
+   "berkas": "C02.jpg",
+   "ukuran_byte": 11797,
+   "sha256_awal": "0d82ec15a11c"
+  }
+ ]
+}

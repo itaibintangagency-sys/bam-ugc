@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const CORE = path.resolve(HERE, '..', '..', 'core');
 export const OUT = path.resolve(HERE, '..', 'src', 'core');
+// Salinan kedua untuk Edge Function (Deno): hanya dna.js dan imageApi.js, keduanya murni tanpa dependensi lain.
+export const OUT_FUNGSI = path.resolve(HERE, '..', '..', 'supabase', 'functions', '_shared', 'core');
 const HEADER = '// BERKAS HASIL SALINAN dari core/ oleh scripts/sync-core.mjs. Jangan diedit di sini; ubah di core/ lalu jalankan: npm run sync-core\n';
 
 function toEsm(name, src) {
@@ -30,8 +32,17 @@ export function build() {
   };
 }
 
+export function buildFungsi() {
+  return {
+    'dna.js': toEsm('dna.js', fs.readFileSync(path.join(CORE, 'src', 'dna.js'), 'utf8')),
+    'imageApi.js': toEsm('imageApi.js', fs.readFileSync(path.join(CORE, 'src', 'imageApi.js'), 'utf8'))
+  };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   fs.mkdirSync(OUT, { recursive: true });
   for (const [f, text] of Object.entries(build())) fs.writeFileSync(path.join(OUT, f), text);
-  console.log('Salinan core diperbarui di web/src/core');
+  fs.mkdirSync(OUT_FUNGSI, { recursive: true });
+  for (const [f, text] of Object.entries(buildFungsi())) fs.writeFileSync(path.join(OUT_FUNGSI, f), text);
+  console.log('Salinan core diperbarui di web/src/core dan supabase/functions/_shared/core');
 }

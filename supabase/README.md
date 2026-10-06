@@ -8,16 +8,11 @@ Aturan kerja: **setiap perubahan database = satu berkas baru di sini**, dijalank
 | Berkas | Fungsi | Status pada database produksi |
 |---|---|---|
 | `baseline/20261002000000_baseline_legacy.sql` | CATATAN struktur lama (7 tabel, 2 fungsi, 4 trigger, 17 policy, 4 bucket). Direkonstruksi dari ekspor 2026-10-02. | **Jangan dijalankan.** Database sudah memilikinya. Dipakai hanya untuk membangun lingkungan uji dari nol. |
-| `20261002000100_fix_legacy_rls_grants.sql` | Menutup celah: RLS pada `frames`/`products`/`backgrounds`, cabut TRUNCATE, kunci `search_path`, tambah indeks | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
-| `20261002000150_storage_remove_anon_upload.sql` | Menutup unggahan anonim ke bucket publik `product-assets` | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
-| `20261002000200_ugc_v2.sql` | Sistem baru: antrean batch/job, agent, telemetri, bucket privat `ugc-*` | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
-| `migrations/20261002000400_hardening.sql` | **Penguatan keamanan dan kinerja** dari analisis Supabase: menutup kenaikan role oleh staff, mencabut hak fungsi anon, indeks, dan merapikan policy. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
-| `20261002000300_ugc_character_voice.sql` | Tahap karakter: profil suara, foto, tugas agent (upload foto, video perkenalan), status sampai `ready`, gerbang batch. Juga memperbaiki penjaga status: konteks tanpa pengguna login (service_role, SQL Editor, n8n) tidak lagi terblokir. | Sudah dijalankan (per catatan serah-terima 4 Okt 2026) |
-| `20261005000500_agent_online_parity.sql` | Agent online setara agent offline: klaim job membawa `flow_asset_url`, penanda generate, data ruang karakter, dan foto wajah; `ugc_requeue_own`; kolom `flow_account_name` | **Sudah dijalankan di produksi** (diverifikasi 5 Okt 2026) |
-| `20261005000600_selaraskan_katalog.sql` | Katalog di database: 15 arketipe, 24 lokasi, peta 226 kategori. Produk mendapat arketipe dari kategori, risiko tidak bisa diturunkan staf, DNA karakter dibekukan sejak `dna_locked`. Berhenti bila tabel sudah berisi data | Sudah dijalankan |
-| `20261005000700_gerbang_risiko.sql` | Menutup jalan pintas antrean: staf tidak bisa menyisipkan batch atau job langsung `queued`, memalsukan persetujuan admin, atau mengisi kolom sistem job. Gerbang risiko tinggi membaca risiko PRODUK. `ugc_approve_risk`. Kebijakan katalog tanpa tumpang tindih | **Sudah dijalankan di produksi** (diverifikasi 5 Okt 2026) |
-| `20261005000710_risiko_kategori.sql` | OPSIONAL: 5 kategori bayi (anak + klaim kesehatan) dinaikkan ke risiko tinggi; risiko lama tidak bisa diturunkan staf dengan mengganti kategori | **Sudah dijalankan di produksi** (diverifikasi 5 Okt 2026) |
-| `20261005000720_risiko_klaim_kesehatan.sql` | OPSIONAL (Opsi B): 9 kategori klaim kesehatan (jerawat, sunscreen, sun care, perawatan mulut, hand sanitizer, minyak esensial, alat pijat, timbangan lemak, purifier) dinaikkan ke risiko tinggi; total override 14, berisiko tinggi efektif 24. Kategori anak saja sengaja tidak dinaikkan | **Sudah dijalankan di produksi** (diverifikasi 5 Okt 2026; 14 override, 24 kategori berisiko tinggi) |
+| `20261002000100_fix_legacy_rls_grants.sql` | Menutup celah: RLS pada `frames`/`products`/`backgrounds`, cabut TRUNCATE, kunci `search_path`, tambah indeks | Belum dijalankan |
+| `20261002000150_storage_remove_anon_upload.sql` | Menutup unggahan anonim ke bucket publik `product-assets` | Belum dijalankan (cek dulu bahwa tidak ada workflow yang memakai kunci anon untuk mengunggah) |
+| `20261002000200_ugc_v2.sql` | Sistem baru: antrean batch/job, agent, telemetri, bucket privat `ugc-*` | Belum dijalankan |
+| `migrations/20261002000400_hardening.sql` | **Penguatan keamanan dan kinerja** dari analisis Supabase: menutup kenaikan role oleh staff, mencabut hak fungsi anon, indeks, dan merapikan policy. | Belum dijalankan |
+| `20261002000300_ugc_character_voice.sql` | Tahap karakter: profil suara, foto, tugas agent (upload foto, video perkenalan), status sampai `ready`, gerbang batch. Juga memperbaiki penjaga status: konteks tanpa pengguna login (service_role, SQL Editor, n8n) tidak lagi terblokir. | Belum dijalankan |
 
 ## Hasil audit ekspor 2026-10-02
 

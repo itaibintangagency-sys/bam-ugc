@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CORE, OUT, build } from '../scripts/sync-core.mjs';
+import { CORE, OUT, OUT_FUNGSI, build, buildFungsi } from '../scripts/sync-core.mjs';
 
 describe('salinan core di website', () => {
   const ada = fs.existsSync(path.join(CORE, 'src', 'dna.js'));
@@ -10,6 +10,12 @@ describe('salinan core di website', () => {
     for (const [nama, teks] of Object.entries(build())) {
       const ada = fs.readFileSync(path.join(OUT, nama), 'utf8');
       expect(ada, `${nama} basi: jalankan npm run sync-core`).toBe(teks);
+    }
+  });
+  (ada ? it : it.skip)('salinan untuk Edge Function (supabase/functions/_shared/core) juga sama persis dengan hasil konversi', () => {
+    for (const [nama, teks] of Object.entries(buildFungsi())) {
+      const ada = fs.readFileSync(path.join(OUT_FUNGSI, nama), 'utf8');
+      expect(ada, `${nama} (fungsi) basi: jalankan npm run sync-core`).toBe(teks);
     }
   });
   it('tidak memuat require() dan diawali penanda berkas hasil salinan', () => {
