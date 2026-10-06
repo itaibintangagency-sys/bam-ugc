@@ -193,3 +193,21 @@ test('imageApi: bagian murni dipakai bersama; imageRequest mengekspor fungsi yan
   const b = api.buildImageRequest({ prompt: 'x', quality: 'low', aspectRatio: '3:4', references: ['data:image/png;base64,AAAA'] }); assert.deepEqual(Object.keys(b), ['model', 'prompt', 'quality', 'aspect_ratio', 'input_references']);
   assert.equal(api.parseImageResponse({ data: [{ b64_json: 'AA==' }], usage: { cost: 0.02 } }).cost, 0.02);
 });
+
+test('asal wajah: lima pilihan, kalimat hanya muncul bila dipilih, tidak ikut ke kalimat penampilan video, ditolak bersama foto acuan dan bila tidak dikenal', () => {
+  assert.deepEqual(Object.keys(core.ASAL_WAJAH), ['asia_tenggara', 'asia_timur', 'eropa_barat', 'timur_tengah', 'campuran']);
+  const tanpa = core.buildFacePrompt(C02, 1);
+  assert.equal(core.buildFacePrompt(C02, 1, null, null), tanpa); assert.equal(core.buildFacePrompt(C02, 1, null, ''), tanpa, 'kosong = tanpa petunjuk; prompt lama tidak berubah');
+  assert.doesNotMatch(tanpa, /facial features/);
+  const frasa = { asia_tenggara: 'Southeast Asian', asia_timur: 'East Asian', eropa_barat: 'European', timur_tengah: 'Middle Eastern', campuran: 'mixed-heritage' };
+  for (const [k, f] of Object.entries(frasa)) {
+    const p = core.buildFacePrompt(C02, 1, null, k);
+    assert.match(p, new RegExp(`${APP_C02.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} The person has natural ${f} facial features\\. The person is clearly an adult`), k);
+    assert.equal(p.replace(` The person has natural ${f} facial features.`, ''), tanpa, `${k}: satu-satunya beda adalah kalimat asal`);
+  }
+  assert.doesNotMatch(core.buildFacePrompt(C02, 1, null, 'asia_tenggara'), /Indonesian/, 'kata Indonesian tetap dihindari (catatan v2.3)');
+  assert.equal(core.dnaToAppearance(C02), APP_C02, 'kalimat penampilan untuk JSON video tidak tersentuh asal wajah');
+  for (const bad of ['asia', 'ASIA_TENGGARA', 'constructor', '__proto__', 'toString', 7, {}]) assert.throws(() => core.buildFacePrompt(C02, 1, null, bad), /tidak dikenal/, String(bad));
+  assert.throws(() => core.buildFacePrompt(C02, 1, { relation: 'kakak' }, 'asia_tenggara'), /tidak dipakai bersama foto acuan/);
+  assert.doesNotMatch(core.buildFacePrompt(C02, 1, { relation: 'kakak' }), /facial features/);
+});

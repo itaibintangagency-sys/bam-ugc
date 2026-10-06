@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  JENIS, MAKS_PER_KLIK, buatGambar, gambarKeFile, hubunganUntuk, kualitasUntuk, peringatanKonflik, rupiah, unggahAcuan, usd
+  ASAL_BAWAAN, JENIS, MAKS_PER_KLIK, PILIHAN_ASAL, buatGambar, gambarKeFile, hubunganUntuk, kualitasUntuk, peringatanKonflik, rupiah, unggahAcuan, usd
 } from '../lib/generate.js';
 import { bacaDimensi, cekFoto, galatAwam, muatFoto, nilaiDimensi } from '../lib/karakter.js';
 
@@ -9,7 +9,7 @@ import { bacaDimensi, cekFoto, galatAwam, muatFoto, nilaiDimensi } from '../lib/
 // Biaya (USD dan Rupiah) hanya tampil untuk admin; fungsi di server pun hanya mengirimkannya ke admin.
 export default function PanelGenerate({ client, userId, admin, mode, dna, dnaValid, onPilih, pilihanRunId }) {
   const kind = mode === 'acuan' ? 'wajah_acuan' : 'wajah_dna';
-  const [jumlah, setJumlah] = useState(2); const [kualitas, setKualitas] = useState('low');
+  const [jumlah, setJumlah] = useState(2); const [kualitas, setKualitas] = useState('low'); const [asal, setAsal] = useState(ASAL_BAWAAN);
   const [hubungan, setHubungan] = useState(''); const [catatan, setCatatan] = useState(''); const [izin, setIzin] = useState(false);
   const [acuan, setAcuan] = useState(null); const [acuanGalat, setAcuanGalat] = useState(''); const [acuanPratinjau, setAcuanPratinjau] = useState('');
   const [slot, setSlot] = useState([]); const [berjalan, setBerjalan] = useState(false); const [galat, setGalat] = useState(''); const [memilih, setMemilih] = useState('');
@@ -38,7 +38,7 @@ export default function PanelGenerate({ client, userId, admin, mode, dna, dnaVal
     try {
       let refPath;
       if (mode === 'acuan') refPath = await unggahAcuan(client, userId, acuan);
-      await buatGambar(client, { kind, dna, quality: kualitas, jumlah, relation: hubungan, note: catatan, refPath }, async (i, h) => {
+      await buatGambar(client, { kind, dna, quality: kualitas, jumlah, relation: hubungan, note: catatan, refPath, asal: mode === 'dna' ? asal : undefined }, async (i, h) => {
         if (!h.ok) { setSlot(s => s.map((x, k) => (k === i ? { status: 'gagal', pesan: h.pesan } : x))); return; }
         let url = '';
         try { url = URL.createObjectURL(await muatFoto(client, h.image_path)); urls.current.push(url); } catch (e) { url = ''; }
@@ -85,6 +85,15 @@ export default function PanelGenerate({ client, userId, admin, mode, dna, dnaVal
         </>
       )}
 
+      {mode === 'dna' && (
+        <div className="field">
+          <label htmlFor="gen-asal">Asal wajah</label>
+          <select id="gen-asal" value={asal} onChange={e => setAsal(e.target.value)} disabled={berjalan}>
+            {PILIHAN_ASAL.map(a => <option key={a.kunci} value={a.kunci}>{a.label}{a.kunci === ASAL_BAWAAN ? ' (bawaan)' : ''}</option>)}
+          </select>
+          <p className="hint">Menentukan tampilan umum wajah di gambar. Hanya memengaruhi gambar ini, bukan DNA dan bukan deskripsi di JSON video.</p>
+        </div>
+      )}
       <div className="baris-pilihan">
         <div className="field"><label htmlFor="gen-jumlah">Jumlah gambar</label>
           <select id="gen-jumlah" value={jumlah} onChange={e => setJumlah(Number(e.target.value))} disabled={berjalan}>

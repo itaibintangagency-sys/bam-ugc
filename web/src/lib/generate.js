@@ -1,6 +1,6 @@
 // Logika murni dan panggilan ke Supabase untuk fitur generate gambar (Edge Function generate-image) dan Riwayat generate.
 // Kunci OpenRouter TIDAK ada di sini dan tidak pernah ada di browser: browser hanya memanggil fungsi di server.
-import { HUBUNGAN, peringatanKonflik } from '../core/dna.js';
+import { ASAL_WAJAH, HUBUNGAN, peringatanKonflik } from '../core/dna.js';
 import { BUCKET, ekstensi, muatFoto } from './karakter.js';
 
 export { peringatanKonflik };
@@ -14,6 +14,11 @@ export const KUALITAS = [
   { kunci: 'high', label: 'Tinggi (high), khusus admin', admin: true }
 ];
 export const kualitasUntuk = admin => KUALITAS.filter(k => admin || !k.admin);
+
+// Asal wajah (hanya untuk "dari DNA"): petunjuk tampilan umum wajah di prompt gambar. Tidak masuk DNA dan tidak masuk JSON video.
+export const LABEL_ASAL = { asia_tenggara: 'Asia Tenggara', asia_timur: 'Asia Timur', eropa_barat: 'Eropa / Barat', timur_tengah: 'Timur Tengah', campuran: 'Campuran' };
+export const ASAL_BAWAAN = 'asia_tenggara';
+export const PILIHAN_ASAL = Object.keys(ASAL_WAJAH).map(k => ({ kunci: k, label: LABEL_ASAL[k] || k }));
 
 // Hubungan yang cocok dengan jenis kelamin DNA hasil (ibu hanya perempuan, ayah hanya laki-laki).
 export function hubunganUntuk(gender) {
@@ -69,12 +74,13 @@ export async function pesanDariFungsi(error) {
 
 // Satu klik = satu kelompok (batch_id). Setiap gambar adalah satu panggilan sendiri agar tiap gambar punya batas waktu sendiri;
 // semuanya dijalankan serentak. onSlot(indeks, hasil) dipanggil begitu satu gambar selesai (berhasil atau gagal).
-export async function buatGambar(client, { kind, dna, quality, jumlah, relation, note, refPath }, onSlot = () => {}) {
+export async function buatGambar(client, { kind, dna, quality, jumlah, relation, note, refPath, asal }, onSlot = () => {}) {
   const n = Number(jumlah); if (!Number.isInteger(n) || n < 1 || n > MAKS_PER_KLIK) throw new Error(`Jumlah gambar harus 1 sampai ${MAKS_PER_KLIK}.`);
   const batchId = crypto.randomUUID();
   const satu = async seq => {
     const body = { kind, batch_id: batchId, seq, total: n, quality, dna };
     if (kind === 'wajah_acuan') Object.assign(body, { relation, note: note || '', ref_path: refPath });
+    else if (asal) body.asal = asal;   // hanya untuk wajah dari DNA; pada foto acuan wajah mengikuti foto
     let hasil;
     try {
       const { data, error } = await client.functions.invoke(FUNGSI, { body });

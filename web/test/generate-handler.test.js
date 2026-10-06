@@ -123,6 +123,30 @@ describe('wajah dari DNA: jalur sukses', () => {
   });
 });
 
+describe('asal wajah (hanya wajah dari DNA, hanya prompt gambar)', () => {
+  it('asia_tenggara masuk ke prompt, ke catatan audit di baris riwayat, dan tidak mengubah DNA yang dikirim', async () => {
+    const w = dunia({ settings: { kurs_usd_idr_manual: 16000 } }); const r = await jalan(w, minta({ asal: 'asia_tenggara' })); expect(r.status).toBe(200);
+    expect(w.s.orPanggilan[0].body.prompt).toMatch(/The person has natural Southeast Asian facial features\./); expect(w.s.orPanggilan[0].body.prompt).not.toMatch(/Indonesian/);
+    expect(w.s.reserve[0].row.dna).toEqual({ ...DNA, asal_wajah: 'asia_tenggara' });
+  });
+  it('tiap pilihan menghasilkan frasanya; tanpa asal prompt tidak memuat kalimat itu dan DNA dicatat apa adanya', async () => {
+    for (const [k, f] of [['asia_timur', 'East Asian'], ['eropa_barat', 'European'], ['timur_tengah', 'Middle Eastern'], ['campuran', 'mixed-heritage']]) {
+      const w = dunia({ settings: { kurs_usd_idr_manual: 16000 } }); await jalan(w, minta({ asal: k })); expect(w.s.orPanggilan[0].body.prompt).toContain(`The person has natural ${f} facial features.`);
+    }
+    for (const asal of [undefined, null, '']) { const w = dunia({ settings: { kurs_usd_idr_manual: 16000 } }); await jalan(w, minta({ asal })); expect(w.s.orPanggilan[0].body.prompt).not.toMatch(/facial features/); expect(w.s.reserve[0].row.dna).toEqual(DNA); }
+  });
+  it('asal tidak dikenal ditolak sebelum memesan jatah (termasuk kunci prototipe dan bukan teks)', async () => {
+    for (const asal of ['asia', 'ASIA_TENGGARA', 'constructor', '__proto__', 5, ['asia_timur'], {}]) {
+      const w = dunia(); const r = await jalan(w, minta({ asal })); expect(r.status, String(asal)).toBe(400); expect(r.json.kode).toBe('asal_salah'); expect(w.s.reserve.length).toBe(0); expect(w.s.orPanggilan.length).toBe(0);
+    }
+  });
+  it('asal pada foto acuan ditolak: wajah mengikuti foto', async () => {
+    const REF = `refs/${STAF}/f1.png`; const w = dunia({ refs: { [REF]: { bytes: PNG, contentType: 'image/png' } } });
+    const r = await jalan(w, minta({ kind: 'wajah_acuan', dna: DNA_PRIA, relation: 'kakak', note: '', ref_path: REF, asal: 'asia_tenggara' }), 'tok_staf');
+    expect(r.status).toBe(400); expect(r.json.pesan).toMatch(/hanya untuk wajah dari DNA/); expect(w.s.reserve.length).toBe(0);
+  });
+});
+
 describe('batas harian dan duplikat', () => {
   it('batas harian tercapai -> 429 dengan angka batasnya, OpenRouter tidak dipanggil', async () => {
     const w = dunia({ reserveHasil: 'batas', settings: { gen_daily_limit_staff: 7 } }); const r = await jalan(w, minta(), 'tok_staf');

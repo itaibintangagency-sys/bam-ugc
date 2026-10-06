@@ -3,7 +3,7 @@
 //
 // Alur satu gambar: login -> peran -> validasi (DNA diperiksa ULANG di server) -> pesan jatah atomik (batas harian) ->
 // foto acuan (bila ada) -> panggil OpenRouter -> simpan gambar -> catat biaya dan kurs. Kunci OpenRouter hanya ada di `d.apiKey`.
-import { validateDna, validateReference, buildFacePrompt, HUBUNGAN } from '../_shared/core/dna.js';
+import { validateDna, validateReference, buildFacePrompt, HUBUNGAN, ASAL_WAJAH } from '../_shared/core/dna.js';
 import { buildImageRequest, parseImageResponse, describeError, DEFAULT_MODEL } from '../_shared/core/imageApi.js';
 
 export const BATAS = {
@@ -82,6 +82,13 @@ export async function handle({ token, body }, d) {
   const masalahDna = validateDna(dna);
   if (masalahDna.length) return galat(400, 'dna_tidak_valid', `DNA tidak valid: ${masalahDna[0].field}: ${masalahDna[0].msg}`);   // aturan dewasa ditegakkan di server
 
+  // Asal wajah (petunjuk tampilan umum wajah): hanya untuk wajah dari DNA dan hanya masuk ke prompt gambar.
+  const asal = b.asal == null || b.asal === '' ? null : b.asal;
+  if (asal != null) {
+    if (b.kind !== 'wajah_dna') return galat(400, 'masukan_salah', 'Asal wajah hanya untuk wajah dari DNA. Pada foto acuan, wajah mengikuti foto.');
+    if (typeof asal !== 'string' || !Object.prototype.hasOwnProperty.call(ASAL_WAJAH, asal)) return galat(400, 'asal_salah', `Asal wajah tidak dikenal. Pilihan: ${Object.keys(ASAL_WAJAH).join(', ')}.`);
+  }
+
   const acuan = b.kind === 'wajah_acuan';
   let ref = null;
   if (acuan) {
@@ -100,7 +107,7 @@ export async function handle({ token, body }, d) {
   const batas = admin ? null : bulat(settings.gen_daily_limit_staff, 20);
 
   // ── Pesan jatah (atomik: batas harian dan baris 'running' sekaligus) ──
-  const pesan = await d.reserve({ id: runId, batch_id: b.batch_id, seq, user_id: user.id, kind: b.kind, model, quality: b.quality, aspect_ratio: aspek, relation: ref ? ref.relation : null, ref_path: ref ? ref.path : null, dna, note: ref && ref.note ? ref.note.slice(0, 200) : null }, batas);
+  const pesan = await d.reserve({ id: runId, batch_id: b.batch_id, seq, user_id: user.id, kind: b.kind, model, quality: b.quality, aspect_ratio: aspek, relation: ref ? ref.relation : null, ref_path: ref ? ref.path : null, dna: asal ? { ...dna, asal_wajah: asal } : dna, note: ref && ref.note ? ref.note.slice(0, 200) : null }, batas);
   if (pesan === 'batas') return galat(429, 'batas_harian', `Batas harian ${batas} gambar sudah tercapai. Coba lagi besok, atau minta admin menaikkan batas.`);
   if (pesan === 'duplikat') return galat(409, 'duplikat', 'Nomor gambar ini sudah pernah diminta pada klik yang sama. Mulai klik baru.');
   if (pesan !== 'ok') return galat(500, 'pemesanan_gagal', 'Tidak bisa mencatat permintaan. Coba lagi.');
@@ -121,7 +128,7 @@ export async function handle({ token, body }, d) {
       if (!TIPE_REF.includes(f.contentType)) return await gagal(400, 'ref_format', 'Format foto acuan harus PNG, JPG, atau WEBP.');
       references.push(`data:${f.contentType};base64,${d.toBase64(f.bytes)}`);
     }
-    const prompt = buildFacePrompt(dna, seq, ref ? { relation: ref.relation, note: ref.note } : null);
+    const prompt = buildFacePrompt(dna, seq, ref ? { relation: ref.relation, note: ref.note } : null, asal);
     const req = buildImageRequest({ model, quality: b.quality, aspectRatio: aspek, prompt, references });
 
     // ── OpenRouter (satu percobaan ulang bila gagal cepat karena jaringan atau 5xx) ──

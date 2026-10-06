@@ -9,6 +9,7 @@
 | Dasbor | Kartu "biaya bulan ini" untuk admin |
 | Edge Function `generate-image` | Memegang kunci OpenRouter di server. Browser tidak pernah melihat kunci |
 | Database | Tabel `ugc_image_runs` (riwayat), batas harian, fungsi laporan, satu migrasi |
+| **Asal wajah** (tab "Buat dengan AI dari DNA") | Pilihan Asia Tenggara (bawaan), Asia Timur, Eropa/Barat, Timur Tengah, Campuran. **Hanya masuk ke prompt gambar**; tidak masuk DNA dan tidak masuk kalimat penampilan di JSON video. Tidak ada di tab foto acuan (wajah mengikuti foto). Tercatat di baris riwayat sebagai catatan audit; **tidak perlu migrasi SQL baru** |
 | `core` | `imageApi.js` dipisah dari `imageRequest.js`; `peringatanKonflik` pindah ke `dna.js`; daftar kata anak diperketat (childlike, boyish, girlish, preteen, dan sejenisnya) |
 
 Aturan: staf **tidak** melihat biaya. Kualitas `high` dan tanpa batas harian hanya untuk admin. Staf dibatasi 20 gambar per hari dan 4 per klik (ubah di tabel `ugc_settings`: `gen_daily_limit_staff`, `gen_max_per_click`).
@@ -25,7 +26,46 @@ Aturan: staf **tidak** melihat biaya. Kualitas `high` dan tanpa batas harian han
    ```
 
    Folder `supabase\functions\_shared\core` ikut terbundel otomatis karena diimpor dengan alamat relatif. Biarkan "Verify JWT" **aktif** (bawaan).
-5. **Website.** Dorong perubahan ke GitHub; Vercel membangun ulang. Variabel `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` tidak berubah.
+5. **Website.** Unggah ke GitHub (lihat bagian **Cara mengunggah ke GitHub** di bawah); Vercel membangun ulang. Variabel `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` tidak berubah.
+
+## Cara mengunggah ke GitHub (penting)
+
+**Unggah HANYA isi zip yang sudah diekstrak, jangan menyeret folder `core`, `db`, `tools`, `supabase`, atau `web` dari `C:\bam-ugc-v2`.** Folder di laptop bisa lebih tua dari GitHub untuk sebagian berkas, dan akan menimpanya; folder `tools\uji-gambar` juga berisi `hasil\` (gambar uji) yang tidak boleh masuk repo. Pengunggah web GitHub mengabaikan `.gitignore`.
+
+1. Ekstrak zip ke folder sementara (mis. `C:\temp\generate-ai-v2`).
+2. Di GitHub: **Add file, Upload files**. Seret **isi** folder hasil ekstrak (folder `core`, `supabase`, `web`, `db`, dan berkas `PASANG-GENERATE-GAMBAR.md`), bukan folder dari `C:\bam-ugc-v2`. Struktur folder terjaga, dan hanya berkas yang ada di zip yang terkirim.
+3. **Commit changes**, lalu tunggu Vercel membangun ulang.
+
+Untuk laptop: timpa `C:\bam-ugc-v2\` dengan isi zip yang sama, supaya laptop dan GitHub sama.
+
+## Bila v1 sudah terpasang: memasang pembaruan Asal wajah
+
+Tidak ada migrasi SQL baru dan tidak ada secret baru. Cukup dua langkah:
+
+1. Timpa berkas dari zip `generate-ai-v2` di `C:\bam-ugc-v2\`, lalu **deploy ulang fungsi** (fungsi membangun prompt di server, jadi tanpa ini pilihan di website tidak berpengaruh):
+
+   ```
+   npx supabase@latest functions deploy generate-image --project-ref usrhroplsedwgkxywshw
+   ```
+
+2. Unggah **isi zip yang sudah diekstrak** ke GitHub (lihat bagian *Cara mengunggah ke GitHub* di atas), bukan folder dari laptop. Vercel lalu membangun ulang.
+
+**Uji A/B yang disarankan** (murah): DNA yang sama, jumlah 2, kualitas low, sekali dengan **Asia Tenggara** dan sekali dengan **Eropa / Barat**. Bandingkan apakah tampilan wajah berubah sesuai pilihan. Bila Asia Tenggara belum cukup terasa, kabari: frasanya bisa diperkuat.
+
+## Pemulihan enam berkas yang mundur (zip v2)
+
+Unggahan folder penuh sebelumnya menimpa enam berkas di GitHub dengan versi lama dari laptop. Zip v2 memulihkannya:
+
+| Berkas | Akibat bila tidak dipulihkan |
+|---|---|
+| `core/src/voice.js`, `core/data/flow_voices.json` | Daftar suara kembali 11 (seharusnya 30), `voicesForGender` dan `defaultVoiceProfile` hilang; menjalankan `npm run sync-core` akan merusak pemilih suara di website |
+| `core/test/voice.test.js` | Tes usang "11 suara" muncul lagi |
+| `db/test/characters.test.mjs`, `db/test/db.test.mjs` | Tes database gagal (menyisipkan produk tanpa arketipe) |
+| `supabase/README.md` | Status migrasi tertulis "Belum dijalankan" |
+
+## Bersihkan folder `hasil/` dari GitHub
+
+Unggahan sebelumnya ikut membawa `tools/uji-gambar/hasil/` (10 gambar uji dan laporan). Hapus di GitHub: buka folder itu, menu titik tiga, **Delete directory**, lalu commit. Berkas yang sudah terunggah tetap ada di riwayat commit selama repo publik; bila gambar itu turunan dari foto orang nyata, pertimbangkan menjadikan repo **privat** (Settings, General, Danger Zone, Change visibility).
 
 ## Uji pertama (biaya kecil)
 

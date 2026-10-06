@@ -159,14 +159,31 @@ function referenceBlock(dna, ref) {
 }
 
 // Kandidat wajah (potret depan). index 1..4 memberi sedikit variasi struktur wajah supaya pilihan tidak identik.
-function buildFacePrompt(dna, index = 1, ref = null) {
+// Asal wajah: petunjuk TAMPILAN UMUM wajah untuk prompt GAMBAR saja (mode "dari DNA"). Sengaja TIDAK menjadi bagian DNA dan TIDAK masuk
+// kalimat penampilan di JSON video: kata asal pada deskripsi video dihindari (lihat aturan tetap di atas). Foto yang dipilih yang membawa
+// tampilan itu ke Flow. Tidak dipakai bersama foto acuan, karena wajah mengikuti foto.
+const ASAL_WAJAH = {
+  asia_tenggara: 'natural Southeast Asian facial features',
+  asia_timur: 'natural East Asian facial features',
+  eropa_barat: 'natural European facial features',
+  timur_tengah: 'natural Middle Eastern facial features',
+  campuran: 'natural mixed-heritage facial features'
+};
+const adaAsal = k => typeof k === 'string' && Object.prototype.hasOwnProperty.call(ASAL_WAJAH, k);
+
+function buildFacePrompt(dna, index = 1, ref = null, asal = null) {
   const appearance = dnaToAppearance(dna); const age = AGE[dna.age_group];
+  if (asal != null && asal !== '') {
+    if (ref) throw new Error('Asal wajah tidak dipakai bersama foto acuan: wajah mengikuti foto.');
+    if (!adaAsal(asal)) throw new Error(`Asal wajah "${String(asal).slice(0, 30)}" tidak dikenal. Pilihan: ${Object.keys(ASAL_WAJAH).join(', ')}`);
+  }
+  const kalimatAsal = adaAsal(asal) ? ` The person has ${ASAL_WAJAH[asal]}.` : '';
   if (ref) { const bad = validateReference(ref, dna); if (bad.length) throw new Error('Foto acuan tidak valid: ' + bad.map(x => `${x.field}: ${x.msg}`).join('; ')); }
   const v = VARIATION[(Math.max(1, index) - 1) % VARIATION.length];
   if (ref) {   // dengan foto acuan: tanpa petunjuk variasi struktur wajah (agar tidak menjauh dari kemiripan), blok acuan sebelum perintah akhir
     return `Photorealistic close-up portrait photograph of one real-looking adult: ${appearance} The person is clearly an adult, apparent age ${age.years} years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing ${outfit(dna, false)}. ${BASE}\n\n${referenceBlock(dna, ref)}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
   }
-  return `Photorealistic close-up portrait photograph of one real-looking adult: ${appearance} The person is clearly an adult, apparent age ${age.years} years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing ${outfit(dna, false)}. Facial structure: ${v}. ${BASE}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
+  return `Photorealistic close-up portrait photograph of one real-looking adult: ${appearance}${kalimatAsal} The person is clearly an adult, apparent age ${age.years} years. Facing the camera at eye level, shoulders square, looking directly into the camera with a natural relaxed expression. Wearing ${outfit(dna, false)}. Facial structure: ${v}. ${BASE}\n\nGenerate the image now. Do not answer with text only and do not ask questions.`;
 }
 // Satu sudut lembar, dari gambar rujukan wajah terpilih.
 function buildSheetPrompt(dna, angle) {
@@ -194,4 +211,4 @@ function peringatanKonflik(catatan, dna) {
   return `catatan menyebut ${g}, tetapi DNA berjenis kelamin ${dna.gender}. DNA yang menang, jadi hasilnya ${dna.gender}.`;
 }
 
-export { peringatanKonflik, OPTIONS, ANGLES, HUBUNGAN, NOTE_MAX, validateDna, validateReference, dnaToAppearance, dnaToProfile, buildFacePrompt, buildSheetPrompt, buildSheetGridPrompt };
+export { peringatanKonflik, ASAL_WAJAH, OPTIONS, ANGLES, HUBUNGAN, NOTE_MAX, validateDna, validateReference, dnaToAppearance, dnaToProfile, buildFacePrompt, buildSheetPrompt, buildSheetGridPrompt };

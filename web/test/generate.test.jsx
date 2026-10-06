@@ -9,10 +9,11 @@ import Riwayat from '../src/pages/Riwayat.jsx';
 import KarakterBaru from '../src/pages/KarakterBaru.jsx';
 import Layout from '../src/components/Layout.jsx';
 import {
-  bulanIni, buatGambar, daftarRiwayat, detik, hubunganUntuk, jalurAcuan, jumlahkan, kualitasUntuk, pesanDariFungsi, rentangBulan, riwayatKeCsv,
+  ASAL_BAWAAN, LABEL_ASAL, PILIHAN_ASAL, bulanIni, buatGambar, daftarRiwayat, detik, hubunganUntuk, jalurAcuan, jumlahkan, kualitasUntuk, pesanDariFungsi, rentangBulan, riwayatKeCsv,
   ringkasanBiaya, rupiah, tautkanGambar, unggahAcuan, usd, waktuWib
 } from '../src/lib/generate.js';
 import { barisKarakter, CONTOH_C02, dnaKosong } from '../src/lib/karakter.js';
+import { ASAL_WAJAH } from '../src/core/dna.js';
 
 // jsdom tidak mendekode gambar, jadi pembaca dimensi dibuat tiruan agar foto uji dianggap cukup besar.
 vi.mock('../src/lib/karakter.js', async orig => ({ ...(await orig()), bacaDimensi: async () => ({ w: 1200, h: 1200 }) }));
@@ -86,6 +87,19 @@ describe('lib/generate: format, rentang, hubungan, kualitas', () => {
     expect(jumlahkan([])).toEqual({ gambar: 0, gagal: 0, usd: 0, idr: 0, tanpaBiaya: 0 });
     const csv = riwayatKeCsv([{ waktu: '2026-10-06T01:00:00Z', nama: 'Ndyy, Jr', jenis: 'wajah_dna', kode_karakter: 'C02', kualitas: 'low', status: 'gagal', durasi_ms: 5000, usd: null, kurs: 16500, idr: null, galat: 'dia bilang "tidak"' }]);
     expect(csv.startsWith('\ufeffWaktu (ISO),Siapa')).toBe(true); expect(csv).toContain('"Ndyy, Jr"'); expect(csv).toContain('"dia bilang ""tidak"""'); expect(csv).toContain('Wajah dari DNA,C02,low,gagal,5.0,,16500,,');
+  });
+});
+
+describe('lib/generate: asal wajah', () => {
+  it('lima pilihan berlabel Indonesia, urutan sama dengan core, bawaan Asia Tenggara', () => {
+    expect(PILIHAN_ASAL.map(a => a.kunci)).toEqual(Object.keys(ASAL_WAJAH)); expect(ASAL_BAWAAN).toBe('asia_tenggara');
+    for (const k of Object.keys(ASAL_WAJAH)) expect(LABEL_ASAL[k], k).toBeTruthy();
+    expect(PILIHAN_ASAL.map(a => a.label)).toEqual(['Asia Tenggara', 'Asia Timur', 'Eropa / Barat', 'Timur Tengah', 'Campuran']);
+  });
+  it('buatGambar mengirim asal hanya untuk wajah dari DNA, dan tidak mengirim bila kosong', async () => {
+    let c = klien(); await buatGambar(c, { kind: 'wajah_dna', dna: DNA, quality: 'low', jumlah: 2, asal: 'asia_timur' }); expect(c.log.invoke.every(x => x.body.asal === 'asia_timur')).toBe(true);
+    c = klien(); await buatGambar(c, { kind: 'wajah_dna', dna: DNA, quality: 'low', jumlah: 1 }); expect(c.log.invoke[0].body).not.toHaveProperty('asal');
+    c = klien(); await buatGambar(c, { kind: 'wajah_acuan', dna: DNA_PRIA, quality: 'low', jumlah: 1, relation: 'kakak', refPath: 'refs/u1/x.png', asal: 'asia_timur' }); expect(c.log.invoke[0].body).not.toHaveProperty('asal');
   });
 });
 
@@ -172,6 +186,29 @@ describe('PanelGenerate: wajah dari DNA', () => {
   it('gambar yang dipilih ditandai terpilih', async () => {
     panel({ pilihanRunId: 'r1' }); fireEvent.click(screen.getByTestId('buat-gambar')); await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2));
     expect(screen.getByRole('button', { name: 'Terpilih' })).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('PanelGenerate: asal wajah di tab "dari DNA"', () => {
+  it('ada pilihan Asal wajah dengan lima opsi, bawaan Asia Tenggara, dan penjelasan bahwa hanya memengaruhi gambar', () => {
+    panel(); const s = screen.getByLabelText('Asal wajah'); expect(s.value).toBe('asia_tenggara');
+    expect(within(s).getAllByRole('option').map(o => o.textContent)).toEqual(['Asia Tenggara (bawaan)', 'Asia Timur', 'Eropa / Barat', 'Timur Tengah', 'Campuran']);
+    expect(screen.getByText(/bukan DNA dan bukan deskripsi di JSON video/)).toBeTruthy();
+  });
+  it('tanpa mengubah apa pun, permintaan memakai asia_tenggara; setelah diganti, semua gambar memakai pilihan baru', async () => {
+    let { c } = panel(); fireEvent.click(screen.getByTestId('buat-gambar')); await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2)); expect(c.log.invoke.every(x => x.body.asal === 'asia_tenggara')).toBe(true); cleanup();
+    ({ c } = panel()); fireEvent.change(screen.getByLabelText('Asal wajah'), { target: { value: 'eropa_barat' } }); fireEvent.click(screen.getByTestId('buat-gambar')); await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2));
+    expect(c.log.invoke.every(x => x.body.asal === 'eropa_barat')).toBe(true);
+  });
+  it('berlaku untuk staf juga, dan pilihan dikunci selama gambar dibuat', async () => {
+    panel({ admin: false }); expect(screen.getByLabelText('Asal wajah')).toBeTruthy(); fireEvent.click(screen.getByTestId('buat-gambar')); expect(screen.getByLabelText('Asal wajah').disabled).toBe(true);
+    await waitFor(() => expect(screen.getAllByRole('img')).toHaveLength(2)); expect(screen.getByLabelText('Asal wajah').disabled).toBe(false);
+  });
+  it('tab foto acuan TIDAK punya pilihan ini dan permintaannya tanpa asal', async () => {
+    const { c } = panel({ mode: 'acuan', dna: DNA_PRIA }); expect(screen.queryByLabelText('Asal wajah')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Foto acuan'), { target: { files: [foto()] } }); await waitFor(() => expect(screen.getByAltText('Pratinjau foto acuan')).toBeTruthy());
+    fireEvent.click(screen.getByLabelText(/izin memakai fotonya/)); fireEvent.click(screen.getByTestId('buat-gambar')); await waitFor(() => expect(c.log.invoke.length).toBeGreaterThan(0));
+    expect(c.log.invoke.every(x => !('asal' in x.body))).toBe(true);
   });
 });
 
