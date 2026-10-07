@@ -309,7 +309,7 @@ function halamanBaru(c) {
     <Route path="/karakter/baru" element={<KarakterBaru />} /><Route path="/karakter/:id" element={<DetailTiruan />} />
   </Routes></AuthProvider></MemoryRouter>);
 }
-const kolom = () => ({ 'ugc_characters.insert': { data: [{ id: 'c-baru', status: 'draft' }], error: null }, 'ugc_character_photos.select': { data: [], error: null }, 'ugc_character_photos.insert': { data: null, error: null }, 'ugc_characters.update': { data: null, error: null } });
+const kolom = () => ({ 'ugc_characters.insert': { data: [{ id: 'c-baru', code: 'C04-3F9A12BC', status: 'draft' }], error: null }, 'ugc_character_photos.select': { data: [], error: null }, 'ugc_character_photos.insert': { data: null, error: null }, 'ugc_characters.update': { data: null, error: null } });
 const lanjut = async () => { await waitFor(() => expect(screen.getByTestId('lanjut')).toBeEnabled()); fireEvent.click(screen.getByTestId('lanjut')); };
 async function sampaiLangkahFoto() {
   await waitFor(() => expect(screen.getByTestId('isi-contoh')).toBeTruthy()); fireEvent.click(screen.getByTestId('isi-contoh')); await lanjut(); await lanjut();
@@ -327,9 +327,21 @@ describe('Karakter baru: foto wajah dari AI', () => {
     fireEvent.change(screen.getByLabelText('Alamat project Flow'), { target: { value: 'https://flow.google.com/project/abc123' } }); fireEvent.change(screen.getByLabelText('Nama akun Google Flow'), { target: { value: 'akun@bintang.id' } });
     await waitFor(() => expect(screen.getByTestId('simpan')).toBeEnabled()); fireEvent.click(screen.getByTestId('simpan'));
     await waitFor(() => expect(screen.getByTestId('detail')).toBeTruthy());
-    const ins = c.log.from.find(x => x.t === 'ugc_characters' && x.op === 'insert'); expect(ins.v).toMatchObject({ code: 'C02_THE_SOFT_GIRL', creation_mode: 'dna_first', status: 'draft' });
+    const ins = c.log.from.find(x => x.t === 'ugc_characters' && x.op === 'insert'); expect(ins.v).toMatchObject({ name: 'Nadia', creation_mode: 'dna_first', status: 'draft' }); expect(ins.v).not.toHaveProperty('code'); expect(screen.getByTestId('detail-pesan').textContent).toMatch(/Karakter C04-3F9A12BC tersimpan lengkap/);
     expect(c.log.upload.some(u => u.path === 'c-baru/face_front.png')).toBe(true); expect(c.log.upload.find(u => u.path === 'c-baru/face_front.png').f.name).toMatch(/^wajah-ai-2\.png$/);
     expect(c.log.rpc.find(x => x.fn === 'ugc_image_link').args).toEqual({ p_run: 'r2', p_character: 'c-baru' });
+  });
+  it('langkah Identitas: tidak ada kolom kode, ada penjelasan kode otomatis, dan tombol contoh hanya mengisi nama dan DNA', async () => {
+    const c = klien({ tabel: kolom() }); halamanBaru(c); await waitFor(() => expect(screen.getByTestId('isi-contoh')).toBeTruthy());
+    expect(screen.queryByLabelText('Kode karakter')).toBeNull(); expect(document.querySelector('#kode')).toBeNull(); expect(screen.getByTestId('info-kode').textContent).toMatch(/Kode dibuat otomatis.*C04-3F9A12BC.*nomor urut.*kunci utama.*tidak bisa diubah/);
+    expect(screen.getByTestId('lanjut')).toBeDisabled(); fireEvent.click(screen.getByTestId('isi-contoh')); expect(screen.getByLabelText('Nama karakter').value).toBe('Nadia'); expect(screen.getByTestId('lanjut')).toBeEnabled();
+  });
+  it('database yang belum punya penjaga kode (migrasi belum dijalankan) menghasilkan pesan yang menunjuk berkas migrasinya, bukan pesan teknis', async () => {
+    const c = klien({ tabel: { ...kolom(), 'ugc_characters.insert': { data: null, error: { code: '23502', message: 'null value in column "code" of relation "ugc_characters" violates not-null constraint' } } } }); halamanBaru(c); await sampaiLangkahFoto();
+    fireEvent.change(screen.getByLabelText('Foto wajah'), { target: { files: [foto('saya.png', 'image/png', 30000)] } }); await waitFor(() => expect(screen.getByTestId('pratinjau-foto')).toBeTruthy()); await lanjut();
+    await waitFor(() => expect(screen.getByLabelText('Alamat project Flow')).toBeTruthy()); fireEvent.change(screen.getByLabelText('Alamat project Flow'), { target: { value: 'https://flow.google.com/project/abc123' } }); fireEvent.change(screen.getByLabelText('Nama akun Google Flow'), { target: { value: 'akun@bintang.id' } });
+    await waitFor(() => expect(screen.getByTestId('simpan')).toBeEnabled()); fireEvent.click(screen.getByTestId('simpan'));
+    await waitFor(() => expect(document.body.textContent).toMatch(/Pembuatan kode otomatis belum aktif di database.*20261007000820/)); expect(screen.queryByTestId('detail')).toBeNull();
   });
   it('foto unggahan sendiri tetap berjalan seperti sebelumnya: mode reference dan TANPA menautkan riwayat', async () => {
     const c = klien({ tabel: kolom() }); halamanBaru(c); await sampaiLangkahFoto();
@@ -357,7 +369,7 @@ describe('Karakter baru: foto wajah dari AI', () => {
     fireEvent.change(screen.getByLabelText('Alamat project Flow'), { target: { value: 'https://flow.google.com/project/abc123' } }); fireEvent.change(screen.getByLabelText('Nama akun Google Flow'), { target: { value: 'akun@bintang.id' } });
     await waitFor(() => expect(screen.getByTestId('simpan')).toBeEnabled()); fireEvent.click(screen.getByTestId('simpan')); await waitFor(() => expect(screen.getByTestId('detail')).toBeTruthy());
     expect(c.log.from.some(x => x.t === 'ugc_characters' && x.op === 'insert')).toBe(true); expect(c.log.upload.some(u => u.path === 'c-baru/face_front.png')).toBe(true);
-    expect(screen.getByTestId('detail-pesan').textContent).toMatch(/Karakter tersimpan lengkap/); expect(screen.getByTestId('detail-peringatan').textContent).toMatch(/Riwayat generate belum tertaut.*Karakter sendiri sudah tersimpan/);
+    expect(screen.getByTestId('detail-pesan').textContent).toMatch(/Karakter C04-3F9A12BC tersimpan lengkap/); expect(screen.getByTestId('detail-peringatan').textContent).toMatch(/Riwayat generate belum tertaut.*Karakter sendiri sudah tersimpan/);
   });
 });
 

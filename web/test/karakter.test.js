@@ -12,7 +12,7 @@ function klien(atur = {}) {
   const log = [];
   const hasil = (t, op) => (atur[`${t}.${op}`] !== undefined ? (typeof atur[`${t}.${op}`] === 'function' ? atur[`${t}.${op}`]() : atur[`${t}.${op}`]) : { data: [], error: null });
   const from = t => { const st = { t, op: 'select', args: {} }; const b = {
-    select() { return b; }, order() { return b; }, eq(k, v) { st.args[k] = v; return b; },
+    select(kolom) { st.kolom = kolom; return b; }, order() { return b; }, eq(k, v) { st.args[k] = v; return b; },
     insert(v) { st.op = 'insert'; st.args.v = v; return b; }, update(v) { st.op = 'update'; st.args.v = v; return b; },
     then(res, rej) { log.push({ ...st }); return Promise.resolve(hasil(t, st.op)).then(res, rej); } }; return b; };
   const storage = { from: () => ({ upload: async (path, f, o) => { log.push({ t: 'storage', op: 'upload', args: { path, o } }); return atur.upload !== undefined ? atur.upload : { data: {}, error: null }; } }) };
@@ -55,9 +55,11 @@ describe('DNA', () => {
 
 describe('validasi isian', () => {
   it('identitas', () => {
-    expect(cekIdentitas({ code: 'C02_THE_SOFT_GIRL', name: 'Nadia' })).toEqual([]);
-    expect(cekIdentitas({ code: '../x', name: 'Nadia' }).length).toBe(1); expect(cekIdentitas({ code: 'C02', name: ' ' }).length).toBe(1); expect(cekIdentitas({ code: '', name: '' }).length).toBe(2);
-    expect(cekIdentitas({ code: 'A'.repeat(41), name: 'N' }).length).toBe(2);
+    expect(cekIdentitas({ name: 'Nadia' })).toEqual([]);
+    expect(cekIdentitas({ name: ' ' }).length).toBe(1); expect(cekIdentitas({ name: '' }).length).toBe(1); expect(cekIdentitas({ name: 'N' }).length).toBe(1); expect(cekIdentitas({ name: 'N'.repeat(61) }).length).toBe(1);
+    expect(cekIdentitas({ name: 'Nadia' })).toEqual([]);
+    expect(cekIdentitas({ code: '../x', name: 'Nadia' })).toEqual([]);   // kode tidak lagi diperiksa: dibuat otomatis oleh database
+    expect(cekIdentitas({ name: 'Nadia' }).join()).not.toMatch(/Kode/);
   });
   it('project Flow dan akun', () => {
     expect(cekProject('https://flow.google.com/project/abc-123', 'Uji Bintang')).toEqual([]);
@@ -106,15 +108,18 @@ describe('status dan syarat siap', () => {
 describe('baris database', () => {
   it('sama bentuknya dengan yang diterima database (tervalidasi di tes RLS): draf, terkunci, dna berisi kalimat penampilan, suara dasar tersalin', () => {
     const voice = suaraAwal('perempuan', 'dewasa_muda').profile;
-    const r = barisKarakter({ code: ' C02 ', name: ' Nadia ', dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice, flowProjectUrl: ' https://flow.google.com/project/a ', flowAccountName: ' Uji ' }, 'uid-1');
-    expect(r).toMatchObject({ code: 'C02', name: 'Nadia', gender: 'perempuan', creation_mode: 'reference', identity_lock: 'locked', status: 'draft', created_by: 'uid-1', voice_base: voice.base_voice, flow_project_url: 'https://flow.google.com/project/a', flow_account_name: 'Uji' });
+    const r = barisKarakter({ code: 'C99_COBA_KIRIM', name: ' Nadia ', dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice, flowProjectUrl: ' https://flow.google.com/project/a ', flowAccountName: ' Uji ' }, 'uid-1');
+    expect(r).not.toHaveProperty('code'); expect(Object.keys(r)).not.toContain('code'); expect(r).toMatchObject({ name: 'Nadia', gender: 'perempuan', creation_mode: 'reference', identity_lock: 'locked', status: 'draft', created_by: 'uid-1', voice_base: voice.base_voice, flow_project_url: 'https://flow.google.com/project/a', flow_account_name: 'Uji' });
     expect(r.dna.appearance_en).toBe(KALIMAT_C02); expect(r.dna.hijab).toBeUndefined(); expect(r.voice).toBe(voice);
   });
 });
 
 describe('galat berbahasa awam', () => {
   it('memetakan galat umum', () => {
-    expect(galatAwam({ code: '23505', message: 'duplicate key value violates unique constraint "ugc_characters_code_key"' })).toMatch(/Kode karakter ini sudah dipakai/);
+    expect(galatAwam({ code: '23505', message: 'duplicate key value violates unique constraint "ugc_characters_code_key"' })).toMatch(/Kode karakter otomatis bentrok.*simpan sekali lagi/);
+    expect(galatAwam({ code: '23505', message: 'duplicate key value violates unique constraint "ugc_characters_pkey"' })).toMatch(/bentrok dengan data yang sudah ada/);
+    expect(galatAwam({ code: '23502', message: 'null value in column "code" of relation "ugc_characters" violates not-null constraint' })).toMatch(/kode otomatis belum aktif.*20261007000820/);
+    expect(galatAwam({ code: '23502', message: 'null value in column "name" violates not-null constraint' })).not.toMatch(/kode otomatis/);
     expect(galatAwam({ code: '23505', message: 'x', details: 'Key (voice_base)=(Achernar) already exists' })).toMatch(/Satu karakter satu suara/);
     expect(galatAwam(new Error('khusus admin'))).toMatch(/Hanya akun admin/); expect(galatAwam(new Error('alasan wajib diisi (minimal 10 karakter)'))).toMatch(/minimal 10/);
     expect(galatAwam({ code: '42501', message: 'new row violates row-level security policy' })).toMatch(/tidak punya izin/); expect(galatAwam(new TypeError('Failed to fetch'))).toMatch(/Tidak tersambung/);
@@ -142,18 +147,18 @@ describe('operasi ke database (klien tiruan)', () => {
     const c = klien({ upload: { data: null, error: new Error('Payload too large') } });
     await expect(pasangFoto(c, 'u1', k0, foto)).rejects.toThrow(/too large/); expect(c.log.some(l => l.t === 'ugc_characters' && l.op === 'update')).toBe(false);
   });
-  const form = { code: 'C02', name: 'Nadia', dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice: suaraAwal('perempuan', 'dewasa_muda').profile, flowProjectUrl: 'https://flow.google.com/project/a', flowAccountName: 'Uji' };
+  const form = { name: 'Nadia', dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice: suaraAwal('perempuan', 'dewasa_muda').profile, flowProjectUrl: 'https://flow.google.com/project/a', flowAccountName: 'Uji' };
   it('buatKarakter: urutan simpan data lalu foto, dan melaporkan langkahnya', async () => {
-    const c = klien({ 'ugc_characters.insert': { data: [{ id: 'k1', status: 'draft' }], error: null } }); const langkah = vi.fn();
+    const c = klien({ 'ugc_characters.insert': { data: [{ id: 'k1', code: 'C04-3F9A12BC', status: 'draft' }], error: null } }); const langkah = vi.fn();
     const r = await buatKarakter(c, 'u1', form, foto, langkah);
-    expect(r).toEqual({ id: 'k1', lengkap: true }); expect(langkah.mock.calls.map(x => x[0])).toEqual(['Menyimpan data karakter…', 'Mengunggah foto wajah…']);
-    expect(c.log.find(l => l.t === 'ugc_characters' && l.op === 'insert').args.v.status).toBe('draft');
+    expect(r).toEqual({ id: 'k1', code: 'C04-3F9A12BC', lengkap: true }); expect(langkah.mock.calls.map(x => x[0])).toEqual(['Menyimpan data karakter…', 'Mengunggah foto wajah…']);
+    expect(c.log.find(l => l.t === 'ugc_characters' && l.op === 'insert').args.v.status).toBe('draft'); expect(String(c.log.find(l => l.t === 'ugc_characters' && l.op === 'insert').kolom).split(',')).toEqual(expect.arrayContaining(['id', 'code', 'status']));   // kode dibuat database; website harus memintanya kembali expect(c.log.find(l => l.t === 'ugc_characters' && l.op === 'insert').args.v).not.toHaveProperty('code', expect.anything());
   });
   it('buatKarakter: foto gagal → karakter tetap tersimpan sebagai draf dan hasilnya memuat pesan awam', async () => {
-    const c = klien({ 'ugc_characters.insert': { data: [{ id: 'k1', status: 'draft' }], error: null }, upload: { data: null, error: new Error('Failed to fetch') } });
-    const r = await buatKarakter(c, 'u1', form, foto); expect(r.id).toBe('k1'); expect(r.lengkap).toBe(false); expect(r.galat).toMatch(/Tidak tersambung/);
+    const c = klien({ 'ugc_characters.insert': { data: [{ id: 'k1', code: 'C05-AAAA1111', status: 'draft' }], error: null }, upload: { data: null, error: new Error('Failed to fetch') } });
+    const r = await buatKarakter(c, 'u1', form, foto); expect(r.id).toBe('k1'); expect(r.code).toBe('C05-AAAA1111'); expect(r.lengkap).toBe(false); expect(r.galat).toMatch(/Tidak tersambung/);
   });
-  it('buatKarakter: kode kembar dilempar sebagai galat dan tidak mengunggah apa pun', async () => {
+  it('buatKarakter: bentrok data dilempar sebagai galat dan tidak mengunggah apa pun', async () => {
     const c = klien({ 'ugc_characters.insert': { data: null, error: { code: '23505', message: 'duplicate key' } } });
     await expect(buatKarakter(c, 'u1', form, foto)).rejects.toMatchObject({ code: '23505' }); expect(c.log.some(l => l.op === 'upload')).toBe(false);
   });

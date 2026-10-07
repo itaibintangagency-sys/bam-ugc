@@ -39,7 +39,7 @@ export { OPTIONS, OPT };
 
 // Contoh siap pakai: DNA C02 menghasilkan tepat kalimat penampilan yang dipakai uji di Flow.
 export const CONTOH_C02 = {
-  code: 'C02_THE_SOFT_GIRL', name: 'Nadia',
+  name: 'Nadia',
   dna: { gender: 'perempuan', age_group: 'dewasa_muda', face_shape: 'oval', complexion: 'terang', expression: 'ceria', hair_length: 'panjang', hair_texture: 'bergelombang', hair_color: 'cokelat_muda_karamel', parting: 'tengah' }
 };
 export const dnaKosong = () => ({ gender: '', age_group: '', face_shape: '', complexion: '', expression: '', hair_length: '', hair_texture: '', hair_color: '', hijab: false });
@@ -57,11 +57,10 @@ export const dnaIssues = d => validateDna(cleanDna(d));
 export function appearanceOf(d) { const c = cleanDna(d); return validateDna(c).length ? '' : dnaToAppearance(c); }
 
 // ───────────── Validasi isian ─────────────
-const KODE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/;
+// Kode karakter dibuat otomatis oleh database (nomor urut + turunan kunci utama, mis. C04-3F9A12BC); website tidak mengirim dan tidak memeriksa kode.
 const PROJECT = /^https:\/\/flow\.google\.com\/(?:u\/\d+\/)?project\/[^/\s?#]+/;
-export function cekIdentitas({ code, name }) {
+export function cekIdentitas({ name }) {
   const e = [];
-  if (!KODE.test(String(code || '').trim())) e.push('Kode: huruf, angka, garis bawah atau tanda hubung, maksimal 40 karakter (contoh C02_THE_SOFT_GIRL).');
   const n = String(name || '').trim(); if (n.length < 2 || n.length > 60) e.push('Nama karakter wajib diisi (2 sampai 60 karakter).');
   return e;
 }
@@ -133,10 +132,10 @@ export function langkahBerikut(c, isAdmin) {
 }
 
 // ───────────── Pembentuk baris database ─────────────
-export function barisKarakter({ code, name, dna, voice, flowProjectUrl, flowAccountName, creationMode }, userId) {
+export function barisKarakter({ name, dna, voice, flowProjectUrl, flowAccountName, creationMode }, userId) {
   const d = cleanDna(dna);
   return {
-    code: String(code).trim(), name: String(name).trim(), gender: d.gender, creation_mode: ['dna_first', 'face_first', 'reference'].includes(creationMode) ? creationMode : 'reference',
+    name: String(name).trim(), gender: d.gender, creation_mode: ['dna_first', 'face_first', 'reference'].includes(creationMode) ? creationMode : 'reference',
     dna: { ...d, appearance_en: dnaToAppearance(d) }, identity_lock: 'locked',
     flow_project_url: String(flowProjectUrl).trim(), flow_account_name: String(flowAccountName).trim(),
     voice, voice_base: voice.base_voice, status: 'draft', created_by: userId
@@ -149,9 +148,11 @@ export const ekstensi = type => (type === 'image/png' ? 'png' : type === 'image/
 export function galatAwam(e) {
   const m = String((e && (e.message || e.error_description || e.error)) || e || ''); const code = e && e.code;
   if (code === '23505' && /voice_base/.test(m + (e.details || ''))) return 'Suara dasar ini sudah dipakai karakter lain. Satu karakter satu suara; pilih suara lain.';
-  if (code === '23505') return 'Kode karakter ini sudah dipakai. Pilih kode lain.';
+  if (code === '23505' && /code/i.test(m + (e.details || ''))) return 'Kode karakter otomatis bentrok dengan karakter lain. Coba simpan sekali lagi; bila berulang, hubungi admin.';
+  if (code === '23505') return 'Data ini bentrok dengan data yang sudah ada. Periksa isiannya lalu coba lagi.';
+  if (code === '23502' && /"code"|\bcode\b/.test(m)) return 'Pembuatan kode otomatis belum aktif di database: jalankan migrasi 20261007000820_kode_karakter_otomatis.sql, lalu coba lagi.';
   if (/ugc_characters_voice_base/.test(m)) return 'Suara dasar ini sudah dipakai karakter lain. Satu karakter satu suara; pilih suara lain.';
-  if (/duplicate key|already exists/i.test(m) && /code/i.test(m)) return 'Kode karakter ini sudah dipakai. Pilih kode lain.';
+  if (/duplicate key|already exists/i.test(m) && /code/i.test(m)) return 'Kode karakter otomatis bentrok dengan karakter lain. Coba simpan sekali lagi; bila berulang, hubungi admin.';
   if (/khusus admin/.test(m)) return 'Hanya akun admin yang boleh menandai karakter siap.';
   if (/alasan wajib/.test(m)) return 'Alasan wajib diisi, minimal 10 karakter.';
   if (code === '42501' || /row-level security|permission denied/i.test(m)) return 'Akun ini tidak punya izin untuk tindakan ini. Hanya pembuat karakter atau admin yang boleh mengubahnya.';
@@ -197,15 +198,15 @@ export async function pasangFoto(client, userId, karakter, file) {
 export async function buatKarakter(client, userId, form, file, onLangkah = () => {}) {
   const row = barisKarakter(form, userId);
   onLangkah('Menyimpan data karakter…');
-  const ins = await client.from('ugc_characters').insert(row).select('id,status');
+  const ins = await client.from('ugc_characters').insert(row).select('id,code,status');
   if (ins.error) throw ins.error;
   const karakter = (ins.data && ins.data[0]);
   if (!karakter) throw new Error('Database tidak mengembalikan data karakter yang baru dibuat.');
   try {
     onLangkah('Mengunggah foto wajah…');
     await pasangFoto(client, userId, karakter, file);
-    return { id: karakter.id, lengkap: true };
-  } catch (e) { return { id: karakter.id, lengkap: false, galat: galatAwam(e) }; }
+    return { id: karakter.id, code: karakter.code, lengkap: true };
+  } catch (e) { return { id: karakter.id, code: karakter.code, lengkap: false, galat: galatAwam(e) }; }
 }
 
 export async function ubahProject(client, id, { url, akun }) {

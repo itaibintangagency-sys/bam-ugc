@@ -21,7 +21,7 @@ export default function KarakterBaru() {
   const admin = isAdmin(profile);
   const [sumber, setSumber] = useState('unggah'); const [asal, setAsal] = useState(null);   // asal = gambar AI yang dipilih { runId, mode }
   const [langkah, setLangkah] = useState(0);
-  const [form, setForm] = useState({ code: '', name: '', dna: dnaKosong(), voice: null, voiceUntuk: '', flowProjectUrl: '', flowAccountName: '' });
+  const [form, setForm] = useState({ name: '', dna: dnaKosong(), voice: null, voiceUntuk: '', flowProjectUrl: '', flowAccountName: '' });
   const [file, setFile] = useState(null); const [fotoNilai, setFotoNilai] = useState({}); const [preview, setPreview] = useState('');
   const [dipakai, setDipakai] = useState([]); const [dipakaiGalat, setDipakaiGalat] = useState('');
   const [proses, setProses] = useState(''); const [galat, setGalat] = useState('');
@@ -81,7 +81,7 @@ export default function KarakterBaru() {
 
   function isiContoh() {
     batalkanGambarAi();
-    setForm(f => ({ ...f, code: CONTOH_C02.code, name: CONTOH_C02.name, dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice: null, voiceUntuk: '' }));
+    setForm(f => ({ ...f, name: CONTOH_C02.name, dna: { ...dnaKosong(), ...CONTOH_C02.dna }, voice: null, voiceUntuk: '' }));
   }
   async function simpan() {
     setGalat('');
@@ -90,12 +90,12 @@ export default function KarakterBaru() {
     try {
       const creationMode = asal && asal.mode === 'dna' ? 'dna_first' : 'reference';
       const hasil = await buatKarakter(client, session.user.id, { ...form, dna: form.dna, creationMode }, file, setProses);
-      let peringatan = hasil.lengkap ? null : `Karakter tersimpan sebagai draf, tetapi foto belum terunggah: ${hasil.galat} Unggah ulang foto dari halaman ini.`;
+      let peringatan = hasil.lengkap ? null : `Karakter ${hasil.code || ''} tersimpan sebagai draf, tetapi foto belum terunggah: ${hasil.galat} Unggah ulang foto dari halaman ini.`;
       if (asal) {   // menautkan riwayat generate ke karakter; kegagalan di sini tidak membatalkan karakter yang sudah tersimpan
         try { setProses('Menautkan riwayat generate…'); await tautkanGambar(client, asal.runId, hasil.id); }
         catch (e) { peringatan = `${peringatan ? peringatan + ' ' : ''}Riwayat generate belum tertaut ke karakter ini (${galatAwam(e)}). Karakter sendiri sudah tersimpan.`; }
       }
-      navigate(`/karakter/${hasil.id}`, { replace: true, state: { pesan: hasil.lengkap ? 'Karakter tersimpan lengkap dengan foto wajah.' : null, peringatan } });
+      navigate(`/karakter/${hasil.id}`, { replace: true, state: { pesan: hasil.lengkap ? `Karakter ${hasil.code || ''} tersimpan lengkap dengan foto wajah.`.replace('  ', ' ') : null, peringatan } });
     } catch (e) { setGalat(galatAwam(e)); setProses(''); }
   }
 
@@ -113,10 +113,10 @@ export default function KarakterBaru() {
       <div className="form-karakter">
         {langkah === 0 && (
           <>
-            <p className="lead">Kode dipakai di seluruh sistem dan tidak bisa diubah. Nama dipanggil di video perkenalan.</p>
-            <div className="field"><label htmlFor="kode">Kode karakter</label><input id="kode" value={form.code} onChange={e => set('code', e.target.value)} placeholder="C02_THE_SOFT_GIRL" autoComplete="off" /></div>
+            <p className="lead">Nama dipanggil di video perkenalan.</p>
+            <div className="notice notice-ok" role="note" data-testid="info-kode"><strong>Kode dibuat otomatis</strong> saat karakter disimpan, berbentuk <code>C04-3F9A12BC</code>: nomor urut ditambah 8 karakter dari kunci utama. Kode dipakai di seluruh sistem dan tidak bisa diubah.</div>
             <div className="field"><label htmlFor="nama">Nama karakter</label><input id="nama" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Nadia" autoComplete="off" /></div>
-            <p><button type="button" className="btn btn-secondary" onClick={isiContoh} data-testid="isi-contoh">Isi contoh C02</button> <span className="hint">Mengisi kode, nama, dan DNA contoh C02 untuk mencoba alurnya.</span></p>
+            <p><button type="button" className="btn btn-secondary" onClick={isiContoh} data-testid="isi-contoh">Isi contoh C02</button> <span className="hint">Mengisi nama dan DNA contoh C02 untuk mencoba alurnya.</span></p>
           </>
         )}
 
