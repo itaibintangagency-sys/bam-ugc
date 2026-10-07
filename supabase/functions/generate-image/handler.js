@@ -5,54 +5,20 @@
 // foto acuan (bila ada) -> panggil OpenRouter -> simpan gambar -> catat biaya dan kurs. Kunci OpenRouter hanya ada di `d.apiKey`.
 import { validateDna, validateReference, buildFacePrompt, HUBUNGAN, ASAL_WAJAH } from '../_shared/core/dna.js';
 import { buildImageRequest, parseImageResponse, describeError, DEFAULT_MODEL } from '../_shared/core/imageApi.js';
+import { UUID, ambilKurs, bulat, galat, jawab, samarkan, tidur } from '../_shared/umum.js';
+export { ambilKurs };   // tetap diekspor dari sini agar pemanggil lama tidak berubah
 
 export const BATAS = {
   anggaranMs: 140000,            // di bawah batas 150 detik Supabase (paket Free); gambar yang lebih lama dicatat gagal, bukan 504
   sisaMinMs: 10000,              // di bawah ini tidak lagi memulai panggilan ke OpenRouter
   cobaUlangMinSisaMs: 45000,     // percobaan ulang hanya bila sisa waktu cukup
   refMaksByte: 6 * 1024 * 1024,
-  kursTtlMs: 12 * 3600 * 1000,
-  kursWajarMin: 1000, kursWajarMax: 100000,
-  kursTimeoutMs: 5000
 };
 const KIND = ['wajah_dna', 'wajah_acuan'];     // lembar sudut dan storyboard menyusul di tahap berikutnya
 const KUALITAS = ['low', 'medium', 'high'];
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TIPE_REF = ['image/png', 'image/jpeg', 'image/webp'];
 const OPENROUTER = 'https://openrouter.ai/api/v1/images';
 
-const jawab = (status, json) => ({ status, json });
-// Pesan dari server luar bisa memuat kunci (mis. pesan galat yang menggemakan header). Samarkan sebelum disimpan atau dikirim.
-const samarkan = (teks, kunci) => { let t = String(teks == null ? '' : teks); if (kunci) t = t.split(kunci).join('[kunci disembunyikan]'); return t.replace(/sk-or-[A-Za-z0-9_-]{8,}/g, '[kunci disembunyikan]'); };
-const galat = (status, kode, pesan, extra = {}) => jawab(status, { ok: false, kode, pesan, ...extra });
-const bulat = (v, def) => { const n = Number(v); return Number.isFinite(n) && n >= 0 ? Math.floor(n) : def; };
-const tidur = ms => new Promise(r => setTimeout(r, ms));
-
-// ───────────── Kurs USD -> IDR ─────────────
-// Urutan: kurs manual admin -> kurs otomatis yang masih segar -> Frankfurter -> open.er-api -> kurs otomatis lama -> tidak ada.
-// Kurs referensi harian (bukan kurs jual-beli bank). Disimpan per gambar, jadi riwayat tidak berubah ketika kurs berubah.
-export async function ambilKurs(d, settings) {
-  const wajar = x => Number.isFinite(x) && x >= BATAS.kursWajarMin && x <= BATAS.kursWajarMax;
-  const manual = Number(settings.kurs_usd_idr_manual);
-  if (wajar(manual)) return { rate: manual, sumber: 'manual', tanggal: null };
-  const c = settings.kurs_usd_idr;
-  const umur = c && c.fetched_at ? d.now() - Date.parse(c.fetched_at) : Infinity;
-  if (c && wajar(Number(c.rate)) && umur < BATAS.kursTtlMs) return { rate: Number(c.rate), sumber: c.source || 'cache', tanggal: c.date || null };
-
-  const coba = async (url, baca) => {
-    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), BATAS.kursTimeoutMs);
-    try { const r = await d.fetch(url, { signal: ctl.signal }); if (!r.ok) return null; const x = baca(await r.json()); return x && wajar(x.rate) ? x : null; }
-    catch { return null; } finally { clearTimeout(t); }
-  };
-  const baru = (await coba('https://api.frankfurter.dev/v1/latest?base=USD&symbols=IDR', j => ({ rate: Number(j && j.rates && j.rates.IDR), sumber: 'frankfurter', tanggal: (j && j.date) || null })))
-    || (await coba('https://open.er-api.com/v6/latest/USD', j => (j && j.result === 'success' ? { rate: Number(j.rates && j.rates.IDR), sumber: 'open.er-api', tanggal: String(j.time_last_update_utc || '').slice(0, 16) || null } : null)));
-  if (baru) {
-    try { await d.setSetting('kurs_usd_idr', { rate: baru.rate, date: baru.tanggal, source: baru.sumber, fetched_at: new Date(d.now()).toISOString() }); } catch { /* menyimpan cache gagal tidak menggagalkan gambar */ }
-    return baru;
-  }
-  if (c && wajar(Number(c.rate))) return { rate: Number(c.rate), sumber: `${c.source || 'cache'} (lama)`, tanggal: c.date || null };
-  return null;
-}
 
 // ───────────── Satu gambar ─────────────
 export async function handle({ token, body }, d) {
@@ -112,9 +78,10 @@ export async function handle({ token, body }, d) {
   if (pesan === 'duplikat') return galat(409, 'duplikat', 'Nomor gambar ini sudah pernah diminta pada klik yang sama. Mulai klik baru.');
   if (pesan !== 'ok') return galat(500, 'pemesanan_gagal', 'Tidak bisa mencatat permintaan. Coba lagi.');
 
+  let biaya = {};   // terisi setelah gambar jadi
   const gagal = async (status, kode, pesanAsli) => {
     const pesanTeks = samarkan(pesanAsli, d.apiKey);
-    try { await d.updateRun(runId, { status: 'gagal', error: pesanTeks.slice(0, 500), finished_at: new Date(d.now()).toISOString(), duration_ms: d.now() - t0 }); } catch { /* catatan gagal tidak boleh menutupi galat aslinya */ }
+    try { await d.updateRun(runId, { status: 'gagal', error: pesanTeks.slice(0, 500), finished_at: new Date(d.now()).toISOString(), duration_ms: d.now() - t0, ...biaya }); } catch { /* catatan gagal tidak boleh menutupi galat aslinya */ }
     return galat(status, kode, pesanTeks, { run_id: runId });
   };
 
@@ -154,17 +121,19 @@ export async function handle({ token, body }, d) {
     const img = parsed.images[0];
     if (!img.b64) return await gagal(502, 'respons_aneh', 'OpenRouter memberi alamat gambar, bukan data. Belum didukung.');
 
+    // ── Biaya dan kurs (dihitung sebelum menyimpan: dicatat walau penyimpanan gagal, karena gambar sudah ditagih) ──
+    const usd = parsed.cost;
+    let kurs = null; try { kurs = await ambilKurs(d, settings); } catch { kurs = null; }
+    const idr = usd != null && kurs ? Math.round(usd * kurs.rate * 100) / 100 : null;
+    biaya = { cost_usd: usd, kurs_idr: kurs ? kurs.rate : null, kurs_sumber: kurs ? (kurs.tanggal ? `${kurs.sumber} ${kurs.tanggal}` : kurs.sumber) : null, cost_idr: idr };
+
     // ── Simpan gambar ──
     const path = `generated/${user.id}/${b.batch_id}/${seq}.${img.ext}`;
     try { await d.uploadImage(path, d.fromBase64(img.b64), img.mediaType); }
     catch (e) { return await gagal(500, 'simpan_gagal', `Gambar jadi tetapi gagal disimpan ke penyimpanan: ${String((e && e.message) || e).slice(0, 200)}. Biaya mungkin sudah terpotong di OpenRouter.`); }
 
-    // ── Biaya dan kurs ──
-    const usd = parsed.cost;
-    let kurs = null; try { kurs = await ambilKurs(d, settings); } catch { kurs = null; }
-    const idr = usd != null && kurs ? Math.round(usd * kurs.rate * 100) / 100 : null;
     const durasi = d.now() - t0;
-    await d.updateRun(runId, { status: 'ok', finished_at: new Date(d.now()).toISOString(), duration_ms: durasi, cost_usd: usd, kurs_idr: kurs ? kurs.rate : null, kurs_sumber: kurs ? (kurs.tanggal ? `${kurs.sumber} ${kurs.tanggal}` : kurs.sumber) : null, cost_idr: idr, image_path: path });
+    await d.updateRun(runId, { status: 'ok', finished_at: new Date(d.now()).toISOString(), duration_ms: durasi, ...biaya, image_path: path });
     const out = { ok: true, run_id: runId, image_path: path, duration_ms: durasi };
     if (admin) Object.assign(out, { cost_usd: usd, cost_idr: idr, kurs: kurs ? kurs.rate : null, kurs_sumber: kurs ? kurs.sumber : null });   // biaya hanya dikirim ke admin
     return jawab(200, out);

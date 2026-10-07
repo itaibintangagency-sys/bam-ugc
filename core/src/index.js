@@ -12,5 +12,6 @@ module.exports = {
   ...require('./labels'),
   ...require('./consistency'),
   ...require('./dna'),
+  ...require('./productProfile'),
   ...require('./imageRequest')
 };

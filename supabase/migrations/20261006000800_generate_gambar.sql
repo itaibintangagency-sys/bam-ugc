@@ -129,7 +129,9 @@ begin
   order by 6 desc, 3 desc;
 end $$;
 
-create or replace function ugc_image_runs_list(
+-- drop dulu: 0810 menambah kolom pada hasil fungsi ini, dan create or replace tidak boleh mengubah tipe kembalian (agar 0800 tetap bisa diulang).
+drop function if exists ugc_image_runs_list(timestamptz, timestamptz, uuid, text, int, int);
+create function ugc_image_runs_list(
   p_from timestamptz, p_to timestamptz, p_user uuid default null, p_kind text default null, p_limit int default 50, p_offset int default 0)
 returns table (id uuid, waktu timestamptz, uid uuid, nama text, jenis text, kode_karakter text, model text, kualitas text,
                status text, galat text, durasi_ms int, usd numeric, kurs numeric, idr numeric, hubungan text, dipilih boolean, total bigint)

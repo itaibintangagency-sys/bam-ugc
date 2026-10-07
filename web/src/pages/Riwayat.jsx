@@ -94,13 +94,13 @@ export default function Riwayat() {
           <p className="hint" data-testid="info-halaman">Menampilkan {awal} sampai {akhir} dari {daftar.total}. <button type="button" className="link" onClick={unduh}>Unduh CSV halaman ini</button></p>
           <div className="tabel-gulir"><table className="tabel" data-testid="tabel-rincian">
             <caption className="sr-only">Rincian generate</caption>
-            <thead><tr><th scope="col">Waktu</th><th scope="col">Siapa</th><th scope="col">Jenis</th><th scope="col">Karakter</th><th scope="col">Kualitas</th><th scope="col">Status</th><th scope="col" className="angka">Durasi</th><th scope="col" className="angka">USD</th><th scope="col" className="angka">Rupiah</th></tr></thead>
+            <thead><tr><th scope="col">Waktu</th><th scope="col">Siapa</th><th scope="col">Jenis</th><th scope="col">Karakter / Produk</th><th scope="col">Kualitas</th><th scope="col">Status</th><th scope="col" className="angka">Durasi</th><th scope="col" className="angka">USD</th><th scope="col" className="angka">Rupiah</th></tr></thead>
             <tbody>{daftar.baris.map(r => {
               const st = STATUS[r.status] || STATUS.gagal;
               return (
                 <tr key={r.id}>
                   <td>{waktuWib(r.waktu)}</td><th scope="row">{r.nama}</th><td>{JENIS[r.jenis] || r.jenis}{r.hubungan ? ` (${r.hubungan})` : ''}</td>
-                  <td>{r.kode_karakter ? `${r.kode_karakter}${r.dipilih ? ' ✓' : ''}` : '–'}</td><td>{r.kualitas}</td>
+                  <td>{r.kode_karakter ? `${r.kode_karakter}${r.dipilih ? ' ✓' : ''}` : r.nama_produk || '–'}</td><td>{r.kualitas === 'na' ? '–' : r.kualitas}</td>
                   <td><span className={`badge ${st.cls}`}>{st.label}</span>{r.galat && <div className="galat-baris">{r.galat}</div>}</td>
                   <td className="angka">{detik(r.durasi_ms)}</td><td className="angka">{usd(r.usd)}</td><td className="angka">{rupiah(r.idr)}</td>
                 </tr>

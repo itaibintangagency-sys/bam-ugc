@@ -221,6 +221,10 @@ describe('kegagalan OpenRouter: dicatat dengan pesan awam, gambar gagal tidak di
     const w = dunia({ uploadGagal: true }); const r = await jalan(w, minta()); expect(r.status).toBe(500); expect(r.json.kode).toBe('simpan_gagal'); expect(r.json.pesan).toMatch(/Biaya mungkin sudah terpotong/);
     expect(w.s.runs['aaaaaaaa-0000-0000-0000-000000000001'].status).toBe('gagal');
   });
+  it('gambar sudah ditagih tetapi gagal disimpan: biaya dan kurs tetap tercatat di baris gagal (tidak hilang dari laporan)', async () => {
+    const w = dunia({ uploadGagal: true, settings: { kurs_usd_idr_manual: 16500 } }); const r = await jalan(w, minta()); expect(r.json.kode).toBe('simpan_gagal');
+    expect(w.s.runs['aaaaaaaa-0000-0000-0000-000000000001']).toMatchObject({ status: 'gagal', cost_usd: 0.03, kurs_idr: 16500, cost_idr: 495 });
+  });
 });
 
 describe('kurs USD ke Rupiah', () => {

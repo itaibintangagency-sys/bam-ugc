@@ -19,7 +19,7 @@ describe('salinan core di website', () => {
     }
   });
   it('tidak memuat require() dan diawali penanda berkas hasil salinan', () => {
-    for (const nama of ['dna.js', 'voice.js']) {
+    for (const nama of ['dna.js', 'voice.js', 'productProfile.js']) {
       const t = fs.readFileSync(path.join(OUT, nama), 'utf8');
       expect(t).not.toMatch(/\brequire\(/); expect(t.startsWith('// BERKAS HASIL SALINAN')).toBe(true); expect(t).toMatch(/\nexport \{/);
     }

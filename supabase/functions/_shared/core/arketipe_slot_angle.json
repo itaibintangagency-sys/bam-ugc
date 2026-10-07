@@ -1,0 +1,618 @@
+{
+  "catatan": "Slot dibaca berurutan prioritas. Slot pertama selalu dipakai. Angle melekat pada slot, bukan pada nomor panel, supaya tetap benar saat urutan diacak.",
+  "arketipe": {
+    "A-01": {
+      "panel_1_angle": "C-01",
+      "panel_5_angle": "C-02",
+      "slot": [
+        {
+          "key": "detail_utama",
+          "nama": "Detail utama (leher, kerah, kancing, bukaan, waistband)",
+          "angle": "C-04",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "detail utama yang terlihat"
+        },
+        {
+          "key": "motif_kain",
+          "nama": "Motif dan tampilan kain",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "motif dan warna yang terlihat"
+        },
+        {
+          "key": "lengan_bawahan_hem",
+          "nama": "Lengan, bawahan, atau hem",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk lengan atau hem yang terlihat"
+        },
+        {
+          "key": "siluet_panjang",
+          "nama": "Siluet dan panjang",
+          "angle": "C-07",
+          "extreme": false,
+          "sideback": true,
+          "butuh_foto": [],
+          "beat": "siluet dan panjang saat dipakai"
+        }
+      ]
+    },
+    "A-02": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "pemasangan_styling",
+          "nama": "Cara pemasangan atau styling",
+          "angle": "C-04",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara dipakai"
+        },
+        {
+          "key": "bentuk_tepi",
+          "nama": "Bentuk dan tepi",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk dan tepi yang terlihat"
+        },
+        {
+          "key": "motif_tekstur",
+          "nama": "Motif atau tekstur visual",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "motif yang terlihat"
+        },
+        {
+          "key": "variasi_cara_pakai",
+          "nama": "Variasi cara pakai",
+          "angle": "C-07",
+          "extreme": false,
+          "sideback": true,
+          "butuh_foto": [
+            "variasi"
+          ],
+          "beat": "variasi cara pakai yang ada di foto"
+        }
+      ]
+    },
+    "A-03": {
+      "panel_1_angle": "C-01",
+      "panel_5_angle": "C-01",
+      "slot": [
+        {
+          "key": "ujung_depan",
+          "nama": "Ujung dan bagian depan",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk bagian depan"
+        },
+        {
+          "key": "siluet_samping",
+          "nama": "Siluet samping dan tumit",
+          "angle": "C-08",
+          "extreme": false,
+          "sideback": true,
+          "butuh_foto": [],
+          "beat": "bentuk dari samping"
+        },
+        {
+          "key": "tali_gesper_jahitan",
+          "nama": "Tali, gesper, lubang, jahitan",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "detail yang terlihat"
+        },
+        {
+          "key": "sol",
+          "nama": "Sol",
+          "angle": "C-10",
+          "extreme": false,
+          "sideback": true,
+          "butuh_foto": [
+            "sol",
+            "samping"
+          ],
+          "beat": "sol yang terlihat"
+        }
+      ]
+    },
+    "A-04": {
+      "panel_1_angle": "C-02",
+      "panel_5_angle": "C-02",
+      "slot": [
+        {
+          "key": "bukaan",
+          "nama": "Bukaan (resleting, kancing, magnet)",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "jenis bukaan yang terlihat"
+        },
+        {
+          "key": "tali_handle",
+          "nama": "Tali atau handle",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "tali atau handle yang terlihat"
+        },
+        {
+          "key": "kompartemen",
+          "nama": "Kompartemen",
+          "angle": "C-11",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "interior"
+          ],
+          "beat": "bagian dalam yang terlihat"
+        },
+        {
+          "key": "ukuran_tubuh",
+          "nama": "Ukuran dibandingkan tubuh",
+          "angle": "C-02",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "ukuran dibanding tubuh"
+        }
+      ]
+    },
+    "A-05": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "kemasan_label",
+          "nama": "Kemasan dan label",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "nama dan kemasan"
+        },
+        {
+          "key": "tekstur_warna",
+          "nama": "Tekstur atau warna produk (yang terlihat)",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "tekstur"
+          ],
+          "beat": "tekstur atau warna yang terlihat"
+        },
+        {
+          "key": "cara_pakai",
+          "nama": "Cara pakai sesuai label",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai sesuai label"
+        },
+        {
+          "key": "kulit_natural",
+          "nama": "Tampilan kulit natural tanpa klaim",
+          "angle": "C-04",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "tanpa klaim hasil"
+        }
+      ]
+    },
+    "A-06": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "kemasan_nama",
+          "nama": "Kemasan dan nama",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "nama dan kemasan"
+        },
+        {
+          "key": "cara_pakai",
+          "nama": "Cara pakai (semprot atau teteskan)",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai"
+        },
+        {
+          "key": "tutup_botol",
+          "nama": "Detail tutup dan botol",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk tutup dan botol"
+        }
+      ]
+    },
+    "A-07": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "kemasan",
+          "nama": "Kemasan",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "nama dan kemasan"
+        },
+        {
+          "key": "info_label",
+          "nama": "Informasi pada label",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "isi label dibaca persis"
+        },
+        {
+          "key": "penyimpanan",
+          "nama": "Cara penyimpanan",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "label"
+          ],
+          "beat": "penyimpanan sesuai label"
+        }
+      ]
+    },
+    "A-08": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "kemasan_label",
+          "nama": "Kemasan dan label",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "nama dan kemasan"
+        },
+        {
+          "key": "buka_tuang_sajikan",
+          "nama": "Membuka, menuang, atau menyajikan",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara menyajikan"
+        },
+        {
+          "key": "tekstur_visual",
+          "nama": "Tekstur visual",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "tampilan yang terlihat"
+        },
+        {
+          "key": "suapan_pertama",
+          "nama": "Suapan pertama (bila diizinkan klien)",
+          "angle": "C-04",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "izin_klien"
+          ],
+          "beat": "hanya bila diizinkan"
+        }
+      ]
+    },
+    "A-09": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "bahan_konstruksi",
+          "nama": "Detail bahan atau konstruksi",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "detail yang terlihat"
+        },
+        {
+          "key": "ukuran_label",
+          "nama": "Ukuran atau label",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "ukuran sesuai label"
+        },
+        {
+          "key": "cara_pakai_dewasa",
+          "nama": "Cara pakai oleh orang dewasa",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai oleh orang dewasa"
+        }
+      ]
+    },
+    "A-10": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "ukuran_bentuk",
+          "nama": "Ukuran dan bentuk",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk dan ukuran"
+        },
+        {
+          "key": "tombol_port",
+          "nama": "Tombol, port, atau panel kontrol",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "kontrol yang terlihat"
+        },
+        {
+          "key": "penggunaan_singkat",
+          "nama": "Penggunaan singkat",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai singkat"
+        },
+        {
+          "key": "isi_kotak",
+          "nama": "Isi dalam kotak",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "isi_kotak"
+          ],
+          "beat": "isi kotak"
+        }
+      ]
+    },
+    "A-11": {
+      "panel_1_angle": "C-02",
+      "panel_5_angle": "C-02",
+      "slot": [
+        {
+          "key": "ukuran_bentuk",
+          "nama": "Ukuran dan bentuk",
+          "angle": "C-07",
+          "extreme": false,
+          "sideback": true,
+          "butuh_foto": [],
+          "beat": "bentuk dan ukuran"
+        },
+        {
+          "key": "panel_kontrol",
+          "nama": "Panel kontrol",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "kontrol yang terlihat"
+        },
+        {
+          "key": "demonstrasi",
+          "nama": "Demonstrasi singkat",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai singkat"
+        },
+        {
+          "key": "komponen",
+          "nama": "Komponen dan cara membersihkan",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "komponen yang terlihat"
+        }
+      ]
+    },
+    "A-12": {
+      "panel_1_angle": "C-02",
+      "panel_5_angle": "C-02",
+      "slot": [
+        {
+          "key": "bentuk_ukuran_ruang",
+          "nama": "Bentuk dan ukuran dalam ruang",
+          "angle": "C-02",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bentuk dalam ruang"
+        },
+        {
+          "key": "material_konstruksi",
+          "nama": "Material dan konstruksi yang terlihat",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "material yang terlihat"
+        },
+        {
+          "key": "cara_pakai",
+          "nama": "Cara pakai",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara pakai"
+        },
+        {
+          "key": "isi_set",
+          "nama": "Isi set",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [
+            "set"
+          ],
+          "beat": "isi set"
+        }
+      ]
+    },
+    "A-13": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "detail",
+          "nama": "Detail (skala, warna, ekspresi)",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "detail yang terlihat"
+        },
+        {
+          "key": "kemasan",
+          "nama": "Kemasan",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "kemasan"
+        },
+        {
+          "key": "interaksi",
+          "nama": "Interaksi (dimainkan orang dewasa)",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara dimainkan oleh orang dewasa"
+        },
+        {
+          "key": "tekstur",
+          "nama": "Tekstur permukaan",
+          "angle": "C-06",
+          "extreme": true,
+          "sideback": false,
+          "butuh_foto": [
+            "closeup"
+          ],
+          "beat": "tekstur sesuai foto close-up"
+        }
+      ]
+    },
+    "A-14": {
+      "panel_1_angle": "C-03",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "kemasan_label",
+          "nama": "Kemasan dan label",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "nama dan kemasan"
+        },
+        {
+          "key": "cara_aplikasi",
+          "nama": "Cara aplikasi",
+          "angle": "C-13",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara aplikasi"
+        },
+        {
+          "key": "hasil_terlihat",
+          "nama": "Hasil yang terlihat",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "hanya yang terlihat"
+        }
+      ]
+    },
+    "A-15": {
+      "panel_1_angle": "C-12",
+      "panel_5_angle": "C-03",
+      "slot": [
+        {
+          "key": "label_kemasan",
+          "nama": "Label ukuran dan kemasan",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "label dan kemasan"
+        },
+        {
+          "key": "bahan_terlihat",
+          "nama": "Bahan yang terlihat",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "bahan yang terlihat"
+        },
+        {
+          "key": "jahitan_karet",
+          "nama": "Jahitan atau karet",
+          "angle": "C-05",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "detail yang terlihat"
+        },
+        {
+          "key": "cara_lipat",
+          "nama": "Cara lipat",
+          "angle": "C-12",
+          "extreme": false,
+          "sideback": false,
+          "butuh_foto": [],
+          "beat": "cara lipat"
+        }
+      ]
+    }
+  }
+}

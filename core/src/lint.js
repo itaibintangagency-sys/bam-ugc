@@ -2,14 +2,15 @@
 // Pemeriksa kata pemicu. Dipakai untuk memastikan prompt storyboard, teks pada
 // gambar, dan JSON video tidak memuat kata yang dicurigai memicu watermark,
 // stiker, atau penolakan kebijakan.
-const BANNED_ALWAYS = ['tiktok', 'affiliate', 'promo', 'diskon', 'checkout', 'google flow', 'tanpa teks', 'klik', 'link bio'];
-const BANNED_IN_IMAGE_TEXT = ['keranjang', 'cta', 'beli', 'hook'];
-const CLAIM_WORDS = ['nyaman', 'ringan', 'lembut', 'adem', 'flowy', 'empuk', 'awet', 'tahan lama', 'premium', 'berkualitas', 'terbaik', 'anti luntur'];
-const BODY_TERMS = ['body', 'skin', 'anatomy', 'touch', 'bare', 'chest', 'waist', 'bust', 'thigh'];
+const KATA = require('../data/kata_terlarang.json');
+const BANNED_ALWAYS = KATA.banned_always;
+const BANNED_IN_IMAGE_TEXT = KATA.banned_in_image_text;
+const CLAIM_WORDS = KATA.claim_words;
+const BODY_TERMS = KATA.body_terms;
 // Kata yang membuat model menggambar layar kamera ponsel (video tampak seperti rekaman layar aplikasi kamera).
-const PHONE_WORDS = ['smartphone', 'phone', 'handphone', 'ponsel'];
+const PHONE_WORDS = KATA.phone_words;
 // Kata Indonesia yang lazim pada deskripsi produk. Di dalam JSON berbahasa Inggris, kalimat Indonesia mudah ditampilkan model sebagai tulisan di video.
-const INDO_HINT = ['dengan', 'yang', 'dan', 'bagian', 'bulat', 'lengan', 'motif', 'panjang', 'depan', 'leher', 'resleting', 'kerah', 'warna', 'ruang', 'tamu', 'produk', 'tampil', 'kain', 'dasar', 'longgar', 'pendek'];
+const INDO_HINT = KATA.indo_hint;
 const PHONE_SAFE_KEYS = new Set(['negative_prompt', 'clean_frame', 'restriction', 'final_instruction']);
 
 function hits(text, words) {
@@ -64,4 +65,4 @@ function lintVideoJson(jsonText) {
 }
 
 const hasErrors = (issues) => issues.some(i => i.level === 'error');
-module.exports = { lintStoryboardText, lintVideoJson, hasErrors, BANNED_ALWAYS, CLAIM_WORDS, BODY_TERMS, PHONE_WORDS };
+module.exports = { lintStoryboardText, lintVideoJson, hasErrors, BANNED_ALWAYS, CLAIM_WORDS, BODY_TERMS, PHONE_WORDS, INDO_HINT };

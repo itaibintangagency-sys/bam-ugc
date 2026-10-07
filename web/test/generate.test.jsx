@@ -279,6 +279,13 @@ describe('halaman Riwayat generate', () => {
     fireEvent.change(screen.getByLabelText('Orang'), { target: { value: 'b2' } }); await waitFor(() => expect(c.log.rpc.some(x => x.args.p_user === 'b2')).toBe(true));
     fireEvent.change(screen.getByLabelText('Jenis'), { target: { value: 'wajah_acuan' } }); await waitFor(() => expect(c.log.rpc.some(x => x.args.p_kind === 'wajah_acuan')).toBe(true));
   });
+  it('baris analisis produk: jenis dan nama produk tampil, kualitas "na" menjadi tanda hubung, filter jenis memuat analisis, CSV memakai nama produk', async () => {
+    const analisis = { id: 'r9', waktu: '2026-10-06T03:00:00Z', uid: 'a1', nama: 'Ndyy', jenis: 'analisis_produk', kode_karakter: null, nama_produk: 'Daster floral', kualitas: 'na', status: 'ok', galat: null, durasi_ms: 9000, usd: 0.004, kurs: 16500, idr: 66, hubungan: null, dipilih: false, total: 1 };
+    const c = klien({ rpc: { ugc_image_cost_summary: { data: ringkasanData, error: null }, ugc_image_runs_list: { data: [analisis], error: null } } }); halamanRiwayat(c); await waitFor(() => expect(screen.getByTestId('tabel-rincian')).toBeTruthy());
+    const baris = within(screen.getByTestId('tabel-rincian')); expect(baris.getByText('Analisis foto produk')).toBeTruthy(); expect(baris.getByText('Daster floral')).toBeTruthy(); expect(baris.queryByText('na')).toBeNull(); expect(baris.getByText('Rp 66')).toBeTruthy();
+    expect(within(screen.getByLabelText('Jenis')).getAllByRole('option').map(o => o.value)).toEqual(['', 'wajah_dna', 'wajah_acuan', 'lembar_sudut', 'storyboard', 'analisis_produk', 'saran_kategori']);
+    const csv = riwayatKeCsv([analisis]); expect(csv).toContain('Karakter / Produk'); expect(csv).toContain('Analisis foto produk,Daster floral,,ok,9.0,0.004,16500,66,');
+  });
   it('halaman berikutnya memakai offset 50; tombol nonaktif di ujung', async () => {
     const banyak = barisData.map(b => ({ ...b, total: 120 })); const c = klien({ rpc: { ugc_image_cost_summary: { data: ringkasanData, error: null }, ugc_image_runs_list: { data: banyak, error: null } } });
     halamanRiwayat(c); await waitFor(() => expect(screen.getByTestId('tabel-rincian')).toBeTruthy());

@@ -13,6 +13,7 @@ export default function Layout() {
         <nav className="nav-utama" aria-label="Menu utama">
           <NavLink to="/" end>Dasbor</NavLink>
           <NavLink to="/karakter">Karakter</NavLink>
+          <NavLink to="/produk">Produk</NavLink>
           {isAdmin(profile) && <NavLink to="/riwayat">Riwayat generate</NavLink>}
         </nav>
         <div className="account">

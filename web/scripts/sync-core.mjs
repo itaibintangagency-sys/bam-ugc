@@ -12,9 +12,9 @@ export const OUT = path.resolve(HERE, '..', 'src', 'core');
 export const OUT_FUNGSI = path.resolve(HERE, '..', '..', 'supabase', 'functions', '_shared', 'core');
 const HEADER = '// BERKAS HASIL SALINAN dari core/ oleh scripts/sync-core.mjs. Jangan diedit di sini; ubah di core/ lalu jalankan: npm run sync-core\n';
 
-function toEsm(name, src) {
+function toEsm(name, src, { jsonAttr = false } = {}) {
   let s = src.replace(/^'use strict';\r?\n/, '');
-  s = s.replace(/const (\w+) = require\('\.\.\/data\/([\w.-]+\.json)'\);/g, "import $1 from './$2';");
+  s = s.replace(/const (\w+) = require\('\.\.\/data\/([\w.-]+\.json)'\);/g, jsonAttr ? "import $1 from './$2' with { type: 'json' };" : "import $1 from './$2';");   // Deno dan Node mewajibkan atribut impor untuk JSON
   const m = /module\.exports = \{([^}]*)\};?\s*$/.exec(s);
   if (!m) throw new Error(`${name}: tidak menemukan module.exports di akhir berkas`);
   s = s.replace(m[0], `export {${m[1]}};\n`);
@@ -28,14 +28,20 @@ export function build() {
   return {
     'dna.js': toEsm('dna.js', fs.readFileSync(path.join(CORE, 'src', 'dna.js'), 'utf8')),
     'voice.js': toEsm('voice.js', fs.readFileSync(path.join(CORE, 'src', 'voice.js'), 'utf8')),
-    'flow_voices.json': fs.readFileSync(path.join(CORE, 'data', 'flow_voices.json'), 'utf8')
+    'flow_voices.json': fs.readFileSync(path.join(CORE, 'data', 'flow_voices.json'), 'utf8'),
+    'productProfile.js': toEsm('productProfile.js', fs.readFileSync(path.join(CORE, 'src', 'productProfile.js'), 'utf8')),
+    'arketipe_slot_angle.json': fs.readFileSync(path.join(CORE, 'data', 'arketipe_slot_angle.json'), 'utf8'),
+    'kata_terlarang.json': fs.readFileSync(path.join(CORE, 'data', 'kata_terlarang.json'), 'utf8')
   };
 }
 
 export function buildFungsi() {
   return {
     'dna.js': toEsm('dna.js', fs.readFileSync(path.join(CORE, 'src', 'dna.js'), 'utf8')),
-    'imageApi.js': toEsm('imageApi.js', fs.readFileSync(path.join(CORE, 'src', 'imageApi.js'), 'utf8'))
+    'imageApi.js': toEsm('imageApi.js', fs.readFileSync(path.join(CORE, 'src', 'imageApi.js'), 'utf8')),
+    'productProfile.js': toEsm('productProfile.js', fs.readFileSync(path.join(CORE, 'src', 'productProfile.js'), 'utf8'), { jsonAttr: true }),
+    'arketipe_slot_angle.json': fs.readFileSync(path.join(CORE, 'data', 'arketipe_slot_angle.json'), 'utf8'),
+    'kata_terlarang.json': fs.readFileSync(path.join(CORE, 'data', 'kata_terlarang.json'), 'utf8')
   };
 }
 

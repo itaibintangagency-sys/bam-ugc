@@ -6,7 +6,7 @@ import { BUCKET, ekstensi, muatFoto } from './karakter.js';
 export { peringatanKonflik };
 export const FUNGSI = 'generate-image';
 export const MAKS_PER_KLIK = 4;
-export const JENIS = { wajah_dna: 'Wajah dari DNA', wajah_acuan: 'Wajah dari foto acuan', lembar_sudut: 'Lembar 7 sudut', storyboard: 'Storyboard' };
+export const JENIS = { wajah_dna: 'Wajah dari DNA', wajah_acuan: 'Wajah dari foto acuan', lembar_sudut: 'Lembar 7 sudut', storyboard: 'Storyboard', analisis_produk: 'Analisis foto produk', saran_kategori: 'Saran kategori produk' };
 
 export const KUALITAS = [
   { kunci: 'low', label: 'Hemat (low)', admin: false },
@@ -134,7 +134,7 @@ export function galatRiwayat(e) {
 // CSV riwayat (untuk pembukuan). Kolom jelas, Rupiah dan USD apa adanya, kutip ganda di-escape.
 export function riwayatKeCsv(baris) {
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
-  const kol = ['Waktu (ISO)', 'Siapa', 'Jenis', 'Karakter', 'Kualitas', 'Status', 'Durasi (detik)', 'USD', 'Kurs IDR/USD', 'Rupiah', 'Galat'];
-  const isi = baris.map(r => [r.waktu, r.nama, JENIS[r.jenis] || r.jenis, r.kode_karakter || '', r.kualitas, r.status, r.durasi_ms == null ? '' : (r.durasi_ms / 1000).toFixed(1), r.usd ?? '', r.kurs ?? '', r.idr ?? '', r.galat || ''].map(q).join(','));
+  const kol = ['Waktu (ISO)', 'Siapa', 'Jenis', 'Karakter / Produk', 'Kualitas', 'Status', 'Durasi (detik)', 'USD', 'Kurs IDR/USD', 'Rupiah', 'Galat'];
+  const isi = baris.map(r => [r.waktu, r.nama, JENIS[r.jenis] || r.jenis, r.kode_karakter || r.nama_produk || '', r.kualitas === 'na' ? '' : r.kualitas, r.status, r.durasi_ms == null ? '' : (r.durasi_ms / 1000).toFixed(1), r.usd ?? '', r.kurs ?? '', r.idr ?? '', r.galat || ''].map(q).join(','));
   return '\ufeff' + [kol.join(','), ...isi].join('\r\n') + '\r\n';
 }

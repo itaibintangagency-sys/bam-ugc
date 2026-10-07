@@ -1,0 +1,74 @@
+{
+ "catatan": "Sumber tunggal daftar kata yang dipantau lint prompt dan profil produk. Dibaca oleh core/src/lint.js dan core/src/productProfile.js.",
+ "banned_always": [
+  "tiktok",
+  "affiliate",
+  "promo",
+  "diskon",
+  "checkout",
+  "google flow",
+  "tanpa teks",
+  "klik",
+  "link bio"
+ ],
+ "banned_in_image_text": [
+  "keranjang",
+  "cta",
+  "beli",
+  "hook"
+ ],
+ "claim_words": [
+  "nyaman",
+  "ringan",
+  "lembut",
+  "adem",
+  "flowy",
+  "empuk",
+  "awet",
+  "tahan lama",
+  "premium",
+  "berkualitas",
+  "terbaik",
+  "anti luntur"
+ ],
+ "body_terms": [
+  "body",
+  "skin",
+  "anatomy",
+  "touch",
+  "bare",
+  "chest",
+  "waist",
+  "bust",
+  "thigh"
+ ],
+ "phone_words": [
+  "smartphone",
+  "phone",
+  "handphone",
+  "ponsel"
+ ],
+ "indo_hint": [
+  "dengan",
+  "yang",
+  "dan",
+  "bagian",
+  "bulat",
+  "lengan",
+  "motif",
+  "panjang",
+  "depan",
+  "leher",
+  "resleting",
+  "kerah",
+  "warna",
+  "ruang",
+  "tamu",
+  "produk",
+  "tampil",
+  "kain",
+  "dasar",
+  "longgar",
+  "pendek"
+ ]
+}
